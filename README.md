@@ -1,0 +1,1 @@
+"# just-redirect-to-docs" 
