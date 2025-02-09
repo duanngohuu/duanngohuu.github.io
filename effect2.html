@@ -1,24 +1,20 @@
-<div style="position: relative; height: 100vh; overflow: hidden; background: linear-gradient(to bottom, #ff758c, #ff7eb3);">
-    <script>
-        function createHeart() {
-            let heart = $('<div class="heart"></div>');
-            let x = Math.random() * $(window).width();
-            heart.css({left: x + 'px', top: '-50px'});
-            $('body').append(heart);
-            setTimeout(() => { heart.remove(); }, 4000);
-        }
-        setInterval(createHeart, 500);
-
-        $(document).click(function(e) {
-            let flower = $('<div class="flower"></div>');
-            flower.css({left: e.pageX + 'px', top: e.pageY + 'px'});
-            $('body').append(flower);
-            flower.animate({transform: 'scale(1.5)'}, 500, function() {
-                $(this).fadeOut(1000, function() { $(this).remove(); });
-            });
-        });
-    </script>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trái Tim & Hoa Rơi</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
+        body {
+            background: linear-gradient(to bottom, #ff758c, #ff7eb3);
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
         .heart, .flower {
             position: absolute;
             width: 50px;
@@ -38,4 +34,28 @@
             100% { transform: translateY(700px); opacity: 0; }
         }
     </style>
-</div>
+</head>
+<body>
+
+<script>
+    function createHeart() {
+        let heart = $('<div class="heart"></div>');
+        let x = Math.random() * $(window).width();
+        heart.css({left: x + 'px', top: '-50px'});
+        $('body').append(heart);
+        setTimeout(() => { heart.remove(); }, 4000);
+    }
+    setInterval(createHeart, 500);
+
+    $(document).click(function(e) {
+        let flower = $('<div class="flower"></div>');
+        flower.css({left: e.pageX + 'px', top: e.pageY + 'px'});
+        $('body').append(flower);
+        flower.animate({transform: 'scale(1.5)'}, 500, function() {
+            $(this).fadeOut(1000, function() { $(this).remove(); });
+        });
+    });
+</script>
+
+</body>
+</html>
