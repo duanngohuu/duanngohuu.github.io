@@ -1,31 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DuanNH・ズアン</title>
+    <title>Happy Valentine's Day ❤️</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        body {
+            background: radial-gradient(circle, #ffafbd, #ffc3a0);
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+        }
+        #message {
+            position: absolute;
+            top: 20%;
+            font-size: 2em;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .heart {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: url('https://cdn-icons-png.flaticon.com/512/833/833472.png') no-repeat center;
+            background-size: contain;
+            animation: floatUp 3s linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-500px) scale(1.5); opacity: 0; }
+        }
+        .flower {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: url('https://cdn-icons-png.flaticon.com/512/189/189679.png') no-repeat center;
+            background-size: contain;
+            transform: scale(0);
+        }
+    </style>
 </head>
-<body style="height: 100%;">
-    <!-- Hi, just a moment...
-    please wait in redirect to 'Just the Docs' -->
-    <h1 style="margin: auto;
-        justify-content: space-around;
-        height: 80vh;
-        display: flex;
-        align-content: space-around;
-        align-items: center;
-        background: #1a2a6c;  /* fallback for old browsers */
-        background: -webkit-linear-gradient(to right, #fdbb2d, #b21f1f, #1a2a6c);  /* Chrome 10-25, Safari 5.1-6 */
-        background: linear-gradient(to right, #ffffff, #b21f1f, #1a2a6c); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 60px;">
-        <!-- Coming soon! -->
-        Welcome to DuanNH・ズアン page!
-    </h1>
+<body>
+
+    <div id="message">💖 Happy Valentine's Day, My Gom Gom! 💖</div>
+
+    <audio id="loveMusic" loop>
+        <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/mpeg">
+    </audio>
 
     <script>
+        $(document).ready(function(){
+            let audio = $("#loveMusic")[0];
+            audio.play().catch(error => console.log("Auto-play blocked, please tap anywhere!"));
 
+            function createHeart() {
+                let heart = $('<div class="heart"></div>');
+                let x = Math.random() * $(window).width();
+                let duration = Math.random() * 3 + 2;
+                heart.css({left: x + 'px', animationDuration: duration + 's'});
+                $('body').append(heart);
+                setTimeout(() => { heart.remove(); }, duration * 1000);
+            }
+
+            setInterval(createHeart, 300);
+
+            $(document).click(function(e) {
+                let flower = $('<div class="flower"></div>');
+                flower.css({left: e.pageX + 'px', top: e.pageY + 'px'});
+                $('body').append(flower);
+                anime({
+                    targets: flower[0],
+                    scale: [0, 1],
+                    rotate: '1turn',
+                    duration: 1000,
+                    easing: 'easeInOutQuad',
+                    complete: () => setTimeout(() => { flower.fadeOut(500, () => flower.remove()); }, 2000)
+                });
+            });
+        });
     </script>
+
 </body>
 </html>
