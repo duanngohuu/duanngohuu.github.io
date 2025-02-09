@@ -1,0 +1,41 @@
+<div style="position: relative; height: 100vh; overflow: hidden; background: linear-gradient(to bottom, #ff758c, #ff7eb3);">
+    <script>
+        function createHeart() {
+            let heart = $('<div class="heart"></div>');
+            let x = Math.random() * $(window).width();
+            heart.css({left: x + 'px', top: '-50px'});
+            $('body').append(heart);
+            setTimeout(() => { heart.remove(); }, 4000);
+        }
+        setInterval(createHeart, 500);
+
+        $(document).click(function(e) {
+            let flower = $('<div class="flower"></div>');
+            flower.css({left: e.pageX + 'px', top: e.pageY + 'px'});
+            $('body').append(flower);
+            flower.animate({transform: 'scale(1.5)'}, 500, function() {
+                $(this).fadeOut(1000, function() { $(this).remove(); });
+            });
+        });
+    </script>
+    <style>
+        .heart, .flower {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-size: contain;
+        }
+        .heart {
+            background: url('https://cdn-icons-png.flaticon.com/512/833/833472.png') no-repeat center;
+            animation: fallDown 4s linear infinite;
+        }
+        .flower {
+            background: url('https://cdn-icons-png.flaticon.com/512/189/189679.png') no-repeat center;
+            transform: scale(0);
+        }
+        @keyframes fallDown {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(700px); opacity: 0; }
+        }
+    </style>
+</div>
