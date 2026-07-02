@@ -1,0 +1,62 @@
+[
+  {
+    "id": "1",
+    "deck": "Business Japanese",
+    "front": "確認",
+    "reading": "かくにん",
+    "meaning_vi": "xác nhận, kiểm tra lại cho chắc",
+    "meaning_jp": "内容や状態をたしかめること",
+    "example_jp": "資料の内容をご確認いただけますでしょうか。",
+    "example_vi": "Anh/chị có thể xác nhận nội dung tài liệu giúp tôi được không?",
+    "tags": ["business", "mail", "n2"],
+    "note": "ご確認ください = lịch sự; ご確認いただけますでしょうか = mềm hơn khi nhờ đối tác."
+  },
+  {
+    "id": "2",
+    "deck": "Business Japanese",
+    "front": "共有",
+    "reading": "きょうゆう",
+    "meaning_vi": "chia sẻ thông tin/tài liệu cho người khác cùng nắm",
+    "meaning_jp": "情報を他の人と一緒に使える状態にすること",
+    "example_jp": "確認が取れ次第、チームに共有いたします。",
+    "example_vi": "Sau khi xác nhận xong, tôi sẽ chia sẻ cho team.",
+    "tags": ["business", "meeting", "n2"],
+    "note": "共有します dùng nội bộ; 共有いたします lịch sự hơn."
+  },
+  {
+    "id": "3",
+    "deck": "N2 Vocabulary",
+    "front": "影響範囲",
+    "reading": "えいきょうはんい",
+    "meaning_vi": "phạm vi ảnh hưởng",
+    "meaning_jp": "変更や問題が影響する範囲",
+    "example_jp": "修正前に影響範囲を確認します。",
+    "example_vi": "Trước khi sửa, tôi sẽ xác nhận phạm vi ảnh hưởng.",
+    "tags": ["it", "business", "n2"],
+    "note": "Cụm rất hay dùng khi báo cáo bug/sửa code."
+  },
+  {
+    "id": "4",
+    "deck": "Grammar N2",
+    "front": "〜次第",
+    "reading": "しだい",
+    "meaning_vi": "ngay sau khi..., hễ xong là...",
+    "meaning_jp": "ある動作が終わったらすぐに次の動作をする",
+    "example_jp": "準備ができ次第、ご連絡いたします。",
+    "example_vi": "Ngay khi chuẩn bị xong, tôi sẽ liên hệ.",
+    "tags": ["grammar", "mail", "n2"],
+    "note": "Vます bỏ ます + 次第."
+  },
+  {
+    "id": "5",
+    "deck": "IT Japanese",
+    "front": "切り分け",
+    "reading": "きりわけ",
+    "meaning_vi": "khoanh vùng, phân tách nguyên nhân",
+    "meaning_jp": "原因や責任範囲を分けて確認すること",
+    "example_jp": "まずフロント側とバックエンド側で原因を切り分けます。",
+    "example_vi": "Trước hết sẽ khoanh vùng nguyên nhân giữa phía frontend và backend.",
+    "tags": ["it", "troubleshooting"],
+    "note": "障害対応/調査で rất hay dùng."
+  }
+]
