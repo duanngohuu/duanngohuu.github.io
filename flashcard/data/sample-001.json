@@ -1,0 +1,112 @@
+[
+  {
+    "id": "sample-001-001",
+    "front": "確認",
+    "reading": "かくにん",
+    "meaning_vi": "xác nhận, kiểm tra lại",
+    "meaning_jp": "内容や状態を確かめること",
+    "example_jp": "資料の内容をご確認いただけますでしょうか。",
+    "example_vi": "Anh/chị có thể xác nhận nội dung tài liệu giúp tôi được không?",
+    "tags": ["business", "mail"],
+    "note": "ご確認ください = cách nói lịch sự hay dùng trong mail"
+  },
+  {
+    "id": "sample-001-002",
+    "front": "切り分け",
+    "reading": "きりわけ",
+    "meaning_vi": "khoanh vùng, tách nguyên nhân/phạm vi",
+    "meaning_jp": "原因や責任範囲を分けて確認すること",
+    "example_jp": "まずフロント側とバックエンド側で原因を切り分けます。",
+    "example_vi": "Trước hết khoanh vùng nguyên nhân giữa frontend và backend.",
+    "tags": ["it", "trouble"],
+    "note": "障害対応でよく使う"
+  },
+  {
+    "id": "sample-001-003",
+    "front": "認識合わせ",
+    "reading": "にんしきあわせ",
+    "meaning_vi": "thống nhất nhận thức/cách hiểu",
+    "meaning_jp": "関係者の理解を同じ状態にすること",
+    "example_jp": "実装前に仕様の認識合わせをさせてください。",
+    "example_vi": "Trước khi implement, cho tôi xác nhận để thống nhất cách hiểu về spec.",
+    "tags": ["business", "meeting"],
+    "note": "BrSE/SE đều hay dùng"
+  },
+  {
+    "id": "sample-001-004",
+    "front": "差し戻し",
+    "reading": "さしもどし",
+    "meaning_vi": "trả lại để sửa, reject về bước trước",
+    "meaning_jp": "提出物を修正のために戻すこと",
+    "example_jp": "レビューで指摘があり、申請が差し戻されました。",
+    "example_vi": "Do có góp ý ở review nên đơn/yêu cầu đã bị trả lại để sửa.",
+    "tags": ["business", "review"],
+    "note": "申請・レビュー・承認フローで使う"
+  },
+  {
+    "id": "sample-001-005",
+    "front": "洗い出し",
+    "reading": "あらいだし",
+    "meaning_vi": "liệt kê/lôi ra toàn bộ các mục cần xem xét",
+    "meaning_jp": "必要な項目や問題点を一つずつ出すこと",
+    "example_jp": "まず影響範囲を洗い出してから対応方針を決めます。",
+    "example_vi": "Trước hết liệt kê phạm vi ảnh hưởng rồi quyết định phương án xử lý.",
+    "tags": ["business", "it"],
+    "note": "影響範囲の洗い出し = phrase rất hay gặp"
+  },
+  {
+    "id": "sample-001-006",
+    "front": "見積もり",
+    "reading": "みつもり",
+    "meaning_vi": "ước lượng, estimate",
+    "meaning_jp": "作業量や費用などを事前に計算すること",
+    "example_jp": "この修正にどのくらい時間がかかるか見積もります。",
+    "example_vi": "Tôi sẽ estimate xem sửa phần này mất khoảng bao lâu.",
+    "tags": ["it", "project"],
+    "note": "作業見積もり, 工数見積もり"
+  },
+  {
+    "id": "sample-001-007",
+    "front": "前倒し",
+    "reading": "まえだおし",
+    "meaning_vi": "đẩy sớm lịch lên",
+    "meaning_jp": "予定より早く実施すること",
+    "example_jp": "リリース日を一週間前倒しする可能性があります。",
+    "example_vi": "Có khả năng sẽ đẩy ngày release sớm lên một tuần.",
+    "tags": ["schedule", "business"],
+    "note": "Ngược lại: 後ろ倒し"
+  },
+  {
+    "id": "sample-001-008",
+    "front": "後ろ倒し",
+    "reading": "うしろだおし",
+    "meaning_vi": "lùi lịch lại",
+    "meaning_jp": "予定より遅く実施すること",
+    "example_jp": "仕様変更の影響でテスト開始が後ろ倒しになります。",
+    "example_vi": "Do ảnh hưởng của thay đổi spec nên thời điểm bắt đầu test sẽ bị lùi lại.",
+    "tags": ["schedule", "business"],
+    "note": "Rất hay dùng khi báo delay"
+  },
+  {
+    "id": "sample-001-009",
+    "front": "暫定対応",
+    "reading": "ざんていたいおう",
+    "meaning_vi": "xử lý tạm thời",
+    "meaning_jp": "根本解決までの一時的な対応",
+    "example_jp": "まず暫定対応を行い、後ほど恒久対応を検討します。",
+    "example_vi": "Trước hết xử lý tạm thời, sau đó sẽ xem xét phương án xử lý lâu dài.",
+    "tags": ["it", "trouble"],
+    "note": "暫定対応 vs 恒久対応"
+  },
+  {
+    "id": "sample-001-010",
+    "front": "恒久対応",
+    "reading": "こうきゅうたいおう",
+    "meaning_vi": "xử lý triệt để/lâu dài",
+    "meaning_jp": "同じ問題が再発しないようにする根本的な対応",
+    "example_jp": "再発防止のため、恒久対応としてバリデーションを追加します。",
+    "example_vi": "Để phòng tái phát, sẽ thêm validation như một biện pháp xử lý triệt để.",
+    "tags": ["it", "trouble"],
+    "note": "セットで覚える: 暫定対応 / 恒久対応"
+  }
+]
