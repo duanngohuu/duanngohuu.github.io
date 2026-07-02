@@ -1,0 +1,275 @@
+:root {
+  --anime-pink: #ff8bd4;
+  --anime-blue: #6ee7ff;
+  --anime-violet: #a78bfa;
+  --anime-yellow: #fde68a;
+}
+
+body.anime-mode {
+  cursor: crosshair;
+}
+
+body.anime-mode .hero-main {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.18),
+    0 30px 110px rgba(167,139,250,.34),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+body.anime-mode .app-card {
+  border-color: rgba(255, 139, 212, .34);
+}
+
+.sakura-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sakura {
+  position: absolute;
+  top: -40px;
+  width: 16px;
+  height: 12px;
+  border-radius: 90% 0 90% 0;
+  background: linear-gradient(135deg, #ffd1e8, #ff7ac8);
+  opacity: .72;
+  filter: drop-shadow(0 0 10px rgba(255, 139, 212, .38));
+  animation: sakuraFall var(--fall, 10s) linear forwards;
+}
+
+.sakura::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 3px;
+  width: 8px;
+  height: 6px;
+  border-radius: 90% 0 90% 0;
+  background: rgba(255,255,255,.45);
+}
+
+@keyframes sakuraFall {
+  0% { transform: translate3d(var(--x, 0), -40px, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: .75; }
+  100% { transform: translate3d(calc(var(--x, 0) + var(--drift, 40px)), 110vh, 0) rotate(680deg); opacity: 0; }
+}
+
+.anime-helper {
+  position: fixed;
+  right: 18px;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 50;
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+  pointer-events: none;
+}
+
+.anime-bubble {
+  max-width: min(310px, calc(100vw - 28px));
+  padding: 12px 14px;
+  color: #eef2ff;
+  background: rgba(15, 23, 42, .78);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 20px 20px 6px 20px;
+  box-shadow: 0 22px 70px rgba(0,0,0,.36);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  font-size: .92rem;
+  font-weight: 760;
+  line-height: 1.45;
+  transform-origin: bottom right;
+  animation: bubbleIn .25s ease-out;
+}
+
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(10px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mascot {
+  pointer-events: auto;
+  width: 138px;
+  height: 166px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  position: relative;
+  filter: drop-shadow(0 28px 45px rgba(0,0,0,.34));
+  animation: mascotFloat 3.4s ease-in-out infinite;
+}
+
+@keyframes mascotFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.mascot:hover {
+  transform: translateY(-5px) scale(1.02);
+}
+
+.mascot-head {
+  position: absolute;
+  left: 18px;
+  top: 24px;
+  width: 102px;
+  height: 98px;
+  border-radius: 48% 48% 44% 44%;
+  background: radial-gradient(circle at 35% 38%, #fff7ed, #ffd7c2 68%, #f7a8a8);
+  border: 2px solid rgba(255,255,255,.72);
+  overflow: hidden;
+}
+
+.mascot-hair {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  width: 118px;
+  height: 82px;
+  border-radius: 54% 54% 40% 40%;
+  background: linear-gradient(135deg, #5b21b6, #1e1b4b 62%, #111827);
+  z-index: 2;
+  clip-path: polygon(0 0,100% 0,96% 74%,78% 58%,66% 88%,52% 56%,35% 86%,26% 56%,8% 78%);
+}
+
+.mascot-ear {
+  position: absolute;
+  top: 11px;
+  width: 34px;
+  height: 42px;
+  background: linear-gradient(135deg, #5b21b6, #1e1b4b);
+  border: 2px solid rgba(255,255,255,.52);
+  z-index: 1;
+}
+
+.mascot-ear.left { left: 20px; border-radius: 80% 0 80% 0; transform: rotate(-18deg); }
+.mascot-ear.right { right: 20px; border-radius: 0 80% 0 80%; transform: rotate(18deg); }
+
+.mascot-eye {
+  position: absolute;
+  z-index: 3;
+  top: 63px;
+  width: 17px;
+  height: 22px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 38% 34%, white 0 16%, #60a5fa 17% 42%, #1e1b4b 43% 100%);
+  box-shadow: 0 0 12px rgba(96,165,250,.7);
+}
+
+.mascot-eye.left { left: 47px; }
+.mascot-eye.right { right: 47px; }
+
+.mascot-mouth {
+  position: absolute;
+  z-index: 3;
+  left: 62px;
+  top: 92px;
+  width: 18px;
+  height: 9px;
+  border-bottom: 3px solid #9f1239;
+  border-radius: 0 0 999px 999px;
+}
+
+.mascot-blush {
+  position: absolute;
+  z-index: 3;
+  top: 84px;
+  width: 20px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(244, 114, 182, .45);
+  filter: blur(.3px);
+}
+
+.mascot-blush.left { left: 30px; }
+.mascot-blush.right { right: 30px; }
+
+.mascot-body {
+  position: absolute;
+  left: 34px;
+  top: 111px;
+  width: 70px;
+  height: 48px;
+  border-radius: 28px 28px 20px 20px;
+  background: linear-gradient(135deg, #60a5fa, #8b5cf6 55%, #f472b6);
+  border: 2px solid rgba(255,255,255,.52);
+}
+
+.mascot-body::before,
+.mascot-body::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  width: 24px;
+  height: 9px;
+  border-radius: 999px;
+  background: #ffd7c2;
+}
+
+.mascot-body::before { left: -16px; transform: rotate(-18deg); }
+.mascot-body::after { right: -16px; transform: rotate(18deg); }
+
+.anime-dock {
+  position: fixed;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 45;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(15,23,42,.62);
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 22px 70px rgba(0,0,0,.32);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.anime-dock a,
+.anime-dock button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  color: #eef2ff;
+  text-decoration: none;
+  font-size: 1.05rem;
+}
+
+.anime-dock a:hover,
+.anime-dock button:hover {
+  background: linear-gradient(135deg, rgba(96,165,250,.32), rgba(244,114,182,.26));
+}
+
+body.anime-mode .anime-dock,
+body.anime-mode .anime-bubble {
+  border-color: rgba(255,139,212,.32);
+}
+
+@media (max-width: 720px) {
+  .anime-helper { right: 10px; bottom: 72px; }
+  .mascot { width: 102px; height: 126px; transform: scale(.84); transform-origin: bottom right; }
+  .mascot-head { left: 14px; top: 18px; width: 78px; height: 76px; }
+  .mascot-hair { left: 8px; top: 6px; width: 92px; height: 64px; }
+  .mascot-ear { top: 9px; width: 26px; height: 32px; }
+  .mascot-ear.left { left: 14px; }
+  .mascot-ear.right { right: 14px; }
+  .mascot-eye { top: 49px; width: 13px; height: 17px; }
+  .mascot-eye.left { left: 36px; }
+  .mascot-eye.right { right: 36px; }
+  .mascot-mouth { left: 47px; top: 70px; width: 14px; }
+  .mascot-blush { top: 64px; width: 14px; }
+  .mascot-blush.left { left: 24px; }
+  .mascot-blush.right { right: 24px; }
+  .mascot-body { left: 25px; top: 86px; width: 54px; height: 38px; }
+  .anime-bubble { max-width: 230px; font-size: .82rem; padding: 10px 12px; }
+  .anime-dock { bottom: 10px; }
+}
