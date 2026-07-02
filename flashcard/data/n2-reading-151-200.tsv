@@ -1,0 +1,51 @@
+no	front	reading	meaning_vi	han_viet	years
+151	要約	ようやく	Tóm tắt, yếu lược	YẾU ƯỚC	2016,2017,2021
+152	まとめ	まとめ	Tóm tắt, kết luận	TÓM TẮT	2014,2019,2022
+153	整理	せいり	Sắp xếp, chỉnh lý	CHỈNH LÝ	2015,2018,2023
+154	分類	ぶんるい	Phân loại, xếp loại	PHÂN LOẠI	2016,2020,2021
+155	比較	ひかく	So sánh, đối chiếu	TỶ GIẢO	2014,2017,2022
+156	対照	たいしょう	Đối chiếu, tương phản	ĐỐI CHIẾU	2015,2019,2023
+157	共通	きょうつう	Chung, phổ biến	CỘNG THÔNG	2016,2018,2020
+158	異なる	ことなる	Khác nhau, khác biệt	DỊ	2014,2017,2021
+159	類似	るいじ	Tương tự, giống nhau	LOẠI TỰ	2015,2020,2022
+160	特定	とくてい	Đặc định, cụ thể	ĐẶC ĐỊNH	2016,2019,2023
+161	一般的	いっぱんてき	Nói chung, phổ biến	NHẤT BÀN ĐÍCH	2014,2018,2021
+162	具体的	ぐたいてき	Cụ thể, rõ ràng	CỤ THỂ ĐÍCH	2015,2017,2022
+163	抽象的	ちゅうしょうてき	Trừu tượng	TRỪU TƯỢNG ĐÍCH	2016,2020,2023
+164	論理的	ろんりてき	Hợp logic, có lý	LUẬN LÝ ĐÍCH	2014,2019,2020
+165	科学的	かがくてき	Khoa học, có cơ sở khoa học	KHOA HỌC ĐÍCH	2015,2018,2021
+166	客観的	きゃっかんてき	Khách quan	KHÁCH QUAN ĐÍCH	2016,2017,2022
+167	主観的	しゅかんてき	Chủ quan	CHỦ QUAN ĐÍCH	2014,2020,2023
+168	積極的	せっきょくてき	Tích cực, chủ động	TÍCH CỰC ĐÍCH	2015,2019,2021
+169	消極的	しょうきょくてき	Tiêu cực, thụ động	TIÊU CỰC ĐÍCH	2016,2018,2022
+170	継続	けいぞく	Tiếp tục, duy trì	KẾ TỤC	2014,2017,2023
+171	中断	ちゅうだん	Gián đoạn, tạm dừng	TRUNG ĐOẠN	2015,2020,2021
+172	再開	さいかい	Mở lại, tiếp tục trở lại	TÁI KHAI	2016,2019,2022
+173	終了	しゅうりょう	Kết thúc, hoàn thành	CHUNG LIỄU	2014,2018,2023
+174	開始	かいし	Bắt đầu, khai mạc	KHAI THỈ	2015,2017,2020
+175	導入	どうにゅう	Đưa vào, giới thiệu	DẪN NHẬP	2016,2019,2021
+176	応用	おうよう	Ứng dụng, áp dụng	ỨNG DỤNG	2014,2018,2022
+177	実用	じつよう	Thực dụng, thực tiễn	THỰC DỤNG	2015,2020,2023
+178	有効	ゆうこう	Có hiệu lực, hữu hiệu	HỮU HIỆU	2016,2017,2021
+179	無効	むこう	Vô hiệu, không hợp lệ	VÔ HIỆU	2014,2019,2022
+180	価値観	かちかん	Quan niệm giá trị	GIÁ TRỊ QUAN	2015,2018,2023
+181	世界観	せかいかん	Thế giới quan	THẾ GIỚI QUAN	2016,2020,2021
+182	人生観	じんせいかん	Nhân sinh quan	NHÂN SINH QUAN	2014,2017,2022
+183	自然	しぜん	Tự nhiên	TỰ NHIÊN	2015,2019,2023
+184	環境	かんきょう	Môi trường, hoàn cảnh	HOÀN CẢNH	2016,2018,2020
+185	資源	しげん	Tài nguyên	TÀI NGUYÊN	2014,2017,2021
+186	持続	じぞく	Bền vững, duy trì	TRÌ TỤC	2015,2020,2022
+187	消費	しょうひ	Tiêu thụ, tiêu dùng	TIÊU PHÍ	2016,2019,2023
+188	生産	せいさん	Sản xuất	SẢN XUẤT	2014,2018,2021
+189	供給	きょうきゅう	Cung cấp	CUNG CẤP	2015,2017,2022
+190	需要	じゅよう	Nhu cầu	NHU CẦU	2016,2020,2023
+191	市場	しじょう	Thị trường	THỊ TRƯỜNG	2014,2019,2020
+192	競争	きょうそう	Cạnh tranh	CẠNH TRANH	2015,2018,2021
+193	協調	きょうちょう	Phối hợp, điều phối	HỢP ĐIỀU	2016,2017,2022
+194	連携	れんけい	Liên kết, phối hợp	LIÊN HỆ	2014,2020,2023
+195	統合	とうごう	Thống hợp, tích hợp	THỐNG HỢP	2015,2019,2021
+196	分離	ぶんり	Phân ly, tách rời	PHÂN LY	2016,2018,2022
+197	独立	どくりつ	Độc lập	ĐỘC LẬP	2014,2017,2023
+198	依存	いぞん	Phụ thuộc, dựa vào	Y TỒN	2015,2020,2021
+199	自立	じりつ	Tự lập, độc lập	TỰ LẬP	2016,2019,2022
+200	補完	ほかん	Bổ sung, bù đắp	BỔ HOÀN	2014,2018,2023
