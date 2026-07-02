@@ -1,0 +1,14 @@
+{
+  "name": "duan-github-pages-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:data && npm run test:e2e",
+    "test:data": "node --test tests/flashcard-data.test.mjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "http-server": "^14.1.1"
+  }
+}
