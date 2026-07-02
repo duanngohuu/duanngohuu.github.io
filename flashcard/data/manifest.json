@@ -1,0 +1,22 @@
+{
+  "version": "2026.07.02-static-lessons",
+  "title": "Duan Flashcard Library",
+  "lessonSize": 50,
+  "courses": [
+    {
+      "id": "sample",
+      "title": "Bài mẫu",
+      "description": "Data mẫu để test giao diện. Sau này thay bằng nội dung Duan gửi.",
+      "lessons": [
+        {
+          "id": "sample-001",
+          "title": "Bài mẫu 01",
+          "description": "10 thẻ mẫu Business/IT Japanese",
+          "path": "./data/sample-001.json",
+          "count": 10,
+          "tags": ["business", "it", "n2"]
+        }
+      ]
+    }
+  ]
+}
