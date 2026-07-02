@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valentine Effects ❤️</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, #ffafbd, #ffc3a0 45%, #fff0f3);
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .container { padding: 48px 18px; }
+    h1 { font-size: clamp(2rem, 9vw, 4rem); margin: 0 0 12px; }
+    p { max-width: 620px; margin: 0 auto 24px; color: #8a2440; line-height: 1.6; }
+    .button {
+      background: linear-gradient(135deg, #ff4d6d, #ff85a1);
+      color: white;
+      padding: 14px 22px;
+      margin: 10px;
+      border: none;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 16px 40px rgba(255, 77, 109, .28);
+      transition: .2s;
+    }
+    .button:hover { transform: translateY(-1px); background: linear-gradient(135deg, #ff2e63, #ff6f91); }
+    #content { display: none; }
+    #back { position: fixed; top: 14px; left: 14px; display: none; z-index: 10; }
+    .home-link { display: inline-block; margin-top: 14px; color: #8a2440; font-weight: 800; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container" id="main">
+    <h1>🎀 Valentine Lab 🎀</h1>
+    <p>Trang hiệu ứng cũ được chuyển vào đây để trang chủ chính dùng làm hub chọn tính năng.</p>
+    <button class="button" onclick="loadEffect('effect1')">💖 Trái tim bay lên</button>
+    <button class="button" onclick="loadEffect('effect2')">🌸 Trái tim & Hoa rơi</button>
+    <br>
+    <a class="home-link" href="/">← Về Duan Hub</a>
+  </div>
+
+  <div id="content"></div>
+  <button id="back" class="button" onclick="goBack()">⬅️ Quay lại</button>
+
+  <script>
+    function loadEffect(effect) {
+      $('#main').hide();
+      $('#content').load('/' + effect + '.html', function() {
+        $('#content').fadeIn();
+        $('#back').fadeIn();
+      });
+    }
+    function goBack() {
+      $('#content').fadeOut(function() {
+        $('#content').empty();
+        $('#main').fadeIn();
+        $('#back').fadeOut();
+      });
+    }
+  </script>
+</body>
+</html>
