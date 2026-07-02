@@ -3,182 +3,292 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#101827" />
-  <title>Flashcard Google Sheets</title>
+  <meta name="theme-color" content="#0b1020" />
+  <title>Flashcard AI · Google Sheets</title>
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="stylesheet" href="./styles.css" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+  <div class="aurora-bg" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-c"></span>
+    <span class="star star-a">✦</span>
+    <span class="star star-b">✧</span>
+    <span class="star star-c">✦</span>
+  </div>
+
   <div class="app-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">GitHub Pages · Google Sheets</p>
-        <h1>Flashcard học nhanh</h1>
-      </div>
+    <header class="topbar glass-card">
+      <a class="brand" href="#top" aria-label="Flashcard home">
+        <span class="brand-mark">✦</span>
+        <span>
+          <strong>Flashcard AI</strong>
+          <small>Google Sheets · Raw Data</small>
+        </span>
+      </a>
+
+      <nav class="tab-nav" aria-label="Menu chính">
+        <button class="tab-button active" type="button" data-tab="study">Học</button>
+        <button class="tab-button" type="button" data-tab="google">Google Sheet</button>
+        <button class="tab-button" type="button" data-tab="raw">Raw Data</button>
+        <button class="tab-button" type="button" data-tab="guide">Hướng dẫn</button>
+      </nav>
+
       <button id="themeToggle" class="icon-btn" type="button" aria-label="Đổi giao diện">◐</button>
     </header>
 
-    <main>
-      <section class="panel hero">
-        <div>
-          <h2>Mở link là học. Data nằm trong Google Sheet của bạn.</h2>
+    <main id="top">
+      <section class="hero glass-card">
+        <div class="hero-copy">
+          <p class="eyebrow">AI-style study deck</p>
+          <h1>Học flashcard từ Google Sheet hoặc raw data trong 1 trang.</h1>
           <p>
-            Kết nối Google bằng OAuth readonly, đọc dữ liệu từ sheet, flashcard chạy hoàn toàn trên trình duyệt.
-            Token chỉ giữ trong phiên hiện tại; tiến độ học lưu localStorage trên máy.
+            Giao diện glass/gradient, chạy static trên GitHub Pages. Data có thể đến từ Google Sheet private qua OAuth readonly,
+            hoặc paste raw CSV/TSV/JSON để convert ngay thành menu học.
           </p>
         </div>
         <div class="hero-actions">
-          <button id="connectGoogleBtn" class="primary" type="button">Kết nối Google</button>
+          <button id="connectGoogleBtn" class="primary sparkle-btn" type="button">Kết nối Google</button>
           <button id="loadSampleBtn" class="secondary" type="button">Dùng data mẫu</button>
         </div>
       </section>
 
-      <section class="grid two-cols">
-        <section class="panel">
-          <div class="section-title">
-            <h3>Cấu hình Google Sheet</h3>
-            <span id="authStatus" class="badge">Chưa kết nối</span>
-          </div>
+      <section class="status-grid">
+        <article class="metric glass-card">
+          <span>Nguồn data</span>
+          <strong id="sourceStatus">Chưa tải</strong>
+        </article>
+        <article class="metric glass-card">
+          <span>Số thẻ</span>
+          <strong id="dataStatus">0</strong>
+        </article>
+        <article class="metric glass-card">
+          <span>Google</span>
+          <strong id="authStatus">Chưa kết nối</strong>
+        </article>
+      </section>
 
-          <label>
-            Google OAuth Client ID
-            <input id="clientIdInput" type="text" inputmode="text" autocomplete="off" placeholder="xxxx.apps.googleusercontent.com" />
-          </label>
-
-          <label>
-            Spreadsheet ID
-            <input id="spreadsheetIdInput" type="text" inputmode="text" autocomplete="off" placeholder="Lấy trong URL Google Sheet" />
-          </label>
-
-          <label>
-            Range
-            <input id="rangeInput" type="text" inputmode="text" value="vocab!A1:J" />
-          </label>
-
-          <div class="button-row">
-            <button id="saveConfigBtn" class="secondary" type="button">Lưu cấu hình</button>
-            <button id="loadSheetBtn" class="primary" type="button">Tải data từ Sheet</button>
-          </div>
-
-          <details>
-            <summary>Format cột Google Sheet</summary>
-            <div class="hint">
-              Hàng đầu tiên là header. Nên dùng:
-              <code>id, deck, front, reading, meaning_vi, meaning_jp, example_jp, example_vi, tags, note</code>.
-              Tags cách nhau bằng dấu phẩy.
+      <section class="tab-panel active" data-tab-panel="study">
+        <div class="grid two-cols">
+          <section class="panel glass-card">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Study setup</p>
+                <h2>Chọn phiên học</h2>
+              </div>
+              <span id="filteredStatus" class="badge">0 thẻ phù hợp</span>
             </div>
-          </details>
+
+            <div class="controls">
+              <label>
+                Deck
+                <select id="deckSelect"></select>
+              </label>
+
+              <label>
+                Tag
+                <select id="tagSelect"></select>
+              </label>
+
+              <label>
+                Tìm kiếm
+                <input id="searchInput" type="search" placeholder="từ, nghĩa, ví dụ, note..." />
+              </label>
+
+              <div class="range-grid">
+                <label>
+                  Từ số
+                  <input id="fromInput" type="number" min="1" value="1" />
+                </label>
+                <label>
+                  Đến số
+                  <input id="toInput" type="number" min="1" value="9999" />
+                </label>
+              </div>
+
+              <label>
+                Số lượng học
+                <select id="limitSelect">
+                  <option value="5">5 thẻ</option>
+                  <option value="10" selected>10 thẻ</option>
+                  <option value="20">20 thẻ</option>
+                  <option value="30">30 thẻ</option>
+                  <option value="all">Tất cả</option>
+                </select>
+              </label>
+
+              <label class="checkline">
+                <input id="shuffleInput" type="checkbox" checked />
+                Shuffle trước khi học
+              </label>
+
+              <button id="startBtn" class="primary full sparkle-btn" type="button">Bắt đầu học</button>
+            </div>
+          </section>
+
+          <section class="panel glass-card study-panel active" id="studyPanel">
+            <div class="study-header">
+              <div>
+                <p class="eyebrow">Flashcard</p>
+                <h2 id="sessionTitle">Chưa bắt đầu</h2>
+              </div>
+              <div class="stats">
+                <span id="positionText">0/0</span>
+                <span id="knownText">Biết: 0</span>
+                <span id="againText">Chưa nhớ: 0</span>
+              </div>
+            </div>
+
+            <div class="progress">
+              <div id="progressBar"></div>
+            </div>
+
+            <article id="card" class="card" tabindex="0" role="button" aria-label="Bấm để lật thẻ">
+              <div class="card-glow"></div>
+              <div class="card-face">
+                <p id="cardDeck" class="eyebrow"></p>
+                <h2 id="cardFront">Chưa có thẻ</h2>
+                <p id="cardSub" class="card-sub"></p>
+                <p id="cardHint" class="hint center">Tải data rồi bấm bắt đầu học.</p>
+              </div>
+            </article>
+
+            <div class="card-actions">
+              <button id="prevBtn" class="secondary" type="button">← Trước</button>
+              <button id="flipBtn" class="secondary" type="button">Lật</button>
+              <button id="againBtn" class="danger" type="button">Chưa nhớ</button>
+              <button id="knownBtn" class="success" type="button">Biết rồi</button>
+              <button id="nextBtn" class="primary" type="button">Tiếp →</button>
+            </div>
+
+            <div class="button-row compact-row">
+              <button id="reviewAgainBtn" class="secondary" type="button">Ôn thẻ chưa nhớ</button>
+              <button id="resetProgressBtn" class="secondary" type="button">Reset tiến độ</button>
+              <button id="exportBtn" class="secondary" type="button">Export progress</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-tab-panel="google">
+        <section class="panel glass-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Google Sheets API</p>
+              <h2>Kết nối Google Sheet private</h2>
+            </div>
+            <span class="badge">Readonly OAuth</span>
+          </div>
+
+          <div class="grid two-cols form-grid">
+            <label>
+              Google OAuth Client ID
+              <input id="clientIdInput" type="text" inputmode="text" autocomplete="off" placeholder="xxxx.apps.googleusercontent.com" />
+            </label>
+
+            <label>
+              Google Sheet URL hoặc Spreadsheet ID
+              <input id="spreadsheetIdInput" type="text" inputmode="text" autocomplete="off" placeholder="https://docs.google.com/spreadsheets/d/... hoặc ID" />
+            </label>
+
+            <label>
+              Range
+              <input id="rangeInput" type="text" inputmode="text" value="vocab!A1:J" />
+            </label>
+
+            <div class="button-column">
+              <button id="saveConfigBtn" class="secondary" type="button">Lưu cấu hình</button>
+              <button id="loadSheetBtn" class="primary sparkle-btn" type="button">Tải data từ Sheet</button>
+            </div>
+          </div>
+
+          <div class="mini-guide">
+            <strong>Format sheet:</strong>
+            <code>id, deck, front, reading, meaning_vi, meaning_jp, example_jp, example_vi, tags, note</code>
+            <p>App tự đọc cột dịch Việt ở <code>meaning_vi</code> và <code>example_vi</code>. Tags cách nhau bằng dấu phẩy.</p>
+          </div>
         </section>
+      </section>
 
-        <section class="panel">
+      <section class="tab-panel" data-tab-panel="raw">
+        <section class="panel glass-card">
           <div class="section-title">
-            <h3>Phiên học</h3>
-            <span id="dataStatus" class="badge">0 thẻ</span>
+            <div>
+              <p class="eyebrow">Raw converter</p>
+              <h2>Paste raw data → chuyển thành deck học</h2>
+            </div>
+            <span class="badge">CSV · TSV · JSON · Plain</span>
           </div>
 
-          <div class="controls">
+          <div class="grid two-cols form-grid">
             <label>
-              Deck
-              <select id="deckSelect"></select>
-            </label>
-
-            <label>
-              Tag
-              <select id="tagSelect"></select>
-            </label>
-
-            <label>
-              Tìm kiếm
-              <input id="searchInput" type="search" placeholder="từ, nghĩa, ví dụ..." />
-            </label>
-
-            <div class="range-grid">
-              <label>
-                Từ số
-                <input id="fromInput" type="number" min="1" value="1" />
-              </label>
-              <label>
-                Đến số
-                <input id="toInput" type="number" min="1" value="9999" />
-              </label>
-            </div>
-
-            <label>
-              Số lượng học
-              <select id="limitSelect">
-                <option value="5">5 thẻ</option>
-                <option value="10" selected>10 thẻ</option>
-                <option value="20">20 thẻ</option>
-                <option value="30">30 thẻ</option>
-                <option value="all">Tất cả</option>
+              Kiểu raw
+              <select id="rawFormatSelect">
+                <option value="auto" selected>Tự nhận dạng</option>
+                <option value="csv">CSV có header</option>
+                <option value="tsv">TSV có header</option>
+                <option value="json">JSON</option>
+                <option value="plain">Plain text: front | reading | meaning_vi | example_jp | example_vi | tags</option>
               </select>
             </label>
 
-            <label class="checkline">
-              <input id="shuffleInput" type="checkbox" checked />
-              Shuffle trước khi học
-            </label>
+            <div class="button-column">
+              <button id="loadRawSampleBtn" class="secondary" type="button">Đổ raw mẫu</button>
+              <button id="convertRawBtn" class="primary sparkle-btn" type="button">Convert & dùng raw</button>
+            </div>
+          </div>
 
-            <button id="startBtn" class="primary full" type="button">Bắt đầu học</button>
+          <label class="textarea-label">
+            Raw data
+            <textarea id="rawInput" spellcheck="false" placeholder="Paste CSV/TSV/JSON ở đây. Có thể copy trực tiếp từ Google Sheet hoặc Excel rồi paste vào."></textarea>
+          </label>
+
+          <div class="button-row compact-row">
+            <button id="exportCardsBtn" class="secondary" type="button">Export deck JSON</button>
+            <button id="clearRawBtn" class="secondary" type="button">Xóa raw</button>
+          </div>
+
+          <div class="mini-guide">
+            <strong>Raw vẫn có dịch:</strong>
+            <p>Dùng cột <code>meaning_vi</code> cho nghĩa Việt, <code>example_vi</code> cho dịch ví dụ. Nếu paste plain text thì tách bằng dấu <code>|</code> hoặc Tab.</p>
           </div>
         </section>
       </section>
 
-      <section class="panel study-panel" id="studyPanel">
-        <div class="study-header">
-          <div>
-            <p class="eyebrow">Flashcard</p>
-            <h3 id="sessionTitle">Chưa bắt đầu</h3>
+      <section class="tab-panel" data-tab-panel="guide">
+        <section class="panel glass-card guide-card">
+          <p class="eyebrow">Setup guide</p>
+          <h2>Format chuẩn cho cả Google Sheet và Raw</h2>
+          <pre class="code-block">id,deck,front,reading,meaning_vi,meaning_jp,example_jp,example_vi,tags,note
+1,Business Japanese,確認,かくにん,xác nhận,内容を確かめること,資料をご確認ください。,Vui lòng xác nhận tài liệu.,business,note...</pre>
+          <div class="guide-grid">
+            <div>
+              <h3>Google Sheet</h3>
+              <p>Tạo sheet riêng, đặt header ở dòng 1, nhập range ví dụ <code>vocab!A1:J</code>, rồi bấm kết nối Google.</p>
+            </div>
+            <div>
+              <h3>Raw Data</h3>
+              <p>Paste CSV/TSV/JSON hoặc copy bảng từ Excel/Google Sheet. App convert ngay trong trình duyệt, không gửi lên server.</p>
+            </div>
+            <div>
+              <h3>Phím tắt</h3>
+              <p><code>Space</code> lật thẻ, <code>←/→</code> chuyển thẻ, <code>K</code> biết rồi, <code>A</code> chưa nhớ.</p>
+            </div>
           </div>
-          <div class="stats">
-            <span id="positionText">0/0</span>
-            <span id="knownText">Biết: 0</span>
-            <span id="againText">Chưa nhớ: 0</span>
-          </div>
-        </div>
-
-        <div class="progress">
-          <div id="progressBar"></div>
-        </div>
-
-        <article id="card" class="card" tabindex="0" role="button" aria-label="Bấm để lật thẻ">
-          <div class="card-face">
-            <p id="cardDeck" class="eyebrow"></p>
-            <h2 id="cardFront">Chưa có thẻ</h2>
-            <p id="cardSub" class="card-sub"></p>
-            <p id="cardHint" class="hint center">Bấm thẻ hoặc Space để lật mặt</p>
-          </div>
-        </article>
-
-        <div class="card-actions">
-          <button id="prevBtn" class="secondary" type="button">← Trước</button>
-          <button id="flipBtn" class="secondary" type="button">Lật</button>
-          <button id="againBtn" class="danger" type="button">Chưa nhớ</button>
-          <button id="knownBtn" class="success" type="button">Biết rồi</button>
-          <button id="nextBtn" class="primary" type="button">Tiếp →</button>
-        </div>
-
-        <div class="button-row">
-          <button id="reviewAgainBtn" class="secondary" type="button">Ôn lại thẻ chưa nhớ</button>
-          <button id="resetProgressBtn" class="secondary" type="button">Reset tiến độ máy này</button>
-          <button id="exportBtn" class="secondary" type="button">Export tiến độ</button>
-        </div>
+        </section>
       </section>
 
-      <section class="panel">
-        <div class="section-title">
-          <h3>Log</h3>
+      <section class="panel glass-card log-panel">
+        <div class="section-title slim">
+          <h2>Log</h2>
           <button id="clearLogBtn" class="ghost" type="button">Xóa log</button>
         </div>
         <pre id="logBox" class="log"></pre>
       </section>
     </main>
   </div>
-
-  <template id="emptyOptionTemplate">
-    <option value="all">Tất cả</option>
-  </template>
 
   <script src="./app.js"></script>
 </body>
