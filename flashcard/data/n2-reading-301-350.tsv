@@ -1,0 +1,51 @@
+no	front	reading	meaning_vi	han_viet	years
+301	呼びかける	よびかける	Kêu gọi, kêu cầu	KÊU GỌI	2016,2018,2023
+302	問いかける	といかける	Đặt câu hỏi, thẩm vấn	ĐẶT CÂU HỎI	2014,2017,2021
+303	求める	もとめる	Yêu cầu, tìm kiếm	YÊU CẦU	2015,2020,2022
+304	与える	あたえる	Cho, trao tặng	BAN CHO	2016,2019,2023
+305	受ける	うける	Nhận, chịu đựng	NHẬN	2014,2018,2020
+306	生かす	いかす	Tận dụng, phát huy	TẬN DỤNG	2015,2017,2021
+307	活用する	かつようする	Vận dụng, tận dụng	VẬN DỤNG	2016,2020,2022
+308	応じる	おうじる	Đáp ứng, ứng phó	ĐÁP ỨNG	2014,2019,2023
+309	従う	したがう	Tuân theo, làm theo	TUÂN THEO	2015,2018,2021
+310	逆らう	さからう	Đi ngược lại, phản đối	ĐI NGƯỢC	2016,2017,2022
+311	見習う	みならう	Noi gương, học theo	NOI GƯƠNG	2014,2020,2023
+312	見倣す	みならす	Bắt chước, học theo	BẮT CHƯỚC	2015,2019,2021
+313	模倣する	もほうする	Mô phỏng, bắt chước	MÔ PHỎNG	2016,2018,2022
+314	独創的	どくそうてき	Độc đáo, sáng tạo	ĐỘC SÁNG ĐÍCH	2014,2017,2023
+315	発想	はっそう	Ý tưởng, cách tư duy	PHÁT TƯỞNG	2015,2020,2021
+316	視点	してん	Quan điểm, góc nhìn	THỊ ĐIỂM	2016,2019,2022
+317	観点	かんてん	Quan điểm, góc nhìn	QUAN ĐIỂM	2014,2018,2023
+318	角度	かくど	Góc độ, phương diện	GÓC ĐỘ	2015,2017,2020
+319	側面	そくめん	Phía cạnh, khía cạnh	PHÍA CẠNH	2016,2020,2021
+320	局面	きょくめん	Cục diện, tình thế	CỤC DIỆN	2014,2019,2022
+321	場面	ばめん	Tình huống, cảnh	TÌNH HUỐNG	2015,2018,2023
+322	文脈	ぶんみゃく	Ngữ cảnh, văn mạch	VĂN MẠCH	2016,2017,2021
+323	背景	はいけい	Bối cảnh, nền tảng	BỐI CẢNH	2014,2020,2022
+324	経緯	けいい	Quá trình, diễn biến	KINH VI	2015,2019,2023
+325	推移	すいい	Sự biến đổi theo thời gian	SUY DỊ	2016,2018,2021
+326	転換	てんかん	Chuyển hướng, biến đổi	CHUYỂN HÓA	2014,2017,2022
+327	節目	ふしめ	Mốc, bước ngoặt	MỐC	2015,2020,2023
+328	局所	きょくしょ	Cục bộ, địa phương	CỤC BỘ	2016,2019,2021
+329	全体	ぜんたい	Toàn thể, tổng thể	TOÀN THỂ	2014,2018,2022
+330	部分	ぶぶん	Bộ phận, một phần	BỘ PHẬN	2015,2017,2023
+331	断片	だんぺん	Mảnh vụn, đoạn rời rạc	MẢNH VỤN	2016,2020,2021
+332	総合	そうごう	Tổng hợp	TỔNG HỢP	2014,2019,2022
+333	包括	ほうかつ	Bao quát, toàn diện	BAO QUÁT	2015,2018,2023
+334	抜粋	ばっすい	Trích dẫn, tóm lược	TRÍCH DẪN	2016,2017,2020
+335	引用	いんよう	Trích dẫn, dẫn chứng	DẪN DỤNG	2014,2020,2021
+336	参照	さんしょう	Tham chiếu, tra cứu	THAM CHIẾU	2015,2019,2022
+337	補足	ほそく	Bổ sung, thêm vào	BỔ SUNG	2016,2018,2023
+338	訂正	ていせい	Đính chính, sửa lại	ĐÍNH CHÍNH	2014,2017,2021
+339	修正	しゅうせい	Sửa đổi, hiệu chỉnh	SỬA ĐỔI	2015,2020,2022
+340	更新	こうしん	Cập nhật, đổi mới	CẬP NHẬT	2016,2019,2023
+341	追加	ついか	Thêm vào, bổ sung	THÊM VÀO	2014,2018,2021
+342	削除	さくじょ	Xóa bỏ, loại bỏ	XÓA BỎ	2015,2017,2022
+343	省略	しょうりゃく	Rút gọn, lược bỏ	TỈNH LƯỢC	2016,2020,2023
+344	省く	はぶく	Bỏ qua, rút gọn	BỎ QUA	2014,2019,2020
+345	活躍	かつやく	Hoạt động tích cực, tỏa sáng	HOẠT DƯỢC	2015,2018,2021
+346	貢献	こうけん	Cống hiến, đóng góp	CỐNG HIẾN	2016,2017,2022
+347	功績	こうせき	Công tích, thành tích	CÔNG TÍCH	2014,2020,2023
+348	業績	ぎょうせき	Thành tích, kết quả công việc	NGHIỆP TÍCH	2015,2019,2021
+349	実績	じっせき	Thành tích thực tế	THỰC TÍCH	2016,2018,2022
+350	業務	ぎょうむ	Nghiệp vụ, công việc	NGHIỆP VỤ	2014,2017,2023
