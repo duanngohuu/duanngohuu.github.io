@@ -1,8 +1,10 @@
-const APP_VERSION = "2026.07.02";
+const APP_VERSION = "2026.07.02-gemini-ui";
+
 const STORAGE_KEYS = {
-  config: "fc_google_sheet_config_v1",
+  config: "fc_google_sheet_config_v2",
   progress: "fc_progress_v1",
   theme: "fc_theme_v1",
+  raw: "fc_raw_data_v1",
 };
 
 const DEFAULT_CONFIG = {
@@ -17,6 +19,7 @@ const state = {
   config: { ...DEFAULT_CONFIG },
   tokenClient: null,
   accessToken: "",
+  sourceName: "Chưa tải",
   rawCards: [],
   sessionCards: [],
   currentIndex: 0,
@@ -28,6 +31,9 @@ const state = {
 
 const el = {
   themeToggle: document.querySelector("#themeToggle"),
+  tabButtons: [...document.querySelectorAll(".tab-button")],
+  tabPanels: [...document.querySelectorAll(".tab-panel")],
+
   connectGoogleBtn: document.querySelector("#connectGoogleBtn"),
   loadSampleBtn: document.querySelector("#loadSampleBtn"),
   clientIdInput: document.querySelector("#clientIdInput"),
@@ -35,8 +41,19 @@ const el = {
   rangeInput: document.querySelector("#rangeInput"),
   saveConfigBtn: document.querySelector("#saveConfigBtn"),
   loadSheetBtn: document.querySelector("#loadSheetBtn"),
+
+  sourceStatus: document.querySelector("#sourceStatus"),
   authStatus: document.querySelector("#authStatus"),
   dataStatus: document.querySelector("#dataStatus"),
+  filteredStatus: document.querySelector("#filteredStatus"),
+
+  rawFormatSelect: document.querySelector("#rawFormatSelect"),
+  rawInput: document.querySelector("#rawInput"),
+  loadRawSampleBtn: document.querySelector("#loadRawSampleBtn"),
+  convertRawBtn: document.querySelector("#convertRawBtn"),
+  exportCardsBtn: document.querySelector("#exportCardsBtn"),
+  clearRawBtn: document.querySelector("#clearRawBtn"),
+
   deckSelect: document.querySelector("#deckSelect"),
   tagSelect: document.querySelector("#tagSelect"),
   searchInput: document.querySelector("#searchInput"),
@@ -45,6 +62,7 @@ const el = {
   limitSelect: document.querySelector("#limitSelect"),
   shuffleInput: document.querySelector("#shuffleInput"),
   startBtn: document.querySelector("#startBtn"),
+
   studyPanel: document.querySelector("#studyPanel"),
   sessionTitle: document.querySelector("#sessionTitle"),
   positionText: document.querySelector("#positionText"),
@@ -72,18 +90,33 @@ function boot() {
   loadConfig();
   loadTheme();
   loadProgress();
+  loadRawDraft();
   bindEvents();
   setControlsEnabled(false);
   renderSelects();
-  log(`Ready v${APP_VERSION}. Hãy nhập Client ID + Spreadsheet ID, hoặc dùng data mẫu.`);
+  renderCard();
+  updateStatus();
+  log(`Ready v${APP_VERSION}. Dùng Google Sheet, Raw Data hoặc data mẫu.`);
 }
 
 function bindEvents() {
   el.themeToggle.addEventListener("click", toggleTheme);
+
+  el.tabButtons.forEach((button) => {
+    button.addEventListener("click", () => switchTab(button.dataset.tab));
+  });
+
   el.saveConfigBtn.addEventListener("click", saveConfigFromForm);
   el.connectGoogleBtn.addEventListener("click", connectGoogle);
   el.loadSheetBtn.addEventListener("click", loadSheetFromGoogle);
   el.loadSampleBtn.addEventListener("click", loadSampleData);
+
+  el.loadRawSampleBtn.addEventListener("click", loadRawSample);
+  el.convertRawBtn.addEventListener("click", convertRawData);
+  el.exportCardsBtn.addEventListener("click", exportCurrentDeck);
+  el.clearRawBtn.addEventListener("click", clearRawData);
+  el.rawInput.addEventListener("input", () => localStorage.setItem(STORAGE_KEYS.raw, el.rawInput.value));
+
   el.startBtn.addEventListener("click", startSession);
   el.card.addEventListener("click", flipCard);
   el.flipBtn.addEventListener("click", flipCard);
@@ -102,8 +135,8 @@ function bindEvents() {
   el.searchInput.addEventListener("input", updateFilteredCount);
 
   document.addEventListener("keydown", (event) => {
-    if (!el.studyPanel.classList.contains("active")) return;
     if (event.target.matches("input, select, textarea")) return;
+    if (!state.sessionCards.length) return;
 
     if (event.code === "Space") {
       event.preventDefault();
@@ -114,6 +147,12 @@ function bindEvents() {
     if (event.key.toLowerCase() === "k") markCard("known");
     if (event.key.toLowerCase() === "a") markCard("again");
   });
+}
+
+function switchTab(tabName) {
+  el.tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.tab === tabName));
+  el.tabPanels.forEach((panel) => panel.classList.toggle("active", panel.dataset.tabPanel === tabName));
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function loadConfig() {
@@ -129,17 +168,28 @@ function loadConfig() {
 }
 
 function saveConfigFromForm() {
+  const rawSheetValue = el.spreadsheetIdInput.value.trim();
+  const spreadsheetId = extractSpreadsheetId(rawSheetValue);
+
   state.config = {
     clientId: el.clientIdInput.value.trim(),
-    spreadsheetId: el.spreadsheetIdInput.value.trim(),
+    spreadsheetId,
     range: el.rangeInput.value.trim() || DEFAULT_CONFIG.range,
   };
 
   localStorage.setItem(STORAGE_KEYS.config, JSON.stringify(state.config));
+  el.spreadsheetIdInput.value = spreadsheetId;
   state.tokenClient = null;
   state.accessToken = "";
-  el.authStatus.textContent = "Đã lưu cấu hình";
+  el.authStatus.textContent = "Đã lưu";
+  updateStatus();
   log("Đã lưu cấu hình Google Sheet.");
+}
+
+function extractSpreadsheetId(value) {
+  const input = String(value || "").trim();
+  const match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : input;
 }
 
 function loadTheme() {
@@ -165,16 +215,15 @@ function saveProgress() {
   localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(state.progress));
 }
 
+function loadRawDraft() {
+  el.rawInput.value = localStorage.getItem(STORAGE_KEYS.raw) || "";
+}
+
 function initTokenClient() {
   saveConfigFromForm();
 
-  if (!state.config.clientId) {
-    throw new Error("Thiếu Google OAuth Client ID.");
-  }
-
-  if (!window.google?.accounts?.oauth2) {
-    throw new Error("Google Identity Services chưa load xong. Hãy thử lại sau vài giây.");
-  }
+  if (!state.config.clientId) throw new Error("Thiếu Google OAuth Client ID.");
+  if (!window.google?.accounts?.oauth2) throw new Error("Google Identity Services chưa load xong. Thử lại sau vài giây.");
 
   state.tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: state.config.clientId,
@@ -186,7 +235,8 @@ function initTokenClient() {
       }
 
       state.accessToken = tokenResponse.access_token;
-      el.authStatus.textContent = "Đã kết nối Google";
+      el.authStatus.textContent = "Đã kết nối";
+      updateStatus();
       log("Đã nhận access token readonly cho Google Sheets.");
       loadSheetFromGoogle();
     },
@@ -206,9 +256,7 @@ async function loadSheetFromGoogle() {
   try {
     saveConfigFromForm();
 
-    if (!state.config.spreadsheetId) {
-      throw new Error("Thiếu Spreadsheet ID.");
-    }
+    if (!state.config.spreadsheetId) throw new Error("Thiếu Spreadsheet ID hoặc Google Sheet URL.");
 
     if (!state.accessToken) {
       if (!state.tokenClient) initTokenClient();
@@ -224,7 +272,8 @@ async function loadSheetFromGoogle() {
     if (response.status === 401) {
       state.accessToken = "";
       el.authStatus.textContent = "Token hết hạn";
-      log("Access token hết hạn. Hãy bấm Kết nối Google lại.");
+      updateStatus();
+      log("Access token hết hạn. Bấm Kết nối Google lại.");
       return;
     }
 
@@ -235,7 +284,8 @@ async function loadSheetFromGoogle() {
 
     const payload = await response.json();
     const cards = rowsToCards(payload.values || []);
-    setCards(cards, "Google Sheet");
+    setCards(cards, `Google Sheet · ${state.config.range}`);
+    switchTab("study");
   } catch (error) {
     logError(error);
   }
@@ -247,9 +297,149 @@ async function loadSampleData() {
     if (!response.ok) throw new Error("Không tải được sample-data.json");
     const cards = await response.json();
     setCards(normalizeCards(cards), "Data mẫu");
+    switchTab("study");
   } catch (error) {
     logError(error);
   }
+}
+
+function loadRawSample() {
+  el.rawFormatSelect.value = "csv";
+  el.rawInput.value = `id,deck,front,reading,meaning_vi,meaning_jp,example_jp,example_vi,tags,note\n1,Business Japanese,確認,かくにん,"xác nhận","内容や状態をたしかめること","資料の内容をご確認いただけますでしょうか。","Anh/chị có thể xác nhận nội dung tài liệu giúp tôi được không?","business,mail,n2","ご確認ください = lịch sự"\n2,IT Japanese,切り分け,きりわけ,"khoanh vùng nguyên nhân","原因や責任範囲を分けて確認すること","まずフロント側とバックエンド側で原因を切り分けます。","Trước hết khoanh vùng nguyên nhân giữa frontend và backend.","it,troubleshooting","障害対応で hay dùng"`;
+  localStorage.setItem(STORAGE_KEYS.raw, el.rawInput.value);
+  log("Đã đổ raw mẫu. Bấm Convert & dùng raw để học.");
+}
+
+function convertRawData() {
+  try {
+    const text = el.rawInput.value.trim();
+    if (!text) throw new Error("Raw data đang trống.");
+
+    const format = el.rawFormatSelect.value;
+    const cards = parseRawData(text, format);
+    setCards(cards, `Raw Data · ${detectFormatLabel(text, format)}`);
+    localStorage.setItem(STORAGE_KEYS.raw, el.rawInput.value);
+    switchTab("study");
+  } catch (error) {
+    logError(error);
+  }
+}
+
+function clearRawData() {
+  if (!confirm("Xóa raw đang paste trên trình duyệt này?")) return;
+  el.rawInput.value = "";
+  localStorage.removeItem(STORAGE_KEYS.raw);
+  log("Đã xóa raw draft.");
+}
+
+function parseRawData(text, requestedFormat) {
+  const format = detectFormat(text, requestedFormat);
+
+  if (format === "json") {
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed)) {
+      if (Array.isArray(parsed[0])) return rowsToCards(parsed);
+      return normalizeCards(parsed);
+    }
+    if (Array.isArray(parsed.cards)) return normalizeCards(parsed.cards);
+    if (Array.isArray(parsed.values)) return rowsToCards(parsed.values);
+    throw new Error("JSON cần là array card, array rows, { cards: [...] } hoặc { values: [...] }.");
+  }
+
+  if (format === "csv" || format === "tsv") {
+    const delimiter = format === "tsv" ? "\t" : ",";
+    return rowsToCards(parseDelimited(text, delimiter));
+  }
+
+  return parsePlainLines(text);
+}
+
+function detectFormat(text, requestedFormat) {
+  if (requestedFormat && requestedFormat !== "auto") return requestedFormat;
+  const trimmed = text.trim();
+  if (trimmed.startsWith("[") || trimmed.startsWith("{")) return "json";
+  const firstLine = trimmed.split(/\r?\n/).find(Boolean) || "";
+  if (firstLine.includes("\t")) return "tsv";
+  if (looksLikeHeader(firstLine) && firstLine.includes(",")) return "csv";
+  if (firstLine.includes("|")) return "plain";
+  return "csv";
+}
+
+function detectFormatLabel(text, requestedFormat) {
+  return detectFormat(text, requestedFormat).toUpperCase();
+}
+
+function looksLikeHeader(line) {
+  const lowered = line.toLowerCase();
+  return ["front", "word", "meaning", "meaning_vi", "example", "deck", "reading"].some((key) => lowered.includes(key));
+}
+
+function parseDelimited(text, delimiter) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        cell += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === delimiter && !inQuotes) {
+      row.push(cell);
+      cell = "";
+      continue;
+    }
+
+    if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && next === "\n") i += 1;
+      row.push(cell);
+      if (row.some((value) => String(value).trim())) rows.push(row);
+      row = [];
+      cell = "";
+      continue;
+    }
+
+    cell += char;
+  }
+
+  row.push(cell);
+  if (row.some((value) => String(value).trim())) rows.push(row);
+  return rows;
+}
+
+function parsePlainLines(text) {
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+
+  const cards = lines.map((line, index) => {
+    const parts = line.includes("\t") ? line.split("\t") : line.split("|");
+    const [front, reading, meaningVi, exampleJp, exampleVi, tags, deck, note] = parts.map((part) => String(part || "").trim());
+
+    return {
+      id: `${index + 1}`,
+      deck: deck || "Raw Data",
+      front,
+      reading,
+      meaning_vi: meaningVi,
+      meaning_jp: "",
+      example_jp: exampleJp,
+      example_vi: exampleVi,
+      tags: splitTags(tags || "raw"),
+      note: note || "",
+      rowNumber: index + 1,
+    };
+  });
+
+  return normalizeCards(cards);
 }
 
 function rowsToCards(rows) {
@@ -264,32 +454,49 @@ function rowsToCards(rows) {
       item[header] = String(row[columnIndex] ?? "").trim();
     });
 
-    return {
-      id: item.id || `${index + 1}`,
-      deck: item.deck || "Default",
-      front: item.front || item.word || item.pattern || "",
-      reading: item.reading || "",
-      meaning_vi: item.meaning_vi || item.vi || item.meaning || "",
-      meaning_jp: item.meaning_jp || item.jp_meaning || "",
-      example_jp: item.example_jp || item.jp || "",
-      example_vi: item.example_vi || item.vi_example || "",
-      tags: splitTags(item.tags || item.tag || ""),
-      note: item.note || "",
-      rowNumber: index + 2,
-    };
+    return mapItemToCard(item, index, index + 2);
   });
 
   return normalizeCards(cards);
 }
 
+function mapItemToCard(item, index, rowNumber) {
+  return {
+    id: pick(item, ["id", "no", "number"]) || `${index + 1}`,
+    deck: pick(item, ["deck", "category", "source", "nhom", "group"]) || "Default",
+    front: pick(item, ["front", "word", "pattern", "term", "jp", "japanese", "cau", "tu"]) || "",
+    reading: pick(item, ["reading", "kana", "furigana", "yomikata"]) || "",
+    meaning_vi: pick(item, ["meaning_vi", "vi", "meaning", "vietnamese", "nghia_vi", "nghia"]) || "",
+    meaning_jp: pick(item, ["meaning_jp", "jp_meaning", "definition_jp", "japanese_meaning"]) || "",
+    example_jp: pick(item, ["example_jp", "jp_example", "example", "sentence_jp", "reibun"]) || "",
+    example_vi: pick(item, ["example_vi", "vi_example", "sentence_vi", "translation", "dich_vi"]) || "",
+    tags: splitTags(pick(item, ["tags", "tag", "labels"]) || ""),
+    note: pick(item, ["note", "memo", "comment", "ghi_chu"]) || "",
+    rowNumber,
+  };
+}
+
+function pick(object, keys) {
+  for (const key of keys) {
+    if (object[key] !== undefined && object[key] !== null && String(object[key]).trim() !== "") {
+      return String(object[key]).trim();
+    }
+  }
+  return "";
+}
+
 function normalizeHeader(header) {
-  return String(header || "")
+  return removeVietnameseAccents(String(header || ""))
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "_")
     .replace(/[^\w]/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
+}
+
+function removeVietnameseAccents(value) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
 }
 
 function splitTags(value) {
@@ -307,19 +514,20 @@ function normalizeCards(cards) {
       deck: String(card.deck || "Default").trim(),
       front: String(card.front || card.word || card.pattern || "").trim(),
       reading: String(card.reading || "").trim(),
-      meaning_vi: String(card.meaning_vi || card.meaning || "").trim(),
+      meaning_vi: String(card.meaning_vi || card.meaning || card.vi || "").trim(),
       meaning_jp: String(card.meaning_jp || "").trim(),
-      example_jp: String(card.example_jp || "").trim(),
-      example_vi: String(card.example_vi || "").trim(),
+      example_jp: String(card.example_jp || card.example || "").trim(),
+      example_vi: String(card.example_vi || card.translation || "").trim(),
       tags: splitTags(card.tags || ""),
       note: String(card.note || "").trim(),
-      rowNumber: Number(card.rowNumber || index + 2),
+      rowNumber: Number(card.rowNumber || index + 1),
     }))
     .filter((card) => card.front || card.meaning_vi || card.example_jp);
 }
 
 function setCards(cards, sourceName) {
   state.rawCards = cards;
+  state.sourceName = sourceName;
   state.sessionCards = [];
   state.currentIndex = 0;
   state.faceIndex = 0;
@@ -329,26 +537,24 @@ function setCards(cards, sourceName) {
   renderSelects();
   updateFilteredCount();
   setControlsEnabled(cards.length > 0);
+  updateStatus();
+  renderCard();
   log(`Đã tải ${cards.length} thẻ từ ${sourceName}.`);
 }
 
 function setControlsEnabled(enabled) {
-  [
-    el.deckSelect,
-    el.tagSelect,
-    el.searchInput,
-    el.fromInput,
-    el.toInput,
-    el.limitSelect,
-    el.shuffleInput,
-    el.startBtn,
-  ].forEach((node) => (node.disabled = !enabled));
+  [el.deckSelect, el.tagSelect, el.searchInput, el.fromInput, el.toInput, el.limitSelect, el.shuffleInput, el.startBtn]
+    .forEach((node) => (node.disabled = !enabled));
+}
+
+function updateStatus() {
+  el.sourceStatus.textContent = state.sourceName;
+  el.dataStatus.textContent = `${state.rawCards.length} thẻ`;
 }
 
 function renderSelects() {
   const decks = unique(state.rawCards.map((card) => card.deck).filter(Boolean));
   const tags = unique(state.rawCards.flatMap((card) => card.tags || []));
-
   fillSelect(el.deckSelect, decks, "Tất cả deck");
   fillSelect(el.tagSelect, tags, "Tất cả tag");
 }
@@ -369,9 +575,7 @@ function fillSelect(select, values, allLabel) {
     select.appendChild(option);
   });
 
-  if ([...select.options].some((option) => option.value === current)) {
-    select.value = current;
-  }
+  if ([...select.options].some((option) => option.value === current)) select.value = current;
 }
 
 function unique(values) {
@@ -385,30 +589,31 @@ function getFilteredCards() {
   const from = Math.max(1, Number(el.fromInput.value || 1));
   const to = Math.max(from, Number(el.toInput.value || 999999));
 
-  return state.rawCards
-    .filter((card, index) => {
-      const order = index + 1;
-      if (order < from || order > to) return false;
-      if (deck !== "all" && card.deck !== deck) return false;
-      if (tag !== "all" && !(card.tags || []).includes(tag)) return false;
-      if (!keyword) return true;
-      return [
-        card.front,
-        card.reading,
-        card.meaning_vi,
-        card.meaning_jp,
-        card.example_jp,
-        card.example_vi,
-        card.note,
-        card.deck,
-        ...(card.tags || []),
-      ].join(" ").toLowerCase().includes(keyword);
-    });
+  return state.rawCards.filter((card, index) => {
+    const order = index + 1;
+    if (order < from || order > to) return false;
+    if (deck !== "all" && card.deck !== deck) return false;
+    if (tag !== "all" && !(card.tags || []).includes(tag)) return false;
+    if (!keyword) return true;
+
+    return [
+      card.front,
+      card.reading,
+      card.meaning_vi,
+      card.meaning_jp,
+      card.example_jp,
+      card.example_vi,
+      card.note,
+      card.deck,
+      ...(card.tags || []),
+    ].join(" ").toLowerCase().includes(keyword);
+  });
 }
 
 function updateFilteredCount() {
   const count = getFilteredCards().length;
-  el.dataStatus.textContent = `${state.rawCards.length} thẻ · lọc ${count}`;
+  el.filteredStatus.textContent = `${count} thẻ phù hợp`;
+  updateStatus();
 }
 
 function startSession() {
@@ -419,14 +624,10 @@ function startSession() {
     return;
   }
 
-  if (el.shuffleInput.checked) {
-    cards = shuffle(cards);
-  }
+  if (el.shuffleInput.checked) cards = shuffle(cards);
 
   const limit = el.limitSelect.value;
-  if (limit !== "all") {
-    cards = cards.slice(0, Number(limit));
-  }
+  if (limit !== "all") cards = cards.slice(0, Number(limit));
 
   state.sessionCards = cards;
   state.currentIndex = 0;
@@ -434,10 +635,9 @@ function startSession() {
   state.knownIds = new Set();
   state.againIds = new Set();
 
-  el.studyPanel.classList.add("active");
   el.sessionTitle.textContent = `${cards.length} thẻ đang học`;
   renderCard();
-  el.studyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector("#studyPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function reviewAgainCards() {
@@ -463,8 +663,8 @@ function renderCard() {
   if (!card) {
     el.cardDeck.textContent = "";
     el.cardFront.textContent = "Chưa có thẻ";
-    el.cardSub.textContent = "";
-    el.cardHint.textContent = "Hãy tải data và bắt đầu học.";
+    el.cardSub.textContent = state.rawCards.length ? "Chọn filter rồi bấm Bắt đầu học." : "Vào Google Sheet hoặc Raw Data để tải deck.";
+    el.cardHint.textContent = "Flashcard có 3 mặt: từ → nghĩa → ví dụ.";
     updateStats();
     return;
   }
@@ -476,7 +676,6 @@ function renderCard() {
   el.cardFront.textContent = face.title;
   el.cardSub.textContent = face.body;
   el.cardHint.textContent = face.hint || "Bấm thẻ hoặc Space để lật mặt";
-
   updateStats();
 }
 
@@ -485,17 +684,17 @@ function buildFaces(card) {
     {
       title: card.front || "(trống)",
       body: [card.reading, card.tags?.length ? `#${card.tags.join(" #")}` : ""].filter(Boolean).join("\n"),
-      hint: "Mặt 1: nhớ nghĩa / cách dùng trước khi lật",
+      hint: "Mặt 1: nhìn từ/mẫu câu và tự nhớ nghĩa.",
     },
     {
       title: card.meaning_vi || "Chưa có nghĩa Việt",
       body: [card.meaning_jp, card.note].filter(Boolean).join("\n"),
-      hint: "Mặt 2: nghĩa",
+      hint: "Mặt 2: nghĩa Việt / giải thích Nhật / note.",
     },
     {
       title: card.example_jp || card.front || "Chưa có ví dụ",
       body: card.example_vi || card.note || "",
-      hint: "Mặt 3: ví dụ Nhật + dịch",
+      hint: "Mặt 3: ví dụ Nhật + dịch Việt.",
     },
   ];
 }
@@ -555,6 +754,7 @@ function markCard(type) {
     updatedAt: new Date().toISOString(),
     front: card.front,
     deck: card.deck,
+    source: state.sourceName,
   };
   saveProgress();
   updateStats();
@@ -578,19 +778,35 @@ function resetProgress() {
 }
 
 function exportProgress() {
-  const payload = {
+  downloadJson(`flashcard-progress-${today()}.json`, {
     exportedAt: new Date().toISOString(),
     appVersion: APP_VERSION,
+    source: state.sourceName,
     progress: state.progress,
-  };
+  });
+}
 
+function exportCurrentDeck() {
+  if (!state.rawCards.length) {
+    log("Chưa có deck để export. Hãy tải Google Sheet, raw hoặc data mẫu trước.");
+    return;
+  }
+
+  downloadJson(`flashcard-deck-${today()}.json`, state.rawCards);
+}
+
+function downloadJson(filename, payload) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `flashcard-progress-${new Date().toISOString().slice(0, 10)}.json`;
+  anchor.download = filename;
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function shuffle(items) {
@@ -604,7 +820,7 @@ function shuffle(items) {
 
 function log(message) {
   const time = new Date().toLocaleTimeString("ja-JP", { hour12: false });
-  el.logBox.textContent = `[${time}] ${message}\n${el.logBox.textContent}`.slice(0, 5000);
+  el.logBox.textContent = `[${time}] ${message}\n${el.logBox.textContent}`.slice(0, 6000);
 }
 
 function logError(error) {
