@@ -51,8 +51,8 @@ test.describe('flashcard smoke', () => {
     expect(errors, errors.join('\n')).toEqual([]);
   });
 
-  test('mobile viewport has no horizontal overflow and drawer opens', async ({ page, isMobile }) => {
-    test.skip(!isMobile, 'mobile-only layout check');
+  test('mobile viewport has no horizontal overflow and drawer opens', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-iphone', 'mobile-only layout check');
     const errors = collectPageErrors(page);
     await waitForStableFlashcard(page);
 
