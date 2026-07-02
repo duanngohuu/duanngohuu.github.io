@@ -89,10 +89,6 @@
     };
     if (e?.start) e.start.onclick = start;
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
-    }
-
     setOfflineMode(!navigator.onLine);
     renderOfflineList();
   }
