@@ -1,21 +1,21 @@
 {
-  "version": "2026.07.02-static-lessons",
-  "title": "Duan Flashcard Library",
+  "version": "2026.07.02-n2-reading-400",
+  "title": "400 từ vựng hay xuất hiện trong bài trường văn N2",
   "lessonSize": 50,
   "courses": [
     {
-      "id": "sample",
-      "title": "Bài mẫu",
-      "description": "Data mẫu để test giao diện. Sau này thay bằng nội dung Duan gửi.",
+      "id": "n2-reading-400",
+      "title": "400 từ vựng N2 - Trường văn",
+      "description": "Data từ ảnh bảng 400 từ vựng hay xuất hiện trong bài trường văn N2.",
       "lessons": [
-        {
-          "id": "sample-001",
-          "title": "Bài mẫu 01",
-          "description": "10 thẻ mẫu Business/IT Japanese",
-          "path": "./data/sample-001.json",
-          "count": 10,
-          "tags": ["business", "it", "n2"]
-        }
+        { "id": "n2-reading-001-050", "title": "Bài 01 · STT 1-50", "description": "50 từ đầu tiên", "path": "./data/n2-reading-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "reading"] },
+        { "id": "n2-reading-051-100", "title": "Bài 02 · STT 51-100", "description": "Từ 51 đến 100", "path": "./data/n2-reading-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "tags": ["n2", "reading"] },
+        { "id": "n2-reading-101-150", "title": "Bài 03 · STT 101-150", "description": "Từ 101 đến 150", "path": "./data/n2-reading-101-150.tsv", "count": 50, "startNo": 101, "endNo": 150, "tags": ["n2", "reading"] },
+        { "id": "n2-reading-151-200", "title": "Bài 04 · STT 151-200", "description": "Từ 151 đến 200", "path": "./data/n2-reading-151-200.tsv", "count": 50, "startNo": 151, "endNo": 200, "tags": ["n2", "reading"] },
+        { "id": "n2-reading-201-250", "title": "Bài 05 · STT 201-250", "description": "Từ 201 đến 250", "path": "./data/n2-reading-201-250.tsv", "count": 50, "startNo": 201, "endNo": 250, "tags": ["n2", "reading"] },
+        { "id": "n2-reading-251-300", "title": "Bài 06 · STT 251-300", "description": "Từ 251 đến 300", "path": "./data/n2-reading-251-300.tsv", "count": 50, "startNo": 251, "endNo": 300, "tags": ["n2", "reading"] },
+        { "id": "n2-reading-301-350", "title": "Bài 07 · STT 301-350", "description": "Từ 301 đến 350", "path": "./data/n2-reading-301-350.tsv", "count": 50, "startNo": 301, "endNo": 350, "tags": ["n2", "reading"] },
+        { "id": "n2-reading-351-400", "title": "Bài 08 · STT 351-400", "description": "Từ 351 đến 400", "path": "./data/n2-reading-351-400.tsv", "count": 50, "startNo": 351, "endNo": 400, "tags": ["n2", "reading"] }
       ]
     }
   ]
