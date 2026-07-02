@@ -2,6 +2,15 @@
   const KEY = 'fc_offline_recent_lessons_v1';
   const MAX = 10;
 
+  function cleanupOldServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations?.().then(regs => regs.forEach(r => r.unregister())).catch(() => {});
+    }
+    if ('caches' in window) {
+      caches.keys().then(keys => keys.filter(k => k.startsWith('duan-flashcard')).forEach(k => caches.delete(k))).catch(() => {});
+    }
+  }
+
   function getSaved() {
     try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; }
   }
@@ -93,6 +102,7 @@
     renderOfflineList();
   }
 
+  cleanupOldServiceWorker();
   buildUi();
   window.addEventListener('online', () => setOfflineMode(false));
   window.addEventListener('offline', () => setOfflineMode(true));
