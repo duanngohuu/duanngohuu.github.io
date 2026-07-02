@@ -1,5 +1,4 @@
-const CACHE='duan-flashcard-v1';
-const ASSETS=['./','./index.html','./static-style.css','./ui-fix.css','./sidebar-fix.css','./end-ux-fix.css','./polish.css','./switch-fix.css','./library-tabs.css','./status-filter.css','./offline-mode.css','./app-v2.js','./sidebar-fix.js','./switch-fix.js','./library-tabs.js','./status-filter.js','./offline-mode.js','./data/manifest.json'];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS.map(u=>new Request(u,{cache:'reload'})))).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
-self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(fetch(event.request).then(res=>{const copy=res.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return res}).catch(()=>caches.match(event.request).then(r=>r||caches.match('./index.html'))))});
+// Service worker disabled temporarily.
+// Offline lesson data still works through localStorage.
+self.addEventListener('install', event => self.skipWaiting());
+self.addEventListener('activate', event => self.clients.claim());
