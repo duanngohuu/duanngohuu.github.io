@@ -1,0 +1,51 @@
+no	front	reading	meaning_vi	han_viet	years
+101	議論	ぎろん	Nghị luận, tranh luận	NGHỊ LUẬN	2014,2018,2020
+102	討論	とうろん	Thảo luận, tranh luận	THẢO LUẬN	2015,2017,2023
+103	交渉	こうしょう	Đàm phán, thương lượng	GIAO THIỆP	2016,2019,2021
+104	合意	ごうい	Đồng thuận, thỏa thuận	HỢP Ý	2014,2018,2022
+105	決意	けつい	Quyết tâm, quyết định	QUYẾT Ý	2015,2020,2023
+106	方針	ほうしん	Phương châm, chính sách	PHƯƠNG CHÂM	2016,2017,2021
+107	計画	けいかく	Kế hoạch	KẾ HOẠCH	2014,2019,2022
+108	準備	じゅんび	Chuẩn bị	CHUẨN BỊ	2015,2018,2023
+109	実施	じっし	Thực thi, tiến hành	THỰC THI	2016,2020,2021
+110	実現	じつげん	Thực hiện, thực hiện được	THỰC HIỆN	2014,2017,2022
+111	達成	たっせい	Đạt được, hoàn thành	ĐẠT THÀNH	2015,2019,2023
+112	完成	かんせい	Hoàn thành, hoàn chỉnh	HOÀN THÀNH	2016,2018,2020
+113	進展	しんてん	Tiến triển, phát triển	TIẾN TRIỂN	2014,2017,2021
+114	変化	へんか	Biến đổi, thay đổi	BIẾN HÓA	2015,2020,2022
+115	変革	へんかく	Cải cách, biến đổi	BIẾN CÁCH	2016,2019,2023
+116	革新	かくしん	Cách tân, đổi mới	CÁCH TÂN	2014,2018,2021
+117	創造	そうぞう	Sáng tạo, tạo ra	SÁNG TẠO	2015,2017,2022
+118	開発	かいはつ	Phát triển, khai thác	KHAI PHÁT	2016,2020,2023
+119	技術	ぎじゅつ	Kỹ thuật, công nghệ	KỸ THUẬT	2014,2017,2020,2021
+120	科学	かがく	Khoa học	KHOA HỌC	2015,2019,2022
+121	社会	しゃかい	Xã hội	XÃ HỘI	2016,2018,2023
+122	経済	けいざい	Kinh tế	KINH TẾ	2014,2017,2020
+123	政治	せいじ	Chính trị	CHÍNH TRỊ	2015,2019,2021
+124	文化	ぶんか	Văn hóa	VĂN HÓA	2016,2018,2022
+125	歴史	れきし	Lịch sử	LỊCH SỬ	2014,2017,2023
+126	伝統	でんとう	Truyền thống	TRUYỀN THỐNG	2015,2020,2021
+127	習慣	しゅうかん	Tập quán, thói quen	TẬP QUÁN	2016,2019,2022
+128	価値	かち	Giá trị	GIÁ TRỊ	2014,2018,2023
+129	意味	いみ	Ý nghĩa	Ý NGHĨA	2015,2017,2020
+130	目安	めやす	Tiêu chuẩn, mốc tham chiếu	MỤC AN	2016,2019,2021
+131	基準	きじゅん	Tiêu chuẩn, chuẩn mực	CƠ CHUẨN	2014,2018,2022
+132	水準	すいじゅん	Mức độ, tiêu chuẩn	THỦY CHUẨN	2015,2017,2023
+133	程度	ていど	Mức độ, trình độ	TRÌNH ĐỘ	2016,2020,2021
+134	範囲	はんい	Phạm vi, giới hạn	PHẠM VI	2014,2019,2022
+135	限界	げんかい	Giới hạn, ranh giới	GIỚI HẠN	2015,2018,2023
+136	可能	かのう	Có thể, khả năng	KHẢ NĂNG	2016,2017,2020
+137	不可能	ふかのう	Không thể, bất khả thi	BẤT KHẢ NĂNG	2014,2019,2021
+138	必要	ひつよう	Cần thiết, tất yếu	CẦN THIẾT	2015,2018,2022
+139	重要	じゅうよう	Quan trọng, trọng yếu	TRỌNG YẾU	2016,2020,2023
+140	深刻	しんこく	Nghiêm trọng, sâu sắc	THÂM KHẮC	2014,2017,2021
+141	複雑	ふくざつ	Phức tạp	PHỨC TẠP	2015,2019,2022
+142	困難	こんなん	Cực kỳ khó khăn	CỰC KHÓ	2016,2018,2023
+143	簡単	かんたん	Đơn giản, dễ dàng	GIẢN ĐƠN	2014,2017,2020
+144	明確	めいかく	Rõ ràng, minh bạch	MINH XÁC	2015,2020,2021
+145	曖昧	あいまい	Mơ hồ, không rõ ràng	ÁM MUỘI	2016,2019,2022
+146	適切	てきせつ	Thích hợp, phù hợp	THÍCH THIẾT	2014,2018,2023
+147	適当	てきとう	Thích đáng, phù hợp	THÍCH ĐÁNG	2015,2017,2020
+148	正確	せいかく	Chính xác, đúng đắn	CHÍNH XÁC	2016,2019,2021
+149	詳細	しょうさい	Chi tiết, tỉ mỉ	TƯỜNG TẾ	2014,2018,2022
+150	概要	がいよう	Khái quát, tóm tắt	KHÁI YẾU	2015,2020,2023
