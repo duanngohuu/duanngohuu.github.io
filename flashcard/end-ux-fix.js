@@ -1,6 +1,6 @@
 (() => {
   function bootEndUxFix() {
-    if (!window.state || !window.el) return setTimeout(bootEndUxFix, 120);
+    if (typeof state === 'undefined' || typeof el === 'undefined') return setTimeout(bootEndUxFix, 120);
 
     let meta = document.querySelector('#cardMeta');
     if (!meta) {
@@ -14,7 +14,7 @@
     const tagText = (c) => (c?.tags || []).length ? '#' + c.tags.join(' #') : '';
     const setMeta = (text) => { meta.textContent = text || ''; };
 
-    window.renderCard = function renderCardFixed() {
+    renderCard = function renderCardFixed() {
       const c = current();
       if (!c) {
         el.title.textContent = state.currentLesson ? 'Chọn range rồi bấm Bắt đầu học' : 'Chọn bài học';
@@ -97,7 +97,7 @@
       setTimeout(() => layer.remove(), 2400);
     }
 
-    window.completeSession = function completeSessionFixed() {
+    completeSession = function completeSessionFixed() {
       if (state.completed) return;
       state.completed = true;
       fireworkBurst();
@@ -105,7 +105,7 @@
       log('Hết phiên học. Bấm Học lại từ đầu để quay về thẻ 1.');
     };
 
-    window.next = function nextFixed() {
+    next = function nextFixed() {
       if (!state.session.length) return;
       if (state.index >= state.session.length - 1) return completeSession();
       state.index += 1;
@@ -114,8 +114,6 @@
     };
 
     el.next.onclick = next;
-    el.flip.onclick = flip;
-    el.prev.onclick = prev;
     renderCard();
   }
 
