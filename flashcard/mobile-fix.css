@@ -1,0 +1,182 @@
+/* Mobile overflow fixes for long Japanese sentences */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  position: relative;
+}
+
+.app-shell,
+main,
+.tab-panel,
+.grid,
+.panel,
+.glass-card,
+.study-panel,
+.card,
+.card-face,
+.hero,
+.hero-copy,
+.section-title,
+.study-header,
+.controls,
+.form-grid,
+.guide-card,
+.log-panel {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.grid,
+.two-cols,
+.form-grid,
+.status-grid,
+.guide-grid {
+  min-width: 0;
+}
+
+.grid > *,
+.two-cols > *,
+.form-grid > *,
+.status-grid > *,
+.guide-grid > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.card {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#cardFront,
+.card-sub,
+#cardDeck,
+#cardHint,
+.hero h1,
+.hero p,
+.metric strong,
+.code-block,
+.log,
+textarea,
+input,
+select,
+button,
+.badge {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-break: anywhere;
+}
+
+#cardFront {
+  white-space: normal;
+  text-wrap: balance;
+  font-size: clamp(1.58rem, 6.4vw, 4.1rem);
+  letter-spacing: -0.045em;
+}
+
+.card-sub {
+  white-space: pre-wrap;
+  font-size: clamp(.98rem, 3.2vw, 1.34rem);
+}
+
+@media (max-width: 980px) {
+  .two-cols,
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .status-grid,
+  .guide-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    width: 100%;
+    max-width: 100vw;
+    padding-inline: 12px;
+  }
+
+  .topbar {
+    width: 100%;
+    max-width: calc(100vw - 24px);
+  }
+
+  .panel,
+  .glass-card {
+    width: 100%;
+  }
+
+  .hero {
+    padding: 20px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 10vw, 3.15rem);
+    letter-spacing: -0.065em;
+  }
+
+  .card {
+    min-height: 310px;
+    padding: 18px;
+    border-radius: 26px;
+  }
+
+  #cardFront {
+    font-size: clamp(1.45rem, 7vw, 2.45rem);
+    line-height: 1.16;
+    letter-spacing: -0.035em;
+  }
+
+  .card-sub {
+    font-size: clamp(.92rem, 4vw, 1.1rem);
+    line-height: 1.55;
+  }
+
+  .eyebrow {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    letter-spacing: .08em;
+  }
+
+  .card-actions button,
+  .compact-row button {
+    width: 100%;
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell {
+    padding-inline: 10px;
+  }
+
+  .topbar {
+    max-width: calc(100vw - 20px);
+  }
+
+  .range-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .hero h1 {
+    font-size: clamp(1.85rem, 10.5vw, 2.6rem);
+  }
+
+  #cardFront {
+    font-size: clamp(1.32rem, 6.8vw, 2.05rem);
+  }
+
+  .card {
+    padding: 16px;
+  }
+}
