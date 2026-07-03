@@ -11,7 +11,7 @@
       if (!el) return;
       el.classList.remove('fc-animating', ...CARD_CLASSES);
     }
-    function fx(name, ms = 390) {
+    function fx(name, ms = 430) {
       const el = card();
       if (!el) return;
       clearFx(el);
@@ -22,6 +22,7 @@
         updateIdle();
       }, ms);
     }
+    function flipFx() { fx('fc-flip', 540); }
     function updateIdle() {
       const el = card();
       if (!el) return;
@@ -33,8 +34,8 @@
       if (pos !== lastPos && running()) {
         const [now] = pos.split('/').map(n => parseInt(n, 10) || 0);
         const [old] = lastPos.split('/').map(n => parseInt(n, 10) || 0);
-        if (now > old || (old > 1 && now === 1)) fx('fc-next');
-        else if (now < old) fx('fc-prev');
+        if (now > old || (old > 1 && now === 1)) fx('fc-next', 430);
+        else if (now < old) fx('fc-prev', 430);
       }
       lastPos = pos;
       updateIdle();
@@ -47,30 +48,40 @@
       };
       window.render.__card3dWrapped = true;
     }
+    const oldFlip = window.flip;
+    if (typeof oldFlip === 'function' && !oldFlip.__card3dWrapped) {
+      window.flip = function card3dFlip() {
+        flipFx();
+        setTimeout(() => oldFlip(), 115);
+      };
+      window.flip.__card3dWrapped = true;
+      if (e.flip) e.flip.onclick = window.flip;
+      if (e.card) e.card.onclick = window.flip;
+    }
     window.addEventListener('click', ev => {
       if (ev.target.closest('#startBtn,#finishRestartBtn,#finishKnownBtn,#finishAgainBtn')) {
-        setTimeout(() => fx('fc-pop', 390), 20);
+        setTimeout(() => fx('fc-pop', 430), 20);
         return;
       }
       if (ev.target.closest('#prevBtn')) {
-        fx('fc-prev');
+        fx('fc-prev', 430);
         return;
       }
       if (ev.target.closest('#knownBtn,#againBtn')) {
-        fx('fc-next');
+        fx('fc-next', 430);
         return;
       }
       if (ev.target.closest('#flipBtn')) {
-        fx('fc-flip', 330);
+        flipFx();
         return;
       }
       if (ev.target.closest('#card')) {
-        if (!running()) fx(st.lesson ? 'fc-pop' : 'fc-tap', st.lesson ? 390 : 260);
-        else fx('fc-flip', 330);
+        if (!running()) fx(st.lesson ? 'fc-pop' : 'fc-tap', st.lesson ? 430 : 260);
+        else flipFx();
       }
     }, true);
     document.addEventListener('click', ev => {
-      if (ev.target.closest('.lesson-btn')) setTimeout(() => fx('fc-pop', 390), 180);
+      if (ev.target.closest('.lesson-btn')) setTimeout(() => fx('fc-pop', 430), 180);
     }, true);
     updateIdle();
     try { if (typeof log === 'function') log('3D card motion loaded.'); } catch (_) {}
