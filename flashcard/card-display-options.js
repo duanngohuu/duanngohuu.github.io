@@ -92,7 +92,7 @@
     function meaningSide(c) {
       sideClass('meaning');
       e.front.textContent = c.meaning_vi || '';
-      e.sub.textContent = [c.reading ? 'Cách đọc: ' + c.reading : '', c.han_viet ? 'Âm Hán Việt: ' + c.han_viet : ''].filter(Boolean).join('\n');
+      e.sub.textContent = [c.reading || '', c.han_viet || ''].filter(Boolean).join('\n');
       e.hint.textContent = 'Mặt nghĩa: bấm lật để xem lại từ.';
       $('#cardMeta') && ($('#cardMeta').textContent = c.years ? 'Năm: ' + c.years : '#n2');
     }
