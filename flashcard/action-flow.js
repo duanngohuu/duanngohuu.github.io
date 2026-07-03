@@ -9,6 +9,12 @@
     function currentCard() {
       return st.session?.[st.i] || null;
     }
+    function setReviewMode(mode) {
+      st.reviewMode = mode || 'all';
+    }
+    function isKnownReview() {
+      return st.reviewMode === 'known' && !!st.session?.length && !st.done;
+    }
     function moveForwardWithLoop() {
       if (!st.session?.length || st.done) return;
       if (st.i >= st.session.length - 1) {
@@ -19,6 +25,14 @@
       }
       st.face = 0;
       if (typeof render === 'function') render();
+    }
+    function continueOrFinish() {
+      if (!st.session?.length || st.done) return;
+      if (st.i >= st.session.length - 1 && !loopOn()) {
+        if (typeof window.finishSession === 'function') window.finishSession();
+        return;
+      }
+      moveForwardWithLoop();
     }
     function polishActions() {
       if (e.next) {
@@ -31,6 +45,15 @@
         e.flip.classList.add('primary');
       }
       const c = currentCard();
+      if (isKnownReview() && e.ok && c && st.known?.has(c.id)) {
+        e.ok.textContent = 'Tiếp tục';
+        e.ok.disabled = false;
+        e.ok.classList.remove('ok');
+        e.ok.classList.add('primary');
+      } else if (e.ok) {
+        if (e.ok.textContent.trim() === 'Tiếp tục') e.ok.textContent = 'Đã nhớ';
+        e.ok.classList.add('ok');
+      }
       if (loopOn() && e.bad && c && st.again?.has(c.id) && !st.done) {
         e.bad.disabled = false;
       }
@@ -44,6 +67,20 @@
       window.render.__actionFlowWrapped = true;
     }
     document.addEventListener('click', ev => {
+      if (ev.target.closest('#startBtn,#finishRestartBtn')) setReviewMode('all');
+      if (ev.target.closest('#finishKnownBtn,#knownText')) setReviewMode('known');
+      if (ev.target.closest('#finishAgainBtn,#againText,#reviewBtn')) setReviewMode('again');
+      const ok = ev.target.closest('#knownBtn');
+      if (ok) {
+        const c = currentCard();
+        if (isKnownReview() && c && st.known?.has(c.id)) {
+          ev.preventDefault();
+          ev.stopImmediatePropagation();
+          continueOrFinish();
+          requestAnimationFrame(polishActions);
+          return;
+        }
+      }
       const bad = ev.target.closest('#againBtn');
       if (bad) {
         const c = currentCard();
@@ -55,7 +92,7 @@
           return;
         }
       }
-      if (ev.target.closest('#knownBtn,#againBtn,#flipBtn,#prevBtn,#loopInput')) {
+      if (ev.target.closest('#knownBtn,#againBtn,#flipBtn,#prevBtn,#loopInput,#finishKnownBtn,#knownText')) {
         requestAnimationFrame(polishActions);
         setTimeout(polishActions, 80);
       }
@@ -63,6 +100,7 @@
     document.addEventListener('change', ev => {
       if (ev.target && ev.target.id === 'loopInput') setTimeout(polishActions, 0);
     }, true);
+    setReviewMode('all');
     polishActions();
     try { if (typeof log === 'function') log('Action flow loaded.'); } catch (_) {}
   } catch (error) {
