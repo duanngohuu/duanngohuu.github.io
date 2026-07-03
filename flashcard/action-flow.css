@@ -1,3 +1,3 @@
-/* Action flow: no manual Next button. Flip takes Next position. */
+/* Action flow: no manual Next button. Mark buttons follow thumb habit. */
 #nextBtn{display:none!important}
-#actions{display:flex!important;flex-wrap:wrap;gap:9px}#flipBtn{order:1!important}#prevBtn{order:0!important}#againBtn{order:2!important}#knownBtn{order:3!important}#actions button{flex:1 1 calc(50% - 9px)}@media(max-width:520px){#actions button{flex:1 1 calc(50% - 9px)!important}#flipBtn{background:linear-gradient(135deg,var(--brand),var(--cyan))!important;color:white!important;border-color:transparent!important}}
+#actions{display:flex!important;flex-wrap:wrap;gap:9px}#prevBtn{order:0!important}#knownBtn{order:1!important}#flipBtn{order:2!important}#againBtn{order:3!important}#actions button{flex:1 1 calc(50% - 9px)}@media(max-width:520px){#actions button{flex:1 1 calc(50% - 9px)!important}#flipBtn{background:linear-gradient(135deg,var(--brand),var(--cyan))!important;color:white!important;border-color:transparent!important}}
