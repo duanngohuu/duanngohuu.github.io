@@ -3,10 +3,40 @@
   try {
     if (!window.st || !window.e) return;
     const $ = s => document.querySelector(s);
+    const MIX_KEY = 'fc_vocab_mix_pick_v1';
     function isRunning() { return !!(st.session && st.session.length && !st.done); }
     function setStudy(on) { document.body.classList.toggle('study-active', !!on); }
     function setLessonSelected() { document.body.classList.toggle('has-selected-lesson', !!st.lesson); }
     function openLessonMenu() { document.body.classList.add('library-open'); }
+    function shuffleCopy(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+    function ensureMixToggle() {
+      let input = $('#mixInput');
+      if (!input) {
+        const loopLabel = $('#loopInput')?.closest('label');
+        const label = document.createElement('label');
+        label.innerHTML = '<input id="mixInput" type="checkbox"> Trộn từ';
+        if (loopLabel) loopLabel.after(label);
+        else document.querySelector('.card-options')?.appendChild(label);
+        input = $('#mixInput');
+      }
+      if (!input || input.dataset.bound === '1') return input;
+      input.dataset.bound = '1';
+      try { input.checked = localStorage.getItem(MIX_KEY) === 'on'; } catch (_) { input.checked = false; }
+      input.onchange = () => {
+        try { localStorage.setItem(MIX_KEY, input.checked ? 'on' : 'off'); } catch (_) {}
+      };
+      return input;
+    }
+    function shouldMixPick() { return !!$('#mixInput')?.checked; }
+    function buildMixedSession() {
+      let a = Math.max(1, +e.from.value || 1);
+      let b = Math.min(st.cards.length, +e.to.value || st.cards.length);
+      if (a > b) [a, b] = [b, a];
+      let arr = st.cards.filter(c => c.no >= a && c.no <= b);
+      arr = shuffleCopy(arr);
+      if (e.limit.value !== 'all') arr = arr.slice(0, +e.limit.value);
+      return arr;
+    }
     function ensureSelectedLessonLabel() {
       const controls = document.querySelector('.controls');
       if (!controls) return null;
@@ -52,6 +82,7 @@
       e.title.closest('div')?.classList.toggle('title-empty', hide);
     }
     function renameLabels() {
+      ensureMixToggle();
       const shuffle = $('#shuffleInput');
       const shuffleLabel = shuffle?.closest('label');
       if (shuffle && shuffleLabel && !shuffleLabel.textContent.includes('Ngẫu nhiên')) {
@@ -112,7 +143,20 @@
     if (typeof oldStart === 'function' && !oldStart.__studySmallWrapped) {
       window.start = function studySmallStart() {
         setStudy(true);
-        oldStart();
+        if (shouldMixPick()) {
+          if (!st.cards.length) return;
+          document.querySelector('#finishModal')?.classList.remove('on');
+          st.done = false;
+          st.finishShown = false;
+          st.session = buildMixedSession();
+          st.i = 0;
+          st.face = 0;
+          if (typeof saveLast === 'function') saveLast();
+          if (typeof render === 'function') render();
+          try { if (typeof log === 'function') log('Bắt đầu học trộn ' + st.session.length + ' thẻ.'); } catch (_) {}
+        } else {
+          oldStart();
+        }
         refreshSoon('all');
         setTimeout(() => document.querySelector('.panel .study-head')?.scrollIntoView({behavior:'smooth',block:'start'}), 60);
       };
