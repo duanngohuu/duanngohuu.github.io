@@ -5,6 +5,7 @@
     const $ = s => document.querySelector(s);
     function isRunning() { return !!(st.session && st.session.length && !st.done); }
     function setStudy(on) { document.body.classList.toggle('study-active', !!on); }
+    function setLessonSelected() { document.body.classList.toggle('has-selected-lesson', !!st.lesson); }
     function ensureSelectedLessonLabel() {
       const controls = document.querySelector('.controls');
       if (!controls) return null;
@@ -24,6 +25,7 @@
       if (!box || !text) return;
       text.textContent = st.lesson?.title || 'Chưa chọn bài';
       box.classList.toggle('has-lesson', !!st.lesson);
+      setLessonSelected();
     }
     function normalizeFlashcardTitle() {
       if (!e.title) return;
@@ -98,6 +100,7 @@
     if (typeof oldSelectLesson === 'function' && !oldSelectLesson.__studySmallWrapped) {
       window.selectLesson = async function studySmallSelectLesson(id) {
         const res = await oldSelectLesson(id);
+        setLessonSelected();
         refreshSoon('all');
         return res;
       };
