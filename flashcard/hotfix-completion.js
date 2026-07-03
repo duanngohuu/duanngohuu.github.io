@@ -6,16 +6,20 @@
     const logSafe = msg => { try { if (typeof log === 'function') log(msg); } catch (_) {} };
 
     function ensureLoopToggle() {
-      if (document.querySelector('#loopInput')) return;
-      const reading = document.querySelector('#readingInput');
-      const anchor = reading?.closest('label') || document.querySelector('#shuffleInput')?.closest('label');
-      if (!anchor) return;
-      const label = document.createElement('label');
-      label.innerHTML = '<input id="loopInput" type="checkbox"> Lặp';
-      anchor.after(label);
-      const input = label.querySelector('input');
+      let input = document.querySelector('#loopInput');
+      if (!input) {
+        const reading = document.querySelector('#readingInput');
+        const anchor = reading?.closest('label') || document.querySelector('#shuffleInput')?.closest('label');
+        if (!anchor) return;
+        const label = document.createElement('label');
+        label.innerHTML = '<input id="loopInput" type="checkbox"> Lặp';
+        anchor.after(label);
+        input = label.querySelector('input');
+      }
       try { input.checked = localStorage.getItem(LOOP_KEY) === 'on'; } catch (_) {}
       st.loop = input.checked;
+      if (input.dataset.loopBound === '1') return;
+      input.dataset.loopBound = '1';
       input.onchange = () => {
         st.loop = input.checked;
         try { localStorage.setItem(LOOP_KEY, st.loop ? 'on' : 'off'); } catch (_) {}
