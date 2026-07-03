@@ -5,6 +5,33 @@
     const $ = s => document.querySelector(s);
     function isRunning() { return !!(st.session && st.session.length && !st.done); }
     function setStudy(on) { document.body.classList.toggle('study-active', !!on); }
+    function ensureSelectedLessonLabel() {
+      const controls = document.querySelector('.controls');
+      if (!controls) return null;
+      let box = $('#selectedLessonBox');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'selectedLessonBox';
+        box.className = 'selected-lesson-box';
+        box.innerHTML = '<span>Bài đã chọn</span><strong id="selectedLessonText">Chưa chọn bài</strong>';
+        controls.prepend(box);
+      }
+      return box;
+    }
+    function updateSelectedLessonLabel() {
+      const box = ensureSelectedLessonLabel();
+      const text = $('#selectedLessonText');
+      if (!box || !text) return;
+      text.textContent = st.lesson?.title || 'Chưa chọn bài';
+      box.classList.toggle('has-lesson', !!st.lesson);
+    }
+    function normalizeFlashcardTitle() {
+      if (!e.title) return;
+      if (!st.lesson) e.title.textContent = 'Chọn bài học';
+      else if (!st.session?.length) e.title.textContent = 'Sẵn sàng học';
+      else if (st.done) e.title.textContent = 'Hoàn thành phiên học';
+      else e.title.textContent = 'Thẻ hiện tại';
+    }
     function renameLabels() {
       const shuffle = $('#shuffleInput');
       const shuffleLabel = shuffle?.closest('label');
@@ -37,6 +64,8 @@
       if (knownBtn) knownBtn.textContent = 'Học thẻ đã nhớ';
     }
     function refresh(mode) {
+      updateSelectedLessonLabel();
+      normalizeFlashcardTitle();
       renameLabels();
       paintActiveStats(mode);
       polishModal();
@@ -65,6 +94,15 @@
       };
       window.render.__studySmallWrapped = true;
     }
+    const oldSelectLesson = window.selectLesson;
+    if (typeof oldSelectLesson === 'function' && !oldSelectLesson.__studySmallWrapped) {
+      window.selectLesson = async function studySmallSelectLesson(id) {
+        const res = await oldSelectLesson(id);
+        refreshSoon('all');
+        return res;
+      };
+      window.selectLesson.__studySmallWrapped = true;
+    }
     document.addEventListener('click', ev => {
       if (ev.target.closest('#startBtn,#finishRestartBtn,#finishKnownBtn,#finishAgainBtn')) {
         setStudy(true);
@@ -77,7 +115,7 @@
       if (ev.target.closest('#posText')) refreshSoon('all');
       if (ev.target.closest('#knownText')) refreshSoon('known');
       if (ev.target.closest('#againText,#reviewBtn')) refreshSoon('again');
-      if (ev.target.closest('#knownBtn,#againBtn,#nextBtn,#prevBtn,#flipBtn')) {
+      if (ev.target.closest('#knownBtn,#againBtn,#nextBtn,#prevBtn,#flipBtn,.lesson-btn,.course-btn')) {
         refreshSoon();
         setTimeout(() => { if (st.done) { setStudy(false); polishModal(); } }, 150);
       }
