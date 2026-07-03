@@ -67,6 +67,31 @@
       });
     }
 
+    function moveYearMetaNearCard() {
+      const meta = document.querySelector('#cardMeta');
+      const card = document.querySelector('#card');
+      if (meta && card && card.parentNode && meta.nextElementSibling !== card) {
+        card.parentNode.insertBefore(meta, card);
+      }
+    }
+
+    function currentYearText() {
+      try {
+        const c = st?.session?.[st.i];
+        return c?.years ? 'Năm: ' + c.years : '';
+      } catch (_) {
+        return '';
+      }
+    }
+
+    function updateYearMeta() {
+      const meta = document.querySelector('#cardMeta');
+      if (!meta) return;
+      const text = currentYearText();
+      meta.textContent = text || '';
+      meta.style.display = text ? 'inline-flex' : 'none';
+    }
+
     function addStatusFilter() {
       if (typeof st === 'undefined' || typeof e === 'undefined') return;
       st.featureFilter = st.featureFilter || 'all';
@@ -93,6 +118,7 @@
         e.known?.classList.toggle('status-active', st.featureFilter === 'known');
         e.again?.classList.toggle('status-active', st.featureFilter === 'again');
         paintCard();
+        updateYearMeta();
       }
 
       function apply(mode) {
@@ -101,14 +127,18 @@
         st.session = filtered(mode);
         st.i = 0;
         st.face = 0;
+        st.done = false;
+        st.finishShown = false;
         if (typeof render === 'function') render();
         updateActive();
         logSafe('Filter: ' + (mode === 'all' ? 'All' : mode === 'known' ? 'Biết' : 'Chưa nhớ') + ' · ' + st.session.length + ' thẻ');
       }
 
+      window.applyStatusFilter = apply;
       e.pos?.addEventListener('click', () => apply('all'));
       e.known?.addEventListener('click', () => apply('known'));
       e.again?.addEventListener('click', () => apply('again'));
+      if (e.review) e.review.onclick = () => apply('again');
 
       try {
         if (typeof render === 'function' && !render.__featureWrapped) {
@@ -127,6 +157,7 @@
     addTapFeedback();
     renameEmergencyBrand();
     addLibraryTabs();
+    moveYearMetaNearCard();
     addStatusFilter();
     logSafe('Stable features loaded.');
   } catch (error) {
