@@ -16,6 +16,10 @@
       const c = currentCard();
       return !!(c && st.known?.has(c.id) && !!st.session?.length && !st.done);
     }
+    function isAgainCard() {
+      const c = currentCard();
+      return !!(c && st.again?.has(c.id) && !!st.session?.length && !st.done);
+    }
     function moveForwardWithLoop() {
       if (!st.session?.length || st.done) return;
       if (st.i >= st.session.length - 1) {
@@ -45,7 +49,6 @@
         e.flip.classList.remove('secondary');
         e.flip.classList.add('primary');
       }
-      const c = currentCard();
       if (isKnownCard() && e.ok) {
         e.ok.textContent = 'Tiếp tục';
         e.ok.disabled = false;
@@ -56,8 +59,15 @@
         e.ok.classList.remove('primary');
         e.ok.classList.add('ok');
       }
-      if (loopOn() && e.bad && c && st.again?.has(c.id) && !st.done) {
+      if (isAgainCard() && e.bad) {
+        e.bad.textContent = 'Tiếp tục';
         e.bad.disabled = false;
+        e.bad.classList.remove('bad');
+        e.bad.classList.add('primary');
+      } else if (e.bad) {
+        if (e.bad.textContent.trim() === 'Tiếp tục') e.bad.textContent = 'Chưa nhớ';
+        e.bad.classList.remove('primary');
+        e.bad.classList.add('bad');
       }
     }
     const oldRender = window.render;
@@ -73,27 +83,22 @@
       if (ev.target.closest('#finishKnownBtn,#knownText')) setReviewMode('known');
       if (ev.target.closest('#finishAgainBtn,#againText,#reviewBtn')) setReviewMode('again');
       const ok = ev.target.closest('#knownBtn');
-      if (ok) {
-        if (isKnownCard()) {
-          ev.preventDefault();
-          ev.stopImmediatePropagation();
-          continueOrFinish();
-          requestAnimationFrame(polishActions);
-          return;
-        }
+      if (ok && isKnownCard()) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        continueOrFinish();
+        requestAnimationFrame(polishActions);
+        return;
       }
       const bad = ev.target.closest('#againBtn');
-      if (bad) {
-        const c = currentCard();
-        if (loopOn() && c && st.again?.has(c.id) && !st.done) {
-          ev.preventDefault();
-          ev.stopImmediatePropagation();
-          moveForwardWithLoop();
-          requestAnimationFrame(polishActions);
-          return;
-        }
+      if (bad && isAgainCard()) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        continueOrFinish();
+        requestAnimationFrame(polishActions);
+        return;
       }
-      if (ev.target.closest('#knownBtn,#againBtn,#flipBtn,#prevBtn,#loopInput,#finishKnownBtn,#knownText')) {
+      if (ev.target.closest('#knownBtn,#againBtn,#flipBtn,#prevBtn,#loopInput,#finishKnownBtn,#finishAgainBtn,#knownText,#againText,#reviewBtn')) {
         requestAnimationFrame(polishActions);
         setTimeout(polishActions, 80);
       }
