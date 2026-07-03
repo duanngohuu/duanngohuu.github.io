@@ -11,14 +11,29 @@
     function load() { try { return localStorage.getItem(AUTO_KEY) === 'on'; } catch (_) { return false; } }
     function currentCard() { return st.session?.[st.i] || null; }
     function autoOn() { return !!$('#autoInput')?.checked; }
+    function autoFocusOn() { return autoOn() && !!st.session?.length && !st.done; }
     function active() {
-      return autoOn() && !!st.session?.length && !st.done && !document.body.classList.contains('force-card-focus');
+      return autoFocusOn() && !document.body.classList.contains('force-card-focus');
     }
     function clearTimers() {
       clearTimeout(tFlip);
       clearTimeout(tMove);
       tFlip = 0;
       tMove = 0;
+    }
+    function ensureBanner() {
+      let banner = $('#autoStudyBanner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'autoStudyBanner';
+        banner.textContent = '▶ Đang tự động lật thẻ · 5 giây mặt đầu · 5 giây mặt sau';
+        document.body.prepend(banner);
+      }
+      return banner;
+    }
+    function updateFocus() {
+      ensureBanner();
+      document.body.classList.toggle('auto-card-focus', autoFocusOn());
     }
     function ensureToggle() {
       let input = $('#autoInput');
@@ -34,10 +49,12 @@
         input.dataset.autoBound = '1';
         input.onchange = () => {
           save(input.checked);
+          updateFocus();
           if (input.checked) scheduleAuto();
           else clearTimers();
         };
       }
+      updateFocus();
       return input;
     }
     function moveDirect() {
@@ -47,11 +64,13 @@
         else {
           if (typeof window.finishSession === 'function') window.finishSession();
           else { st.done = true; if (typeof render === 'function') render(); }
+          updateFocus();
           return;
         }
       } else st.i += 1;
       st.face = 0;
       if (typeof render === 'function') render();
+      updateFocus();
     }
     function autoMove() {
       if (!active()) return;
@@ -60,9 +79,11 @@
       if (st.known?.has(c.id) || st.again?.has(c.id)) moveDirect();
       else if (typeof window.mark === 'function') window.mark('again');
       else moveDirect();
+      updateFocus();
     }
     function scheduleAuto() {
       ensureToggle();
+      updateFocus();
       clearTimers();
       if (!active()) return;
       if (e.hint) e.hint.textContent = (e.hint.textContent || '') + '  Auto: 5s/mặt.';
@@ -71,6 +92,7 @@
         internalFlip = true;
         st.face = 1;
         if (typeof render === 'function') render();
+        updateFocus();
         if (e.hint) e.hint.textContent = 'Auto: đang xem mặt sau 5 giây.';
       }, 5000);
       tMove = setTimeout(() => {
@@ -82,6 +104,7 @@
     if (typeof oldRender === 'function' && !oldRender.__autoStudyWrapped) {
       window.render = function autoStudyRender() {
         oldRender();
+        updateFocus();
         if (internalFlip) {
           internalFlip = false;
           return;
@@ -91,13 +114,25 @@
       window.render.__autoStudyWrapped = true;
     }
     document.addEventListener('click', ev => {
+      if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options,#autoInput')) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        return;
+      }
       if (ev.target.closest('#knownBtn,#againBtn,#prevBtn,#startBtn,.lesson-btn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn,#resetBtn')) {
         setTimeout(scheduleAuto, 120);
       }
     }, true);
+    document.addEventListener('touchmove', ev => {
+      if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options')) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+      }
+    }, {capture:true, passive:false});
     document.addEventListener('change', ev => {
       if (ev.target?.closest('#autoInput,#loopInput')) setTimeout(scheduleAuto, 0);
     }, true);
+    ensureBanner();
     ensureToggle();
     scheduleAuto();
     try { if (typeof log === 'function') log('Auto study loaded.'); } catch (_) {}
