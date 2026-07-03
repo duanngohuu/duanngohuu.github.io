@@ -26,8 +26,10 @@
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'autoStudyBanner';
-        banner.textContent = '▶ Đang tự động lật thẻ · 5 giây mặt đầu · 5 giây mặt sau';
+        banner.textContent = 'Đang tự động lật thẻ';
         document.body.prepend(banner);
+      } else {
+        banner.textContent = 'Đang tự động lật thẻ';
       }
       return banner;
     }
@@ -39,7 +41,7 @@
       let input = $('#autoInput');
       if (!input) {
         const label = document.createElement('label');
-        label.title = 'Auto: 5s mặt đầu, 5s mặt sau, rồi tự chuyển';
+        label.title = 'Auto: tự lật và tự chuyển thẻ';
         label.innerHTML = '<input id="autoInput" type="checkbox"> ▶';
         document.querySelector('.card-options')?.appendChild(label);
         input = $('#autoInput');
@@ -86,14 +88,12 @@
       updateFocus();
       clearTimers();
       if (!active()) return;
-      if (e.hint) e.hint.textContent = (e.hint.textContent || '') + '  Auto: 5s/mặt.';
       tFlip = setTimeout(() => {
         if (!active()) return;
         internalFlip = true;
         st.face = 1;
         if (typeof render === 'function') render();
         updateFocus();
-        if (e.hint) e.hint.textContent = 'Auto: đang xem mặt sau 5 giây.';
       }, 5000);
       tMove = setTimeout(() => {
         if (!active()) return;
