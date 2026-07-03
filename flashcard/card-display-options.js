@@ -10,6 +10,11 @@
     function on(id) { return !!$(id)?.checked; }
     function save(key, value) { try { localStorage.setItem(key, value ? 'on' : 'off'); } catch (_) {} }
     function load(key) { try { return localStorage.getItem(key) === 'on'; } catch (_) { return false; } }
+    function sideClass(side) {
+      if (!e.card) return;
+      e.card.classList.toggle('fc-meaning-side', side === 'meaning');
+      e.card.classList.toggle('fc-word-side', side === 'word');
+    }
     function ensureToggle(id, icon, title, key) {
       let input = $('#' + id);
       if (!input) {
@@ -63,6 +68,7 @@
       if (on('#hideKanjiInput')) forceReadingOn();
     }
     function wordSide(c) {
+      sideClass('word');
       const hideKanji = on('#hideKanjiInput');
       const showReading = on('#readingInput') || hideKanji;
       if (hideKanji && c.reading) {
@@ -77,6 +83,7 @@
       $('#cardMeta') && ($('#cardMeta').textContent = '#n2');
     }
     function meaningSide(c) {
+      sideClass('meaning');
       e.front.textContent = c.meaning_vi || '';
       e.sub.textContent = [c.reading ? 'Cách đọc: ' + c.reading : '', c.han_viet ? 'Âm Hán Việt: ' + c.han_viet : ''].filter(Boolean).join('\n');
       e.hint.textContent = 'Mặt nghĩa: bấm lật để xem lại từ.';
