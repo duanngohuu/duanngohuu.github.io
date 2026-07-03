@@ -15,7 +15,13 @@
       e.card.classList.toggle('fc-meaning-side', side === 'meaning');
       e.card.classList.toggle('fc-word-side', side === 'word');
     }
-    function ensureToggle(id, icon, title, key) {
+    function moveAfter(input, anchorSelector) {
+      if (!input || !anchorSelector) return;
+      const label = input.closest('label');
+      const anchor = $(anchorSelector)?.closest('label');
+      if (label && anchor && anchor.nextElementSibling !== label) anchor.after(label);
+    }
+    function ensureToggle(id, icon, title, key, afterSelector) {
       let input = $('#' + id);
       if (!input) {
         const label = document.createElement('label');
@@ -24,6 +30,7 @@
         document.querySelector('.card-options')?.appendChild(label);
         input = $('#' + id);
       }
+      moveAfter(input, afterSelector);
       const label = input.closest('label');
       if (label && label.dataset.shortText !== icon) {
         label.dataset.shortText = icon;
@@ -51,8 +58,8 @@
       save(READING_KEY, true);
     }
     function ensureToggles() {
+      ensureToggle('hideKanjiInput', '漢', 'Ẩn Hán tự, bắt buộc bật Hiragana', HIDE_KANJI_KEY, '#readingInput');
       ensureToggle('reverseInput', '⇄', 'Học ngược: hiện mặt sau trước', REVERSE_KEY);
-      ensureToggle('hideKanjiInput', '漢', 'Ẩn Hán tự, bắt buộc bật Hiragana', HIDE_KANJI_KEY);
       const reading = $('#readingInput');
       if (reading && reading.dataset.displayGuard !== '1') {
         reading.dataset.displayGuard = '1';
