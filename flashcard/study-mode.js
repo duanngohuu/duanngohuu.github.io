@@ -14,7 +14,8 @@
       if (!input) {
         const loopLabel = $('#loopInput')?.closest('label');
         const label = document.createElement('label');
-        label.innerHTML = '<input id="mixInput" type="checkbox"> Trộn từ';
+        label.title = 'Trộn từ trong range';
+        label.innerHTML = '<input id="mixInput" type="checkbox"> 🎲 Từ';
         if (loopLabel) loopLabel.after(label);
         else document.querySelector('.card-options')?.appendChild(label);
         input = $('#mixInput');
@@ -81,26 +82,30 @@
       e.title.textContent = st.lesson ? '' : 'Chọn bài học';
       e.title.closest('div')?.classList.toggle('title-empty', hide);
     }
+    function polishHintText() {
+      if (!e.hint) return;
+      if (!st.session?.length) {
+        e.hint.textContent = st.lesson ? 'Chọn số lượng rồi bấm Bắt đầu học.' : 'Đang tải menu bài học.';
+        return;
+      }
+      if (st.face === 0) e.hint.textContent = 'Mặt trước: xem thẻ cần nhớ.';
+      else e.hint.textContent = 'Mặt sau: xem nghĩa, cách đọc và ghi chú.';
+    }
+    function setLabel(inputSelector, text, title) {
+      const input = $(inputSelector);
+      const label = input?.closest('label');
+      if (!input || !label || label.dataset.shortText === text) return;
+      label.dataset.shortText = text;
+      if (title) label.title = title;
+      label.innerHTML = '';
+      label.append(input, document.createTextNode(' ' + text));
+    }
     function renameLabels() {
       ensureMixToggle();
-      const shuffle = $('#shuffleInput');
-      const shuffleLabel = shuffle?.closest('label');
-      if (shuffle && shuffleLabel && !shuffleLabel.textContent.includes('Ngẫu nhiên')) {
-        shuffleLabel.innerHTML = '';
-        shuffleLabel.append(shuffle, document.createTextNode(' Ngẫu nhiên'));
-      }
-      const reading = $('#readingInput');
-      const readingLabel = reading?.closest('label');
-      if (reading && readingLabel && !readingLabel.textContent.includes('Hiragana')) {
-        readingLabel.innerHTML = '';
-        readingLabel.append(reading, document.createTextNode(' Hiragana'));
-      }
-      const loop = $('#loopInput');
-      const loopLabel = loop?.closest('label');
-      if (loop && loopLabel && !loopLabel.textContent.includes('Lặp lại từ')) {
-        loopLabel.innerHTML = '';
-        loopLabel.append(loop, document.createTextNode(' Lặp lại từ'));
-      }
+      setLabel('#shuffleInput', '🔀', 'Trộn thứ tự thẻ');
+      setLabel('#readingInput', 'あ', 'Hiện Hiragana/cách đọc ở mặt trước');
+      setLabel('#loopInput', '🔁', 'Lặp lại từ sau khi hết phiên');
+      setLabel('#mixInput', '🎲', 'Trộn từ trong range trước khi lấy số lượng học');
       if (e.known) e.known.textContent = e.known.textContent.replace(/^Biết:/, 'Đã nhớ:');
       if (e.ok && e.ok.textContent.trim() === 'Biết rồi') e.ok.textContent = 'Đã nhớ';
       if (e.flip && e.flip.textContent.trim() === 'Lật') e.flip.textContent = 'Lật thẻ';
@@ -131,6 +136,7 @@
       updateSelectedLessonLabel();
       normalizeFlashcardTitle();
       renameLabels();
+      polishHintText();
       paintActiveStats(mode);
       polishModal();
       if (isRunning()) setStudy(true);
@@ -171,6 +177,16 @@
       };
       window.render.__studySmallWrapped = true;
     }
+    const oldFlip = window.flip;
+    if (typeof oldFlip === 'function' && !oldFlip.__studySmallWrapped) {
+      window.flip = function studySmallFlip() {
+        oldFlip();
+        refreshSoon();
+      };
+      window.flip.__studySmallWrapped = true;
+      if (e.flip) e.flip.onclick = window.flip;
+      if (e.card) e.card.onclick = window.flip;
+    }
     const oldSelectLesson = window.selectLesson;
     if (typeof oldSelectLesson === 'function' && !oldSelectLesson.__studySmallWrapped) {
       window.selectLesson = async function studySmallSelectLesson(id) {
@@ -194,7 +210,7 @@
       if (ev.target.closest('#posText')) refreshSoon('all');
       if (ev.target.closest('#knownText')) refreshSoon('known');
       if (ev.target.closest('#againText,#reviewBtn')) refreshSoon('again');
-      if (ev.target.closest('#knownBtn,#againBtn,#nextBtn,#prevBtn,#flipBtn,.lesson-btn,.course-btn')) {
+      if (ev.target.closest('#knownBtn,#againBtn,#nextBtn,#prevBtn,#flipBtn,.lesson-btn,.course-btn,.card')) {
         refreshSoon();
         setTimeout(() => { if (st.done) { setStudy(false); polishModal(); } }, 150);
       }
