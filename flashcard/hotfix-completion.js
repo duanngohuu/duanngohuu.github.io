@@ -75,6 +75,27 @@
       return st.session[st.i] || null;
     }
 
+    function cardInReviewMode(c) {
+      if (!c || !st.reviewMode) return true;
+      if (st.reviewMode === 'known') return st.known.has(c.id);
+      if (st.reviewMode === 'again') return st.again.has(c.id);
+      return true;
+    }
+
+    function filterCurrentReviewSession(oldIndex) {
+      if (st.reviewMode !== 'known' && st.reviewMode !== 'again') return false;
+      st.session = (st.session || []).filter(cardInReviewMode);
+      if (!st.session.length) {
+        paintComplete();
+        return true;
+      }
+      st.i = Math.min(oldIndex, st.session.length - 1);
+      st.face = 0;
+      if (typeof render === 'function') render();
+      updateButtons();
+      return true;
+    }
+
     function updateButtons() {
       const has = !!st.session?.length && !st.done;
       const c = currentCard();
@@ -125,6 +146,7 @@
       if (!c) return;
       if (type === 'known' && st.known.has(c.id)) return;
       if (type === 'again' && st.again.has(c.id)) return;
+      const oldIndex = st.i;
       if (type === 'known') {
         st.known.add(c.id);
         st.again.delete(c.id);
@@ -133,12 +155,14 @@
         st.known.delete(c.id);
       }
       try { if (typeof saveProgress === 'function') saveProgress(); } catch (_) {}
+      if (filterCurrentReviewSession(oldIndex)) return;
       if (st.i >= st.session.length - 1 && !st.loop) paintComplete();
       else moveNext();
     }
 
-    function startCards(cards, label) {
+    function startCards(cards, label, mode = null) {
       hideModal();
+      st.reviewMode = mode;
       st.session = cards || [];
       st.i = 0;
       st.face = 0;
@@ -150,22 +174,23 @@
     }
 
     function startSubset(mode) {
-      const base = st.session?.length ? st.session : st.cards;
+      const base = st.cards?.length ? st.cards : st.session;
       const cards = mode === 'known'
         ? base.filter(c => st.known.has(c.id))
         : base.filter(c => st.again.has(c.id));
-      startCards(cards, mode === 'known' ? 'Học thẻ đã nhớ' : 'Học thẻ chưa nhớ');
+      startCards(cards, mode === 'known' ? 'Học thẻ đã nhớ' : 'Học thẻ chưa nhớ', mode);
     }
 
     function restartSession() {
       const base = st.session?.length ? st.session : (typeof buildSession === 'function' ? buildSession() : st.cards);
-      startCards([...base], 'Học lại từ đầu');
+      startCards([...base], 'Học lại từ đầu', null);
     }
 
     const oldStart = window.start;
     window.start = function patchedStart() {
       st.done = false;
       st.finishShown = false;
+      st.reviewMode = null;
       hideModal();
       if (typeof oldStart === 'function') oldStart();
       updateButtons();
