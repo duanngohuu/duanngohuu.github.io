@@ -7,6 +7,7 @@
     let tFlip = 0;
     let tMove = 0;
     let internalFlip = false;
+    let lastFocus = false;
     function save(v) { try { localStorage.setItem(AUTO_KEY, v ? 'on' : 'off'); } catch (_) {} }
     function load() { try { return localStorage.getItem(AUTO_KEY) === 'on'; } catch (_) { return false; } }
     function currentCard() { return st.session?.[st.i] || null; }
@@ -21,6 +22,9 @@
       tFlip = 0;
       tMove = 0;
     }
+    function scrollToCard() {
+      try { e.card?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+    }
     function ensureBanner() {
       let banner = $('#autoStudyBanner');
       if (!banner) {
@@ -33,9 +37,16 @@
       }
       return banner;
     }
-    function updateFocus() {
+    function updateFocus(forceScroll = false) {
       ensureBanner();
-      document.body.classList.toggle('auto-card-focus', autoFocusOn());
+      const on = autoFocusOn();
+      document.body.classList.toggle('auto-card-focus', on);
+      if (forceScroll || on !== lastFocus) {
+        requestAnimationFrame(scrollToCard);
+        setTimeout(scrollToCard, 80);
+        setTimeout(scrollToCard, 260);
+      }
+      lastFocus = on;
     }
     function ensureToggle() {
       let input = $('#autoInput');
@@ -51,9 +62,9 @@
         input.dataset.autoBound = '1';
         input.onchange = () => {
           save(input.checked);
-          updateFocus();
-          if (input.checked) scheduleAuto();
-          else clearTimers();
+          if (!input.checked) clearTimers();
+          updateFocus(true);
+          if (input.checked) scheduleAuto(true);
         };
       }
       updateFocus();
@@ -66,13 +77,13 @@
         else {
           if (typeof window.finishSession === 'function') window.finishSession();
           else { st.done = true; if (typeof render === 'function') render(); }
-          updateFocus();
+          updateFocus(true);
           return;
         }
       } else st.i += 1;
       st.face = 0;
       if (typeof render === 'function') render();
-      updateFocus();
+      updateFocus(true);
     }
     function autoMove() {
       if (!active()) return;
@@ -81,11 +92,11 @@
       if (st.known?.has(c.id) || st.again?.has(c.id)) moveDirect();
       else if (typeof window.mark === 'function') window.mark('again');
       else moveDirect();
-      updateFocus();
+      updateFocus(true);
     }
-    function scheduleAuto() {
+    function scheduleAuto(forceScroll = false) {
       ensureToggle();
-      updateFocus();
+      updateFocus(forceScroll);
       clearTimers();
       if (!active()) return;
       tFlip = setTimeout(() => {
@@ -93,7 +104,7 @@
         internalFlip = true;
         st.face = 1;
         if (typeof render === 'function') render();
-        updateFocus();
+        updateFocus(true);
       }, 5000);
       tMove = setTimeout(() => {
         if (!active()) return;
@@ -120,7 +131,7 @@
         return;
       }
       if (ev.target.closest('#knownBtn,#againBtn,#prevBtn,#startBtn,.lesson-btn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn,#resetBtn')) {
-        setTimeout(scheduleAuto, 120);
+        setTimeout(() => scheduleAuto(true), 120);
       }
     }, true);
     document.addEventListener('touchmove', ev => {
@@ -130,7 +141,7 @@
       }
     }, {capture:true, passive:false});
     document.addEventListener('change', ev => {
-      if (ev.target?.closest('#autoInput,#loopInput')) setTimeout(scheduleAuto, 0);
+      if (ev.target?.closest('#autoInput,#loopInput')) setTimeout(() => scheduleAuto(true), 0);
     }, true);
     ensureBanner();
     ensureToggle();
