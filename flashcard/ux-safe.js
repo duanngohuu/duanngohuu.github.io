@@ -3,7 +3,7 @@
   try {
     if (!window.st || !window.e) return;
     const $ = s => document.querySelector(s);
-    const schedule = fn => requestAnimationFrame(() => { try { fn(); } catch (_) {} });
+    const later = fn => requestAnimationFrame(() => { try { fn(); } catch (_) {} });
     function cardKind() {
       const t = ((st.lesson?.id || '') + ' ' + (st.lesson?.title || '') + ' ' + (st.lesson?.courseTitle || '')).toLowerCase();
       if (t.includes('grammar') || t.includes('ngữ pháp')) return 'ngữ pháp';
@@ -12,22 +12,26 @@
     }
     function setStudyMode(on) {
       document.body.classList.toggle('is-studying', !!on);
-      schedule(alignFab);
+      later(alignFab);
     }
     function renameShuffle() {
-      const label = $('#shuffleInput')?.closest('label');
-      if (!label || label.dataset.uxRenamed === '1') return;
-      label.dataset.uxRenamed = '1';
       const input = $('#shuffleInput');
-      label.textContent = ' Ngẫu nhiên';
-      label.prepend(input);
+      const label = input?.closest('label');
+      if (!input || !label) return;
+      if (label.textContent.trim() === 'Ngẫu nhiên') return;
+      label.innerHTML = '';
+      label.append(input, document.createTextNode(' Ngẫu nhiên'));
     }
     function polishStats() {
       if (e.known) e.known.textContent = e.known.textContent.replace(/^Biết:/, 'Đã nhớ:');
     }
     function polishHint() {
-      if (!st.session?.length || !e.hint) return;
+      if (!e.hint) return;
       const kind = cardKind();
+      if (!st.session?.length) {
+        e.hint.innerHTML = 'Bấm thẻ để lật.';
+        return;
+      }
       if (st.face === 0) e.hint.innerHTML = `<strong>Mặt 1/2:</strong> ${kind}.`;
       else if (kind === 'ngữ pháp') e.hint.innerHTML = '<strong>Mặt 2/2:</strong> nghĩa + cách dùng.';
       else if (kind === 'kanji') e.hint.innerHTML = '<strong>Mặt 2/2:</strong> cách đọc + nghĩa.';
@@ -44,22 +48,16 @@
       panel.prepend(btn);
     }
     function alignFab() {
-      const fab = $('.library-fab');
-      if (!fab) return;
       const meta = $('#cardMeta');
       let top = Math.round(window.innerHeight * 0.46);
       if (meta && meta.offsetParent !== null && meta.textContent.trim()) {
         const r = meta.getBoundingClientRect();
         top = Math.round(r.top + r.height / 2);
       }
-      const min = document.body.classList.contains('is-studying') ? 90 : 116;
-      const max = window.innerHeight - 168;
-      top = Math.max(min, Math.min(max, top));
+      top = Math.max(96, Math.min(window.innerHeight - 150, top));
       document.documentElement.style.setProperty('--fab-top', top + 'px');
     }
     function polishModal() {
-      const modal = $('#finishModal');
-      if (!modal) return;
       const title = $('#finishTitle');
       const text = $('#finishText');
       if (title) title.textContent = '🎉 Chúc mừng bạn!';
@@ -67,21 +65,31 @@
         const total = st.session?.length || 0;
         text.innerHTML = `Bạn đã học xong <strong>${total}</strong> thẻ.<div class="finish-stat"><span>Đã nhớ: ${st.known.size}</span><span>Chưa nhớ: ${st.again.size}</span></div>`;
       }
+      const knownBtn = $('#finishKnownBtn');
+      if (knownBtn) knownBtn.textContent = 'Học thẻ đã nhớ';
     }
     function afterRender() {
       renameShuffle();
       polishStats();
       polishHint();
       ensureMenuClose();
-      polishModal();
       alignFab();
+      if ($('#finishModal')?.classList.contains('on')) {
+        setStudyMode(false);
+        polishModal();
+      }
       if (st.done) setStudyMode(false);
+    }
+    function runLater() {
+      later(afterRender);
+      setTimeout(afterRender, 80);
+      setTimeout(afterRender, 180);
     }
     const oldRender = window.render;
     if (typeof oldRender === 'function' && !oldRender.__uxSafeWrapped) {
       window.render = function uxSafeRender() {
         oldRender();
-        schedule(afterRender);
+        runLater();
       };
       window.render.__uxSafeWrapped = true;
     }
@@ -90,23 +98,33 @@
       window.start = function uxSafeStart() {
         setStudyMode(true);
         oldStart();
-        schedule(afterRender);
+        runLater();
       };
       window.start.__uxSafeWrapped = true;
       if (e.start) e.start.onclick = window.start;
     }
+    const oldNext = window.next;
+    if (typeof oldNext === 'function' && !oldNext.__uxSafeWrapped) {
+      window.next = function uxSafeNext() { oldNext(); runLater(); };
+      window.next.__uxSafeWrapped = true;
+      if (e.next) e.next.onclick = window.next;
+    }
+    const oldMark = window.mark;
+    if (typeof oldMark === 'function' && !oldMark.__uxSafeWrapped) {
+      window.mark = function uxSafeMark(type) { oldMark(type); runLater(); };
+      window.mark.__uxSafeWrapped = true;
+      if (e.ok) e.ok.onclick = () => window.mark('known');
+      if (e.bad) e.bad.onclick = () => window.mark('again');
+    }
     document.addEventListener('click', ev => {
       if (ev.target.closest('#startBtn,#finishRestartBtn,#finishKnownBtn,#finishAgainBtn')) setStudyMode(true);
       if (ev.target.closest('#finishCloseBtn')) setStudyMode(false);
-      if (ev.target.closest('#knownBtn,#againBtn,#nextBtn,#prevBtn,#flipBtn,.stats span')) {
-        requestAnimationFrame(() => requestAnimationFrame(afterRender));
-        setTimeout(() => { if (st.done) { setStudyMode(false); polishModal(); } }, 120);
-      }
+      if (ev.target.closest('button,.card,.stats span')) runLater();
     }, true);
-    window.addEventListener('resize', () => schedule(alignFab), {passive:true});
-    window.addEventListener('scroll', () => schedule(alignFab), {passive:true});
-    afterRender();
-    try { if (typeof log === 'function') log('UX safe loaded.'); } catch (_) {}
+    window.addEventListener('resize', () => later(alignFab), {passive:true});
+    window.addEventListener('scroll', () => later(alignFab), {passive:true});
+    runLater();
+    try { if (typeof log === 'function') log('UX safe v2 loaded.'); } catch (_) {}
   } catch (error) {
     try { console.warn('[ux-safe disabled]', error); } catch (_) {}
   }
