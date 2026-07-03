@@ -3,6 +3,7 @@
   try {
     if (!window.st || !window.e) return;
     const $ = s => document.querySelector(s);
+    let forcedWait = false;
     function loopOn() {
       return !!(st.loop || $('#loopInput')?.checked);
     }
@@ -19,6 +20,23 @@
     function isAgainCard() {
       const c = currentCard();
       return !!(c && st.again?.has(c.id) && !!st.session?.length && !st.done);
+    }
+    function lockButtons(on) {
+      forcedWait = !!on;
+      [e.prev, e.flip, e.ok, e.bad].forEach(btn => { if (btn) btn.disabled = !!on; });
+    }
+    function showBackThen(callback) {
+      if (forcedWait || !st.session?.length || st.done) return;
+      lockButtons(true);
+      st.face = 1;
+      if (typeof render === 'function') render();
+      if (e.hint) e.hint.textContent = 'Đang xem mặt sau 3 giây rồi mới qua thẻ tiếp theo.';
+      setTimeout(() => {
+        lockButtons(false);
+        callback();
+        requestAnimationFrame(polishActions);
+        setTimeout(polishActions, 80);
+      }, 3000);
     }
     function moveForwardWithLoop() {
       if (!st.session?.length || st.done) return;
@@ -38,6 +56,10 @@
         return;
       }
       moveForwardWithLoop();
+    }
+    function markAgainThenMove() {
+      if (typeof window.mark === 'function') window.mark('again');
+      else continueOrFinish();
     }
     function polishActions() {
       if (e.next) {
@@ -69,6 +91,7 @@
         e.bad.classList.remove('primary');
         e.bad.classList.add('bad');
       }
+      if (forcedWait) lockButtons(true);
     }
     const oldRender = window.render;
     if (typeof oldRender === 'function' && !oldRender.__actionFlowWrapped) {
@@ -79,6 +102,11 @@
       window.render.__actionFlowWrapped = true;
     }
     document.addEventListener('click', ev => {
+      if (forcedWait) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        return;
+      }
       if (ev.target.closest('#startBtn,#finishRestartBtn')) setReviewMode('all');
       if (ev.target.closest('#finishKnownBtn,#knownText')) setReviewMode('known');
       if (ev.target.closest('#finishAgainBtn,#againText,#reviewBtn')) setReviewMode('again');
@@ -91,11 +119,11 @@
         return;
       }
       const bad = ev.target.closest('#againBtn');
-      if (bad && isAgainCard()) {
+      if (bad) {
         ev.preventDefault();
         ev.stopImmediatePropagation();
-        continueOrFinish();
-        requestAnimationFrame(polishActions);
+        if (isAgainCard()) showBackThen(continueOrFinish);
+        else showBackThen(markAgainThenMove);
         return;
       }
       if (ev.target.closest('#knownBtn,#againBtn,#flipBtn,#prevBtn,#loopInput,#finishKnownBtn,#finishAgainBtn,#knownText,#againText,#reviewBtn')) {
