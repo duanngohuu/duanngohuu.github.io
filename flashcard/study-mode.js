@@ -6,18 +6,36 @@
     function isRunning() { return !!(st.session && st.session.length && !st.done); }
     function setStudy(on) { document.body.classList.toggle('study-active', !!on); }
     function setLessonSelected() { document.body.classList.toggle('has-selected-lesson', !!st.lesson); }
+    function openLessonMenu() { document.body.classList.add('library-open'); }
     function ensureSelectedLessonLabel() {
       const controls = document.querySelector('.controls');
       if (!controls) return null;
       let box = $('#selectedLessonBox');
       if (!box) {
-        box = document.createElement('div');
+        box = document.createElement('button');
         box.id = 'selectedLessonBox';
+        box.type = 'button';
         box.className = 'selected-lesson-box';
-        box.innerHTML = '<span>Bài đã chọn</span><strong id="selectedLessonText">Chưa chọn bài</strong>';
+        box.innerHTML = '<span>Bài đã chọn</span><strong id="selectedLessonText">Chưa chọn bài</strong><em>Đổi bài</em>';
+        box.onclick = openLessonMenu;
         controls.prepend(box);
       }
       return box;
+    }
+    function ensureBottomLessonButton() {
+      let btn = $('#bottomLessonBtn');
+      if (btn) return btn;
+      const actionGroups = document.querySelectorAll('.panel.glass .actions');
+      const bottom = actionGroups[actionGroups.length - 1];
+      if (!bottom) return null;
+      btn = document.createElement('button');
+      btn.id = 'bottomLessonBtn';
+      btn.type = 'button';
+      btn.className = 'secondary';
+      btn.textContent = '☰ Bài học';
+      btn.onclick = openLessonMenu;
+      bottom.prepend(btn);
+      return btn;
     }
     function updateSelectedLessonLabel() {
       const box = ensureSelectedLessonLabel();
@@ -29,10 +47,9 @@
     }
     function normalizeFlashcardTitle() {
       if (!e.title) return;
-      if (!st.lesson) e.title.textContent = 'Chọn bài học';
-      else if (!st.session?.length) e.title.textContent = 'Sẵn sàng học';
-      else if (st.done) e.title.textContent = 'Hoàn thành phiên học';
-      else e.title.textContent = 'Thẻ hiện tại';
+      const hide = !!st.lesson && !st.session?.length;
+      e.title.textContent = !st.lesson ? 'Chọn bài học' : hide ? '' : st.done ? 'Hoàn thành phiên học' : 'Thẻ hiện tại';
+      e.title.closest('div')?.classList.toggle('title-empty', hide);
     }
     function renameLabels() {
       const shuffle = $('#shuffleInput');
@@ -41,8 +58,21 @@
         shuffleLabel.innerHTML = '';
         shuffleLabel.append(shuffle, document.createTextNode(' Ngẫu nhiên'));
       }
+      const reading = $('#readingInput');
+      const readingLabel = reading?.closest('label');
+      if (reading && readingLabel && !readingLabel.textContent.includes('Hiragana')) {
+        readingLabel.innerHTML = '';
+        readingLabel.append(reading, document.createTextNode(' Hiragana'));
+      }
+      const loop = $('#loopInput');
+      const loopLabel = loop?.closest('label');
+      if (loop && loopLabel && !loopLabel.textContent.includes('Lặp lại từ')) {
+        loopLabel.innerHTML = '';
+        loopLabel.append(loop, document.createTextNode(' Lặp lại từ'));
+      }
       if (e.known) e.known.textContent = e.known.textContent.replace(/^Biết:/, 'Đã nhớ:');
       if (e.ok && e.ok.textContent.trim() === 'Biết rồi') e.ok.textContent = 'Đã nhớ';
+      if (e.flip && e.flip.textContent.trim() === 'Lật') e.flip.textContent = 'Lật thẻ';
     }
     function paintActiveStats(mode) {
       st.featureFilter = mode || st.featureFilter || 'all';
@@ -66,6 +96,7 @@
       if (knownBtn) knownBtn.textContent = 'Học thẻ đã nhớ';
     }
     function refresh(mode) {
+      ensureBottomLessonButton();
       updateSelectedLessonLabel();
       normalizeFlashcardTitle();
       renameLabels();
@@ -107,6 +138,7 @@
       window.selectLesson.__studySmallWrapped = true;
     }
     document.addEventListener('click', ev => {
+      if (ev.target.closest('#selectedLessonBox,#bottomLessonBtn')) openLessonMenu();
       if (ev.target.closest('#startBtn,#finishRestartBtn,#finishKnownBtn,#finishAgainBtn')) {
         setStudy(true);
         refreshSoon('all');
