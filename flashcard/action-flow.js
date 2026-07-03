@@ -12,8 +12,9 @@
     function setReviewMode(mode) {
       st.reviewMode = mode || 'all';
     }
-    function isKnownReview() {
-      return st.reviewMode === 'known' && !!st.session?.length && !st.done;
+    function isKnownCard() {
+      const c = currentCard();
+      return !!(c && st.known?.has(c.id) && !!st.session?.length && !st.done);
     }
     function moveForwardWithLoop() {
       if (!st.session?.length || st.done) return;
@@ -45,13 +46,14 @@
         e.flip.classList.add('primary');
       }
       const c = currentCard();
-      if (isKnownReview() && e.ok && c && st.known?.has(c.id)) {
+      if (isKnownCard() && e.ok) {
         e.ok.textContent = 'Tiếp tục';
         e.ok.disabled = false;
         e.ok.classList.remove('ok');
         e.ok.classList.add('primary');
       } else if (e.ok) {
         if (e.ok.textContent.trim() === 'Tiếp tục') e.ok.textContent = 'Đã nhớ';
+        e.ok.classList.remove('primary');
         e.ok.classList.add('ok');
       }
       if (loopOn() && e.bad && c && st.again?.has(c.id) && !st.done) {
@@ -72,8 +74,7 @@
       if (ev.target.closest('#finishAgainBtn,#againText,#reviewBtn')) setReviewMode('again');
       const ok = ev.target.closest('#knownBtn');
       if (ok) {
-        const c = currentCard();
-        if (isKnownReview() && c && st.known?.has(c.id)) {
+        if (isKnownCard()) {
           ev.preventDefault();
           ev.stopImmediatePropagation();
           continueOrFinish();
