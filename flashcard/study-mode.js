@@ -64,7 +64,7 @@
       btn.className = 'secondary';
       btn.textContent = '☰ Bài học';
       btn.onclick = openLessonMenu;
-      bottom.prepend(btn);
+      bottom.appendChild(btn);
       return btn;
     }
     function updateSelectedLessonLabel() {
@@ -77,8 +77,8 @@
     }
     function normalizeFlashcardTitle() {
       if (!e.title) return;
-      const hide = !!st.lesson && !st.session?.length;
-      e.title.textContent = !st.lesson ? 'Chọn bài học' : hide ? '' : st.done ? 'Hoàn thành phiên học' : 'Thẻ hiện tại';
+      const hide = !!st.lesson;
+      e.title.textContent = st.lesson ? '' : 'Chọn bài học';
       e.title.closest('div')?.classList.toggle('title-empty', hide);
     }
     function renameLabels() {
