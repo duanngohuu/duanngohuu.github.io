@@ -10,6 +10,9 @@
     function currentCard() {
       return st.session?.[st.i] || null;
     }
+    function focusPanel() {
+      return e.card?.closest('.panel');
+    }
     function setReviewMode(mode) {
       st.reviewMode = mode || 'all';
     }
@@ -24,6 +27,7 @@
     function lockButtons(on) {
       forcedWait = !!on;
       document.body.classList.toggle('force-card-focus', !!on);
+      focusPanel()?.classList.toggle('fc-focus-panel', !!on);
       [e.prev, e.flip, e.ok, e.bad].forEach(btn => { if (btn) btn.disabled = !!on; });
     }
     function showBackThen(callback) {
@@ -32,13 +36,13 @@
       st.face = 1;
       if (typeof render === 'function') render();
       try { e.card?.scrollIntoView({behavior:'smooth',block:'center'}); } catch (_) {}
-      if (e.hint) e.hint.textContent = 'Cưỡng chế xem mặt sau 3 giây. Tập trung nhớ lại trước khi qua thẻ tiếp theo.';
+      if (e.hint) e.hint.textContent = 'Cưỡng chế xem mặt sau 5 giây. Tập trung nhớ lại trước khi qua thẻ tiếp theo.';
       setTimeout(() => {
         lockButtons(false);
         callback();
         requestAnimationFrame(polishActions);
         setTimeout(polishActions, 80);
-      }, 3000);
+      }, 5000);
     }
     function moveForwardWithLoop() {
       if (!st.session?.length || st.done) return;
