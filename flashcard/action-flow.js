@@ -23,6 +23,7 @@
     }
     function lockButtons(on) {
       forcedWait = !!on;
+      document.body.classList.toggle('force-card-focus', !!on);
       [e.prev, e.flip, e.ok, e.bad].forEach(btn => { if (btn) btn.disabled = !!on; });
     }
     function showBackThen(callback) {
@@ -30,7 +31,8 @@
       lockButtons(true);
       st.face = 1;
       if (typeof render === 'function') render();
-      if (e.hint) e.hint.textContent = 'Đang xem mặt sau 3 giây rồi mới qua thẻ tiếp theo.';
+      try { e.card?.scrollIntoView({behavior:'smooth',block:'center'}); } catch (_) {}
+      if (e.hint) e.hint.textContent = 'Cưỡng chế xem mặt sau 3 giây. Tập trung nhớ lại trước khi qua thẻ tiếp theo.';
       setTimeout(() => {
         lockButtons(false);
         callback();
@@ -101,6 +103,18 @@
       };
       window.render.__actionFlowWrapped = true;
     }
+    document.addEventListener('touchmove', ev => {
+      if (forcedWait) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+      }
+    }, {capture:true, passive:false});
+    document.addEventListener('wheel', ev => {
+      if (forcedWait) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+      }
+    }, {capture:true, passive:false});
     document.addEventListener('click', ev => {
       if (forcedWait) {
         ev.preventDefault();
