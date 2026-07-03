@@ -4,6 +4,7 @@
     if (!window.st || !window.e) return;
     const $ = s => document.querySelector(s);
     const logSafe = msg => { try { if (typeof log === 'function') log(msg); } catch (_) {} };
+    const PROGRESS_KEY = 'fc_vocab_progress_v2';
     const categoryState = {
       vocab: { loaded: false, courses: [], summary: 'Từ vựng Đọc hiểu các năm JLPT.' },
       grammar: { loaded: false, courses: [], summary: 'Ngữ pháp N2 các năm JLPT.' },
@@ -15,6 +16,32 @@
         title: c.title || 'Untitled',
         lessons: (c.lessons || []).map(l => ({...l, courseTitle: c.title || 'Untitled'}))
       }));
+    }
+
+    function readProgress(lessonId) {
+      try {
+        const all = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}');
+        const p = all[lessonId] || {};
+        return { known: (p.known || []).length, again: (p.again || []).length };
+      } catch (_) {
+        return { known: 0, again: 0 };
+      }
+    }
+
+    function lessonMetaHtml(l) {
+      const p = readProgress(l.id);
+      const count = l.count || 0;
+      return `<span>${count} thẻ</span><span>Đã nhớ: ${p.known}</span><span>Chưa nhớ: ${p.again}</span>`;
+    }
+
+    function refreshLessonProgressBadges() {
+      document.querySelectorAll('.lesson-btn[data-lesson-id]').forEach(btn => {
+        const lesson = categoryState.vocab.courses.concat(categoryState.grammar.courses)
+          .flatMap(c => c.lessons || [])
+          .find(l => l.id === btn.dataset.lessonId);
+        const meta = btn.querySelector('.lesson-progress-line');
+        if (lesson && meta) meta.innerHTML = lessonMetaHtml(lesson);
+      });
     }
 
     async function fetchCourses(tab) {
@@ -64,10 +91,10 @@
         } else {
           course.lessons.forEach(l => {
             const b = document.createElement('button');
-            b.className = 'lesson-btn';
+            b.className = 'lesson-btn lesson-btn-grid';
             b.type = 'button';
             b.dataset.lessonId = l.id;
-            b.innerHTML = `<strong>${l.title}</strong><span>${l.count || ''} thẻ</span>`;
+            b.innerHTML = `<strong>${l.title}</strong><span class="lesson-progress-line">${lessonMetaHtml(l)}</span>`;
             b.onclick = () => {
               st.lessons = course.lessons;
               if (typeof selectLesson === 'function') selectLesson(l.id);
@@ -84,10 +111,12 @@
           });
           box.classList.toggle('open', willOpen);
           lessonsBox.style.display = willOpen ? 'grid' : 'none';
+          refreshLessonProgressBadges();
         };
         e.list.appendChild(box);
       });
       clearStudy();
+      refreshLessonProgressBadges();
       logSafe('Render category: ' + tab);
     }
 
@@ -105,8 +134,15 @@
       switchCategory(btn.dataset.tab).catch(err => logSafe('Category load error: ' + err.message));
     }, true);
 
+    document.addEventListener('click', ev => {
+      if (ev.target.closest('#knownBtn,#againBtn,#resetBtn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn')) {
+        setTimeout(refreshLessonProgressBadges, 120);
+      }
+    }, true);
+
     setTimeout(() => switchCategory('vocab').catch(err => logSafe('Vocab category error: ' + err.message)), 0);
     window.switchFlashcardCategory = switchCategory;
+    window.refreshLessonProgressBadges = refreshLessonProgressBadges;
     logSafe('Course category loader loaded.');
   } catch (error) {
     try { console.warn('[category loader disabled]', error); } catch (_) {}
