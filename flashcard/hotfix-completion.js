@@ -1,8 +1,28 @@
-// Hotfix: custom finish popup, safe end-of-session behavior, and nav/action button states.
+// Hotfix: custom finish popup, loop mode, safe end-of-session behavior, and nav/action button states.
 (() => {
   try {
     if (!window.st || !window.e) return;
+    const LOOP_KEY = 'fc_vocab_loop_v1';
     const logSafe = msg => { try { if (typeof log === 'function') log(msg); } catch (_) {} };
+
+    function ensureLoopToggle() {
+      if (document.querySelector('#loopInput')) return;
+      const reading = document.querySelector('#readingInput');
+      const anchor = reading?.closest('label') || document.querySelector('#shuffleInput')?.closest('label');
+      if (!anchor) return;
+      const label = document.createElement('label');
+      label.innerHTML = '<input id="loopInput" type="checkbox"> Lặp';
+      anchor.after(label);
+      const input = label.querySelector('input');
+      try { input.checked = localStorage.getItem(LOOP_KEY) === 'on'; } catch (_) {}
+      st.loop = input.checked;
+      input.onchange = () => {
+        st.loop = input.checked;
+        try { localStorage.setItem(LOOP_KEY, st.loop ? 'on' : 'off'); } catch (_) {}
+        updateButtons();
+        logSafe('Lặp: ' + (st.loop ? 'on' : 'off'));
+      };
+    }
 
     function ensureModal() {
       if (document.querySelector('#finishModal')) return;
@@ -54,8 +74,9 @@
     function updateButtons() {
       const has = !!st.session?.length && !st.done;
       const c = currentCard();
+      const atLast = has && st.i >= st.session.length - 1;
       if (e.prev) e.prev.disabled = !has || st.i <= 0;
-      if (e.next) e.next.disabled = !has || st.i >= st.session.length - 1;
+      if (e.next) e.next.disabled = !has || (atLast && !st.loop);
       if (e.ok) e.ok.disabled = !has || !c || st.known.has(c.id);
       if (e.bad) e.bad.disabled = !has || !c || st.again.has(c.id);
     }
@@ -83,8 +104,12 @@
 
     function moveNext() {
       if (!st.session?.length || st.done) return;
-      if (st.i >= st.session.length - 1) return;
-      st.i += 1;
+      if (st.i >= st.session.length - 1) {
+        if (!st.loop) return;
+        st.i = 0;
+      } else {
+        st.i += 1;
+      }
       st.face = 0;
       if (typeof render === 'function') render();
       updateButtons();
@@ -104,7 +129,7 @@
         st.known.delete(c.id);
       }
       try { if (typeof saveProgress === 'function') saveProgress(); } catch (_) {}
-      if (st.i >= st.session.length - 1) paintComplete();
+      if (st.i >= st.session.length - 1 && !st.loop) paintComplete();
       else moveNext();
     }
 
@@ -163,9 +188,10 @@
       if (typeof prev === 'function') prev();
       updateButtons();
     };
+    ensureLoopToggle();
     ensureModal();
     updateButtons();
-    logSafe('Completion modal hotfix loaded.');
+    logSafe('Completion modal + loop hotfix loaded.');
   } catch (error) {
     try { console.warn('[completion hotfix disabled]', error); } catch (_) {}
   }
