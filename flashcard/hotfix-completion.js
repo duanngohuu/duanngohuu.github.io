@@ -1,4 +1,4 @@
-// Hotfix: custom finish popup, safe end-of-session behavior, and nav button states.
+// Hotfix: custom finish popup, safe end-of-session behavior, and nav/action button states.
 (() => {
   try {
     if (!window.st || !window.e) return;
@@ -46,10 +46,18 @@
       document.querySelector('#finishModal')?.classList.add('on');
     }
 
+    function currentCard() {
+      if (!st.session?.length || st.done) return null;
+      return st.session[st.i] || null;
+    }
+
     function updateButtons() {
       const has = !!st.session?.length && !st.done;
+      const c = currentCard();
       if (e.prev) e.prev.disabled = !has || st.i <= 0;
       if (e.next) e.next.disabled = !has || st.i >= st.session.length - 1;
+      if (e.ok) e.ok.disabled = !has || !c || st.known.has(c.id);
+      if (e.bad) e.bad.disabled = !has || !c || st.again.has(c.id);
     }
 
     function paintComplete() {
@@ -86,6 +94,8 @@
       if (!st.session?.length || st.done) return;
       const c = st.session[st.i];
       if (!c) return;
+      if (type === 'known' && st.known.has(c.id)) return;
+      if (type === 'again' && st.again.has(c.id)) return;
       if (type === 'known') {
         st.known.add(c.id);
         st.again.delete(c.id);
