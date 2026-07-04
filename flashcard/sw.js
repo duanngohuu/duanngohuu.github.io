@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v5';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v5';
+const SHELL_CACHE = 'flashcard-shell-20260704-v6';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v6';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
@@ -14,6 +14,7 @@ const SHELL_FILES = [
   './features-stable.css',
   './category-menu.css',
   './sheet-approved.css',
+  './library-tools.css',
   './header-normal.css',
   './study-mode.css',
   './action-flow.css',
@@ -38,6 +39,7 @@ const SHELL_FILES = [
   './card-3d.js',
   './card-display-options.js',
   './sheet-library.js',
+  './sheet-config-live.js',
   './sheet-offline-bridge.js',
   './sheet-sync-reader.js',
   './auto-study.js',
@@ -45,6 +47,7 @@ const SHELL_FILES = [
   './multi-face-final.js',
   './sheet-cache-v2.js',
   './connectivity-monitor.js',
+  './library-tools.js',
   './data/sheet-library-manifest.json',
   './data/manifest.json',
   './data/n2-grammar-manifest.json'
