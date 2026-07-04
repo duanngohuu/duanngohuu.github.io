@@ -2,6 +2,7 @@
 (() => {
   try {
     const $ = selector => document.querySelector(selector);
+    const COURSE_PREFIX = window.sheetOfflineKeys?.coursePrefix || 'sheet-course:';
     let refreshQueued = false;
     let initialized = false;
 
@@ -55,24 +56,33 @@
       if (label && label.textContent !== text) label.textContent = text;
     }
 
-    function refreshCourseButtons() {
-      document.querySelectorAll('#lessonList .course-block[data-course-id]').forEach(block => {
-        const courseId = block.dataset.courseId || '';
-        const info = findCourse(courseId);
-        const button = block.querySelector(':scope > .course-btn');
-        const label = button?.querySelector('span');
-        if (!info || !button || !label || info.tab !== 'sheet') return;
-        if (button.classList.contains('is-loading')) return;
+    async function refreshCourseButton(block) {
+      const courseId = block.dataset.courseId || '';
+      const info = findCourse(courseId);
+      const button = block.querySelector(':scope > .course-btn');
+      const label = button?.querySelector('span');
+      if (!info || !button || !label || info.tab !== 'sheet') return;
+      if (button.classList.contains('is-loading')) return;
 
-        const ready = !!info.course._lessonsReady;
-        button.classList.toggle('is-downloaded', ready);
-        if (ready) {
-          const count = info.course.lessons?.length || 0;
-          setLabel(label, `Đã tải · ${count} bài`);
-        } else {
-          setLabel(label, 'Chạm để tải');
-        }
-      });
+      let cached = null;
+      try { cached = await window.flashcardOffline?.getLibrary?.(COURSE_PREFIX + courseId); }
+      catch (_) {}
+      if (!block.isConnected || block.dataset.courseId !== courseId) return;
+
+      const downloaded = Array.isArray(cached?.lessons) && cached.lessons.length > 0;
+      button.classList.toggle('is-downloaded', downloaded);
+      if (downloaded) {
+        setLabel(label, `Đã tải · ${cached.lessons.length} bài`);
+      } else if (info.course._lessonsReady && info.course.lessons?.length) {
+        setLabel(label, `Đang dùng · ${info.course.lessons.length} bài`);
+      } else {
+        setLabel(label, 'Chạm để tải');
+      }
+    }
+
+    async function refreshCourseButtons() {
+      const blocks = [...document.querySelectorAll('#lessonList .course-block[data-course-id]')];
+      await Promise.all(blocks.map(refreshCourseButton));
     }
 
     async function refreshLessonButton(button) {
@@ -89,20 +99,23 @@
         return;
       }
 
-      setBadge(badge, 'Chưa tải', 'is-not-downloaded');
       let cached = null;
       try { cached = await window.flashcardOffline?.getLesson?.(lessonId); }
       catch (_) {}
       if (!button.isConnected || button.dataset.lessonId !== lessonId) return;
       if (Array.isArray(cached?.cards) && cached.cards.length > 0) {
         setBadge(badge, 'Đã tải', 'is-downloaded');
+      } else {
+        setBadge(badge, 'Chưa tải', 'is-not-downloaded');
       }
     }
 
     async function refreshAll() {
-      refreshCourseButtons();
       const buttons = [...document.querySelectorAll('#lessonList .lesson-btn[data-lesson-id]')];
-      await Promise.all(buttons.map(refreshLessonButton));
+      await Promise.all([
+        refreshCourseButtons(),
+        ...buttons.map(refreshLessonButton)
+      ]);
     }
 
     function queueRefresh(delay = 0) {
@@ -133,7 +146,16 @@
         offline.putLibrary = async function putLibraryWithStatus(...args) {
           const result = await originalPutLibrary(...args);
           const key = String(args[0] || '');
-          if (key.startsWith('sheet-course:')) queueRefresh();
+          if (key.startsWith(COURSE_PREFIX)) queueRefresh();
+          return result;
+        };
+      }
+
+      if (typeof offline.clearOfflineData === 'function') {
+        const originalClearOfflineData = offline.clearOfflineData.bind(offline);
+        offline.clearOfflineData = async function clearOfflineDataWithStatus(...args) {
+          const result = await originalClearOfflineData(...args);
+          queueRefresh(80);
           return result;
         };
       }
