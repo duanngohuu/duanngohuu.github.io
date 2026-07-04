@@ -1,0 +1,3 @@
+/* Keep forgotten-card focus visually clean: no temporary hint or hourglass. */
+body.force-card-focus #cardHint{display:none!important}
+body.force-card-focus #cardHint::after{content:none!important;display:none!important}
