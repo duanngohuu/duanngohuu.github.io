@@ -125,11 +125,47 @@
       if (typeof render === 'function') render();
     }
 
+    function closeCourseBoxes() {
+      if (!e.list) return;
+      e.list.querySelectorAll('.course-block').forEach(block => {
+        block.classList.remove('open');
+        const lessons = block.querySelector('.course-lessons');
+        if (lessons) lessons.style.display = 'none';
+      });
+    }
+
+    function setSheetGroupOpen(group = '', scroll = true) {
+      if (!e.list) return;
+      closeCourseBoxes();
+      e.list.querySelectorAll('.sheet-group-heading').forEach(heading => {
+        const open = !!group && heading.dataset.sheetGroup === group;
+        heading.classList.toggle('open', open);
+        heading.setAttribute('aria-expanded', String(open));
+      });
+      e.list.querySelectorAll('.course-block[data-sheet-group]').forEach(block => {
+        block.classList.toggle('sheet-group-visible', !!group && block.dataset.sheetGroup === group);
+      });
+      if (group && scroll) {
+        const heading = e.list.querySelector(`.sheet-group-heading[data-sheet-group="${group}"]`);
+        setTimeout(() => heading?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 40);
+      }
+    }
+
+    function toggleSheetGroup(group) {
+      const heading = e.list?.querySelector(`.sheet-group-heading[data-sheet-group="${group}"]`);
+      const willOpen = !heading?.classList.contains('open');
+      setSheetGroupOpen(willOpen ? group : '', willOpen);
+    }
+
     function appendSheetGroupHeading(course, courses) {
-      const heading = document.createElement('div');
+      const heading = document.createElement('button');
+      heading.type = 'button';
       heading.className = `sheet-group-heading sheet-group-${String(course.sheetGroup || '').toLowerCase()}`;
+      heading.dataset.sheetGroup = course.sheetGroup;
+      heading.setAttribute('aria-expanded', 'false');
       const count = courses.filter(item => item.sheetGroup === course.sheetGroup).length;
-      heading.innerHTML = `<div><span>Kho học</span><strong>${course.sheetGroupLabel}</strong></div><small>${count} bộ</small>`;
+      heading.innerHTML = `<div><span>Kho học</span><strong>${course.sheetGroupLabel}</strong></div><small>${count} bộ</small><i class="sheet-group-chevron" aria-hidden="true">⌄</i>`;
+      heading.onclick = () => toggleSheetGroup(course.sheetGroup);
       e.list.appendChild(heading);
     }
 
@@ -138,6 +174,7 @@
       const data = categoryState[tab];
       if (!e.list || !data) return;
       e.list.style.display = 'grid';
+      e.list.classList.toggle('sheet-group-mode', tab === 'sheet');
       e.list.innerHTML = '';
       const empty = $('.empty-tab');
       if (empty) empty.style.display = 'none';
@@ -158,6 +195,7 @@
 
         const box = document.createElement('div');
         box.className = 'course-block';
+        box.dataset.courseId = course.id || '';
         if (course.sheetGroup) box.dataset.sheetGroup = course.sheetGroup;
         const ready = tab !== 'sheet' || course._lessonsReady;
         const countText = ready
@@ -167,7 +205,7 @@
         box.innerHTML = `<button class="course-btn" type="button"><strong>${shownTitle}</strong><span>${countText}</span></button><div class="course-lessons"></div>`;
         const button = box.querySelector('.course-btn');
         const lessonsBox = box.querySelector('.course-lessons');
-        const open = openIndex === index || (data.courses.length === 1 && course.lessons?.length > 0);
+        const open = openIndex === index || (tab !== 'sheet' && data.courses.length === 1 && course.lessons?.length > 0);
         box.classList.toggle('open', open);
         lessonsBox.style.display = open ? 'grid' : 'none';
 
@@ -194,6 +232,7 @@
         }
 
         button.onclick = async () => {
+          if (tab === 'sheet') setSheetGroupOpen(course.sheetGroup, false);
           if (tab === 'sheet' && !course._lessonsReady) {
             button.classList.add('is-loading');
             button.querySelector('span').textContent = 'Đang đọc sheet';
@@ -209,17 +248,26 @@
             return;
           }
           const willOpen = !box.classList.contains('open');
-          e.list.querySelectorAll('.course-block').forEach(item => {
-            item.classList.remove('open');
-            const list = item.querySelector('.course-lessons');
-            if (list) list.style.display = 'none';
-          });
+          closeCourseBoxes();
           box.classList.toggle('open', willOpen);
           lessonsBox.style.display = willOpen ? 'grid' : 'none';
+          if (willOpen) setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
           refreshLessonProgressBadges();
         };
         e.list.appendChild(box);
       });
+
+      if (tab === 'sheet' && openIndex !== null && data.courses[openIndex]) {
+        const targetCourse = data.courses[openIndex];
+        setSheetGroupOpen(targetCourse.sheetGroup, false);
+        const targetBox = e.list.querySelector(`.course-block[data-course-id="${targetCourse.id}"]`);
+        if (targetBox) {
+          targetBox.classList.add('open');
+          const lessons = targetBox.querySelector('.course-lessons');
+          if (lessons) lessons.style.display = 'grid';
+          setTimeout(() => targetBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
+        }
+      }
 
       if (tab === 'sheet' && !data.courses.length) {
         const notice = document.createElement('div');
@@ -259,6 +307,8 @@
     window.switchFlashcardCategory = switchCategory;
     window.refreshLessonProgressBadges = refreshLessonProgressBadges;
     window.getFlashcardCategoryState = () => categoryState;
+    window.openSheetStudyGroup = (group, scroll = true) => setSheetGroupOpen(group, scroll);
+    window.closeSheetStudyGroups = () => setSheetGroupOpen('', false);
     logSafe('Approved Sheet category loader loaded.');
   } catch (error) {
     try { console.warn('[category loader disabled]', error); } catch (_) {}
