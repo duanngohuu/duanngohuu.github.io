@@ -1,89 +1,93 @@
-// Stable card motion controller. Face changes are instant; only card-to-card movement is animated.
+// Stable card transition: fade current content out, swap while hidden, then fade the next content in.
 (() => {
   try {
     if (!window.st || !window.e) return;
-    const $ = s => document.querySelector(s);
-    const FX = ['fc-pop','fc-flip','fc-next','fc-prev','fc-tap','fc-pulse'];
-    let lastPos = e.pos?.textContent || '0/0';
-    let lastFace = Number(st.face || 0);
-    let motionTimer = 0;
-    let clearTimer = 0;
+    const card = () => document.querySelector('#card');
+    const content = () => card()?.querySelector('.card-inner');
+    const OUT_MS = 105;
+    const IN_MS = 145;
+    let switching = false;
+    let cleanupTimer = 0;
 
-    function card() { return $('#card'); }
-    function running() { return !!(st.session && st.session.length && !st.done); }
-    function clear(el) { if (el) el.classList.remove('fc-animating', ...FX); }
-
-    function play(name, ms = 260) {
-      const el = card();
-      if (!el) return;
-      clearTimeout(motionTimer);
-      clearTimeout(clearTimer);
-      clear(el);
-      requestAnimationFrame(() => {
-        clear(el);
-        void el.offsetWidth;
-        el.classList.add('fc-animating', name);
-        clearTimer = setTimeout(() => {
-          el.classList.remove(name, 'fc-animating');
-          idle();
-        }, ms);
-      });
+    function clearClasses() {
+      clearTimeout(cleanupTimer);
+      const element = card();
+      element?.classList.remove(
+        'fc-card-leaving',
+        'fc-card-entering',
+        'fc-card-transitioning',
+        'fc-animating',
+        'fc-pop',
+        'fc-flip',
+        'fc-next',
+        'fc-prev',
+        'fc-tap',
+        'fc-pulse'
+      );
+      document.body.classList.remove('card-switching');
+      switching = false;
     }
 
-    function schedule(name, ms = 260) {
-      clearTimeout(motionTimer);
-      motionTimer = setTimeout(() => play(name, ms), 12);
+    function shouldAnimate() {
+      return !!card()
+        && !!content()
+        && !!st.session?.length
+        && !st.done
+        && !document.body.classList.contains('auto-card-focus')
+        && !document.body.classList.contains('force-card-focus')
+        && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     }
 
-    function idle() {
-      const el = card();
-      if (!el) return;
-      el.classList.toggle('fc-idle', !running() || !st.lesson);
+    function runChange(change) {
+      try { return change?.(); }
+      catch (error) {
+        clearClasses();
+        throw error;
+      }
     }
 
-    function syncMotion() {
-      const pos = e.pos?.textContent || '0/0';
-      const face = Number(st.face || 0);
-      const posChanged = pos !== lastPos;
-      const faceChanged = face !== lastFace;
-
-      if (running()) {
-        if (posChanged) {
-          const now = parseInt(pos, 10) || 0;
-          const old = parseInt(lastPos, 10) || 0;
-          if (old === 0) schedule('fc-pop', 210);
-          else if (now > old || (old > 1 && now === 1)) schedule('fc-next', 230);
-          else if (now < old) schedule('fc-prev', 230);
-        } else if (faceChanged) {
-          // Face content is already painted by render(). Do not run a second animation,
-          // forced reflow, opacity change, or brightness effect here.
-          clearTimeout(motionTimer);
-          clearTimeout(clearTimer);
-          clear(card());
-        }
+    window.smoothCardTransition = function smoothCardTransition(change) {
+      if (typeof change !== 'function') return false;
+      if (switching || !shouldAnimate()) {
+        runChange(change);
+        return false;
       }
 
-      lastPos = pos;
-      lastFace = face;
-      idle();
-    }
+      const element = card();
+      switching = true;
+      document.body.classList.add('card-switching');
+      element.classList.remove('fc-card-entering');
+      element.classList.add('fc-card-transitioning', 'fc-card-leaving');
 
-    const oldRender = window.render;
-    if (typeof oldRender === 'function' && !oldRender.__card3dStableWrapped) {
-      window.render = function card3dStableRender() {
-        oldRender();
-        requestAnimationFrame(syncMotion);
-      };
-      window.render.__card3dStableWrapped = true;
-    }
+      setTimeout(() => {
+        if (!switching) return;
+        runChange(change);
 
-    document.addEventListener('click', ev => {
-      if (ev.target.closest('.lesson-btn')) setTimeout(() => play('fc-pop', 210), 120);
-    }, true);
+        const nextElement = card();
+        const nextContent = content();
+        if (!nextElement || !nextContent) {
+          clearClasses();
+          return;
+        }
 
-    idle();
-    try { if (typeof log === 'function') log('Stable card motion loaded.'); } catch (_) {}
+        nextElement.classList.remove('fc-card-leaving');
+        nextElement.classList.add('fc-card-entering', 'fc-card-transitioning');
+
+        // The new content is already painted at opacity 0. Start only the fade-in next frame.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            nextElement.classList.remove('fc-card-entering');
+            cleanupTimer = setTimeout(clearClasses, IN_MS + 35);
+          });
+        });
+      }, OUT_MS);
+      return true;
+    };
+
+    window.cancelSmoothCardTransition = clearClasses;
+    clearClasses();
+    try { if (typeof log === 'function') log('Smooth card fade loaded.'); } catch (_) {}
   } catch (error) {
-    try { console.warn('[card motion disabled]', error); } catch (_) {}
+    try { console.warn('[card fade disabled]', error); } catch (_) {}
   }
 })();
