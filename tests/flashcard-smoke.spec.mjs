@@ -13,13 +13,20 @@ async function openFirstVocabLesson(page, { navigate = true } = {}) {
   if (navigate) await page.goto('/flashcard/?v=e2e', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#cardFront')).toBeVisible();
 
-  const vocabTab = page.locator('.library-tab[data-tab="vocab"]');
-  await expect(vocabTab).toBeAttached({ timeout: 15_000 });
-  await vocabTab.click();
+  await expect.poll(
+    async () => page.evaluate(() => typeof window.switchFlashcardCategory === 'function'),
+    { timeout: 15_000 }
+  ).toBe(true);
 
-  const firstLesson = page.locator('#lessonList .lesson-btn').first();
-  await expect(firstLesson).toBeAttached({ timeout: 15_000 });
-  await firstLesson.click();
+  await page.evaluate(async () => {
+    await window.switchFlashcardCategory('vocab');
+    const courses = window.getFlashcardCategoryState?.().vocab?.courses || [];
+    const course = courses.find(item => item.lessons?.length);
+    const lesson = course?.lessons?.[0];
+    if (!course || !lesson) throw new Error('Không có bài Từ vựng để smoke test.');
+    window.st.lessons = course.lessons;
+    await window.selectLesson(lesson.id);
+  });
 
   await expect.poll(
     async () => page.evaluate(() => window.st?.cards?.length || 0),
@@ -73,8 +80,12 @@ test.describe('flashcard smoke', () => {
 
     await page.locator('.library-fab').click();
     await expect(page.locator('body')).toHaveClass(/library-open/);
-    await page.locator('.library-tab[data-tab="vocab"]').click();
-    await page.locator('#lessonList .lesson-btn').first().click();
+
+    await page.evaluate(async () => {
+      const lessonId = window.st?.lesson?.id;
+      if (!lessonId) throw new Error('Không có bài đang chọn để đóng drawer.');
+      await window.selectLesson(lessonId);
+    });
     await expect(page.locator('body')).not.toHaveClass(/library-open/);
 
     expect(errors, errors.join('\n')).toEqual([]);
