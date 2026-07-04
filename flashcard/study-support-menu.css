@@ -26,6 +26,7 @@
   pointer-events:auto!important;
   touch-action:manipulation!important;
 }
+#studySupportTrigger.hidden{display:none!important}
 #studySupportTrigger span{font-size:1rem;line-height:1}
 #studySupportTrigger strong{font-size:.8rem;line-height:1}
 body.library-open #studySupportTrigger,
@@ -71,7 +72,29 @@ body.auto-lesson-switching #studySupportTrigger{display:none!important}
   box-shadow:-20px 0 60px rgba(15,23,42,.24);
   transform:translateX(0);
 }
-.study-support-panel.hidden{display:none!important}
+#studySupportPanel.study-support-panel.card-options,
+body.auto-card-focus #studySupportPanel.study-support-panel.card-options{
+  position:fixed!important;
+  top:0!important;
+  right:0!important;
+  bottom:0!important;
+  left:auto!important;
+  z-index:14010!important;
+  display:block!important;
+  width:min(390px,92vw)!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:auto!important;
+  margin:0!important;
+  padding:max(18px,env(safe-area-inset-top)) 16px max(22px,env(safe-area-inset-bottom))!important;
+  border-radius:0!important;
+  opacity:1!important;
+  filter:none!important;
+  transform:none!important;
+  pointer-events:auto!important;
+  touch-action:pan-y!important;
+}
+#studySupportPanel.hidden{display:none!important}
 .study-support-panel header{
   display:flex;
   align-items:flex-start;
@@ -224,5 +247,5 @@ body.study-support-open{overflow:hidden!important}
     height:42px!important;
     padding-inline:13px!important;
   }
-  .study-support-panel{width:min(94vw,370px);padding-inline:13px}
+  #studySupportPanel.study-support-panel.card-options{width:min(94vw,370px)!important;padding-inline:13px!important}
 }
