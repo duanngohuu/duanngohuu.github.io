@@ -1,0 +1,6 @@
+/* User-facing status policy: hide internal cache/sync diagnostics. */
+#sheetSyncBanner,.sheet-sync-banner{display:none!important}
+.sheet-load-kicker,.sheet-load-status{display:none!important}
+.sheet-load-card h2{margin-bottom:14px!important}
+.course-btn.is-loading>span{display:none!important}
+#lessonMeta:empty{display:none!important}
