@@ -4,10 +4,36 @@
     if (!window.st || !window.e) return;
     const $ = s => document.querySelector(s);
     const MIX_KEY = 'fc_vocab_mix_pick_v1';
+    let menuOpenToken = 0;
     function isRunning() { return !!(st.session && st.session.length && !st.done); }
     function setStudy(on) { document.body.classList.toggle('study-active', !!on); }
     function setLessonSelected() { document.body.classList.toggle('has-selected-lesson', !!st.lesson); }
-    function openLessonMenu() { document.body.classList.add('library-open'); }
+    function focusFirstLibraryTab(token) {
+      if (token !== menuOpenToken || !document.body.classList.contains('library-open')) return false;
+      window.flashcardLibraryTools?.arrange?.();
+      const panel = $('.library-panel');
+      const tabs = panel?.querySelector('.library-tabs');
+      const firstTab = tabs?.querySelector('.library-tab');
+      if (!panel || !tabs || !firstTab) return false;
+
+      panel.scrollTop = 0;
+      tabs.scrollLeft = 0;
+      firstTab.click();
+      requestAnimationFrame(() => {
+        if (token !== menuOpenToken) return;
+        panel.scrollTop = 0;
+        tabs.scrollLeft = 0;
+        try { firstTab.focus({ preventScroll: true }); } catch (_) { firstTab.focus(); }
+      });
+      return true;
+    }
+    function openLessonMenu() {
+      const token = ++menuOpenToken;
+      document.body.classList.add('library-open');
+      requestAnimationFrame(() => {
+        if (!focusFirstLibraryTab(token)) setTimeout(() => focusFirstLibraryTab(token), 80);
+      });
+    }
     function shuffleCopy(arr) { return [...arr].sort(() => Math.random() - 0.5); }
     function ensureMixToggle() {
       let input = $('#mixInput');
@@ -198,7 +224,6 @@
       window.selectLesson.__studySmallWrapped = true;
     }
     document.addEventListener('click', ev => {
-      if (ev.target.closest('#selectedLessonBox,#bottomLessonBtn')) openLessonMenu();
       if (ev.target.closest('#startBtn,#finishRestartBtn,#finishKnownBtn,#finishAgainBtn')) {
         setStudy(true);
         refreshSoon('all');
