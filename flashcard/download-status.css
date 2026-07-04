@@ -1,0 +1,39 @@
+/* Download/offline availability badges for course lists and individual lessons. */
+.course-btn.is-downloaded>span{
+  color:#15803d!important;
+  font-weight:950!important;
+}
+.lesson-progress-line.has-download-state{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+.lesson-progress-line .lesson-download-state{
+  font-weight:950!important;
+}
+.lesson-progress-line .lesson-download-state.is-downloaded{
+  color:#15803d!important;
+  background:#dcfce7!important;
+  border-color:#86efac!important;
+}
+.lesson-progress-line .lesson-download-state.is-not-downloaded{
+  color:#64748b!important;
+  background:#f1f5f9!important;
+}
+.lesson-progress-line .lesson-download-state.is-local{
+  color:#1d4ed8!important;
+  background:#dbeafe!important;
+  border-color:#93c5fd!important;
+}
+.lesson-btn.active .lesson-progress-line .lesson-download-state{
+  color:#fff!important;
+  background:rgba(255,255,255,.18)!important;
+  border-color:rgba(255,255,255,.3)!important;
+}
+@media(max-width:820px){
+  .lesson-progress-line.has-download-state{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+  .lesson-progress-line .lesson-download-state{
+    font-size:.58rem!important;
+    letter-spacing:-.035em!important;
+  }
+}
