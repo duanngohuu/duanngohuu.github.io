@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v16';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v16';
+const SHELL_CACHE = 'flashcard-shell-20260704-v17';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v17';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
@@ -28,6 +28,7 @@ const SHELL_FILES = [
   './sheet-cache.css',
   './dark-calm.css',
   './user-status-policy.css',
+  './review-focus-clean.css',
   './core-stable-mini.js',
   './features-stable.js',
   './sheet-tabs.js',
