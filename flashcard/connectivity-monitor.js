@@ -6,6 +6,7 @@
     const $ = selector => document.querySelector(selector);
     const PROBE_INTERVAL = 30000;
     const PROBE_TIMEOUT = 4500;
+    const OFFLINE_TEXT = 'Đang offline · dùng dữ liệu đã lưu';
     let onlineState = null;
     let probeTimer = 0;
     let bannerTimer = 0;
@@ -37,19 +38,29 @@
       if (tone === 'warning') banner.classList.add('is-warning');
       if (tone === 'error') banner.classList.add('is-error');
       const label = banner.querySelector('#sheetSyncBannerText');
-      if (label) label.textContent = text;
+      if (label && label.textContent !== text) label.textContent = text;
       if (autoHideMs > 0 && onlineState !== false) {
         bannerTimer = setTimeout(() => banner.classList.add('hidden'), autoHideMs);
       }
       return banner;
     }
 
+    function offlineBannerIsCorrect() {
+      const banner = ensureBanner();
+      const label = banner.querySelector('#sheetSyncBannerText');
+      return document.body.classList.contains('network-offline')
+        && !banner.classList.contains('hidden')
+        && banner.classList.contains('is-warning')
+        && banner.classList.contains('network-persistent')
+        && label?.textContent === OFFLINE_TEXT;
+    }
+
     function renderOffline() {
-      if (enforcingOffline) return;
+      if (enforcingOffline || offlineBannerIsCorrect()) return;
       enforcingOffline = true;
       try {
         document.body.classList.add('network-offline');
-        const banner = renderBanner('Đang offline · dùng dữ liệu đã lưu', 'warning', 0);
+        const banner = renderBanner(OFFLINE_TEXT, 'warning', 0);
         banner.classList.add('network-persistent');
         banner.dataset.connectivityState = 'offline';
       } finally {
@@ -236,7 +247,9 @@
     window.addEventListener('focus', () => evaluateConnectivity('focus'));
 
     const bannerObserver = new MutationObserver(() => {
-      if (onlineState === false && !enforcingOffline) queueMicrotask(renderOffline);
+      if (onlineState === false && !enforcingOffline && !offlineBannerIsCorrect()) {
+        queueMicrotask(renderOffline);
+      }
     });
     bannerObserver.observe(ensureBanner(), {
       attributes: true,
