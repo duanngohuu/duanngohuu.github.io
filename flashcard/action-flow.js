@@ -22,6 +22,11 @@
       const card = currentCard();
       return !!(card && st.again?.has(card.id) && st.session?.length && !st.done);
     }
+    function transitionCardChange(change) {
+      if (typeof window.smoothCardTransition === 'function') return window.smoothCardTransition(change);
+      change();
+      return false;
+    }
     function disableButtons(on) {
       [e.prev, e.flip, e.ok, e.bad].forEach(button => { if (button) button.disabled = !!on; });
     }
@@ -56,7 +61,7 @@
         unlockTimer = setTimeout(() => {
           lockButtons(false);
           requestAnimationFrame(polishActions);
-        }, 260);
+        }, 300);
       }, 220);
     }
     function showBackThen(callback) {
@@ -84,7 +89,7 @@
       };
       advance();
     }
-    function moveForwardWithLoop() {
+    function moveForwardNow() {
       if (!st.session?.length || st.done) return;
       if (st.i >= st.session.length - 1) {
         if (!loopOn()) return;
@@ -93,13 +98,17 @@
       st.face = 0;
       if (typeof render === 'function') render();
     }
-    function continueOrFinish() {
+    function continueOrFinishNow() {
       if (!st.session?.length || st.done) return;
       if (st.i >= st.session.length - 1 && !loopOn()) {
         if (typeof window.finishSession === 'function') window.finishSession();
         return;
       }
-      moveForwardWithLoop();
+      moveForwardNow();
+    }
+    function continueOrFinish() {
+      if (!st.session?.length || st.done) return;
+      transitionCardChange(continueOrFinishNow);
     }
     function markAgainThenMove() {
       if (typeof window.mark === 'function') window.mark('again');
