@@ -1,5 +1,5 @@
-const SHELL_CACHE='flashcard-shell-20260704-v22';
-const RUNTIME_CACHE='flashcard-runtime-20260704-v22';
+const SHELL_CACHE='flashcard-shell-20260704-v23';
+const RUNTIME_CACHE='flashcard-runtime-20260704-v23';
 const SCOPE=self.registration.scope;
 const SHELL_FILES=['./','./index.html','./static-style.css','./ui-fix.css','./end-ux-fix.css','./polish.css','./switch-fix.css','./drawer-stable.css','./features-stable.css','./category-menu.css','./sheet-approved.css','./library-tools.css','./header-normal.css','./study-mode.css','./action-flow.css','./gradient-motion.css','./card-3d.css','./no-card-motion.css','./card-display-options.css','./focus-lock.css','./auto-focus.css','./stats-row-fix.css','./sheet-library.css','./sheet-cache.css','./dark-calm.css','./user-status-policy.css','./review-focus-clean.css','./core-stable-mini.js','./features-stable.js','./sheet-tabs.js','./offline-store.js','./hotfix-completion.js','./category-loader.js','./study-mode.js','./action-flow.js','./card-tap-flow.js','./card-3d.js','./card-display-options.js','./sheet-library.js','./sheet-config-live.js','./sheet-offline-bridge.js','./sheet-sync-reader.js','./auto-study.js','./theme-settings.js','./multi-face-final.js','./sheet-cache-v2.js','./connectivity-monitor.js','./library-tools.js','./no-motion-fix.js','./batch-progress.js','./data/sheet-library-manifest.json','./data/manifest.json','./data/n2-grammar-manifest.json'];
 const absolute=path=>new URL(path,SCOPE).href;
