@@ -46,9 +46,13 @@
 
     function setBadge(badge, text, tone) {
       if (!badge) return;
-      badge.textContent = text;
+      if (badge.textContent !== text) badge.textContent = text;
       badge.classList.remove('is-downloaded', 'is-not-downloaded', 'is-local');
       if (tone) badge.classList.add(tone);
+    }
+
+    function setLabel(label, text) {
+      if (label && label.textContent !== text) label.textContent = text;
     }
 
     function refreshCourseButtons() {
@@ -64,9 +68,9 @@
         button.classList.toggle('is-downloaded', ready);
         if (ready) {
           const count = info.course.lessons?.length || 0;
-          label.textContent = `Đã tải · ${count} bài`;
+          setLabel(label, `Đã tải · ${count} bài`);
         } else {
-          label.textContent = 'Chạm để tải';
+          setLabel(label, 'Chạm để tải');
         }
       });
     }
