@@ -125,7 +125,8 @@
       window.render.__autoStudyWrapped = true;
     }
     document.addEventListener('click', ev => {
-      if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options,#autoInput')) {
+      const displayUi = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn,#displaySettingsBackdrop');
+      if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options,#autoInput') && !displayUi) {
         ev.preventDefault();
         ev.stopImmediatePropagation();
         return;
@@ -135,7 +136,8 @@
       }
     }, true);
     document.addEventListener('touchmove', ev => {
-      if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options')) {
+      const displayUi = ev.target.closest('#displaySettingsBackdrop');
+      if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options') && !displayUi) {
         ev.preventDefault();
         ev.stopImmediatePropagation();
       }
