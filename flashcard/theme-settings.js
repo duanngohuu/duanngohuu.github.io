@@ -76,6 +76,22 @@
       }
     }
 
+    function loadDownloadStatus() {
+      if (!document.querySelector('link[data-download-status-style]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = './download-status.css?v=20260704-download1';
+        link.dataset.downloadStatusStyle = '1';
+        document.head.appendChild(link);
+      }
+      if (!document.querySelector('script[data-download-status-script]')) {
+        const script = document.createElement('script');
+        script.src = './download-status.js?v=20260704-download1';
+        script.dataset.downloadStatusScript = '1';
+        document.body.appendChild(script);
+      }
+    }
+
     const bodyObserver = new MutationObserver(() => {
       if (build()) bodyObserver.disconnect();
     });
@@ -89,6 +105,7 @@
     }, true);
 
     loadSystemSettings();
+    loadDownloadStatus();
     sync();
   } catch (error) {
     try { console.warn('[theme-settings disabled]', error); } catch (_) {}
