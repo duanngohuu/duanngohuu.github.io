@@ -6,6 +6,7 @@
     const LESSON_STORE = 'lessons';
     const LIBRARY_STORE = 'library';
     let dbPromise = null;
+    let dbInstance = null;
 
     function openDb() {
       if (dbPromise) return dbPromise;
@@ -24,9 +25,23 @@
             library.createIndex('updatedAt', 'updatedAt', { unique: false });
           }
         };
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error || new Error('Không mở được IndexedDB.'));
-        request.onblocked = () => reject(new Error('IndexedDB đang bị khóa bởi tab cũ.'));
+        request.onsuccess = () => {
+          dbInstance = request.result;
+          dbInstance.onversionchange = () => {
+            try { dbInstance.close(); } catch (_) {}
+            dbInstance = null;
+            dbPromise = null;
+          };
+          resolve(dbInstance);
+        };
+        request.onerror = () => {
+          dbPromise = null;
+          reject(request.error || new Error('Không mở được IndexedDB.'));
+        };
+        request.onblocked = () => {
+          dbPromise = null;
+          reject(new Error('IndexedDB đang bị khóa bởi tab cũ.'));
+        };
       });
       return dbPromise;
     }
@@ -70,6 +85,39 @@
       });
     }
 
+    function closeDb() {
+      try { dbInstance?.close(); } catch (_) {}
+      dbInstance = null;
+      dbPromise = null;
+    }
+
+    async function deleteDatabase() {
+      closeDb();
+      if (!('indexedDB' in window)) return false;
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.deleteDatabase(DB_NAME);
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => reject(request.error || new Error('Không xóa được IndexedDB.'));
+        request.onblocked = () => reject(new Error('Dữ liệu đang được dùng ở tab khác. Hãy đóng các tab Flashcard khác rồi thử lại.'));
+      });
+    }
+
+    async function clearAppCaches() {
+      if (!('caches' in window)) return 0;
+      const names = await caches.keys();
+      const targets = names.filter(name => name.startsWith('flashcard-shell-') || name.startsWith('flashcard-runtime-'));
+      const results = await Promise.all(targets.map(name => caches.delete(name)));
+      return results.filter(Boolean).length;
+    }
+
+    async function clearOfflineData() {
+      const [databaseDeleted, cacheCount] = await Promise.all([
+        deleteDatabase(),
+        clearAppCaches()
+      ]);
+      return { databaseDeleted, cacheCount };
+    }
+
     async function requestPersistentStorage() {
       try {
         if (!navigator.storage?.persist) return false;
@@ -96,6 +144,10 @@
       dbName: DB_NAME,
       dbVersion: DB_VERSION,
       openDb,
+      closeDb,
+      deleteDatabase,
+      clearAppCaches,
+      clearOfflineData,
       getLesson,
       putLesson,
       getLibrary,
