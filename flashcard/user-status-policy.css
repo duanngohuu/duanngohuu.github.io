@@ -6,3 +6,6 @@
 .course-btn.is-loading>span{display:none!important}
 #lessonMeta:empty{display:none!important}
 body.force-card-focus #cardHint::after{content:none!important;display:none!important}
+#studySupportTrigger.study-support-trigger.card-options.hidden,
+#studySupportBackdrop.study-support-backdrop.card-options.hidden,
+#studySupportPanel.study-support-panel.card-options.hidden{display:none!important}
