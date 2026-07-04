@@ -1,0 +1,2 @@
+GitHub Pages rebuild trigger: 2026-07-04
+No application logic changed.
