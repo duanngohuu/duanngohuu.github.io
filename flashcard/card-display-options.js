@@ -1,4 +1,4 @@
-// Card display settings: compact gear button with front/back visibility tabs.
+// Card display settings: compact gear button + fixed floating shortcut + body-level popup.
 (() => {
   try {
     if (!window.st || !window.e) return;
@@ -63,9 +63,31 @@
       return `<label class="display-setting-row" for="${id}"><span>${label}</span><input id="${id}" type="checkbox" ${checked ? 'checked' : ''}><i></i></label>`;
     }
 
+    function openPopup() {
+      const backdrop = $('#displaySettingsBackdrop');
+      if (!backdrop) return;
+      syncPopupFromInputs();
+      backdrop.classList.remove('hidden');
+      document.body.classList.add('display-settings-open');
+    }
+    function closePopup() {
+      $('#displaySettingsBackdrop')?.classList.add('hidden');
+      document.body.classList.remove('display-settings-open');
+    }
+    function bindOpenButton(button) {
+      if (!button || button.dataset.settingsBound === '1') return;
+      button.dataset.settingsBound = '1';
+      button.onclick = ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        openPopup();
+      };
+    }
+
     function ensurePopup() {
       const options = document.querySelector('.card-options');
       if (!options) return;
+
       let gear = $('#displaySettingsBtn');
       if (!gear) {
         gear = document.createElement('button');
@@ -78,6 +100,18 @@
         const reverseLabel = $('#reverseInput')?.closest('label');
         if (reverseLabel) reverseLabel.after(gear);
         else options.appendChild(gear);
+      }
+
+      let floatGear = $('#displaySettingsFloatBtn');
+      if (!floatGear) {
+        floatGear = document.createElement('button');
+        floatGear.id = 'displaySettingsFloatBtn';
+        floatGear.type = 'button';
+        floatGear.className = 'display-settings-float-btn';
+        floatGear.title = 'Tùy chỉnh hiển thị thẻ';
+        floatGear.setAttribute('aria-label', 'Mở cài đặt hiển thị thẻ');
+        floatGear.innerHTML = '<span>⚙</span><b>Hiển thị</b>';
+        document.body.appendChild(floatGear);
       }
 
       let backdrop = $('#displaySettingsBackdrop');
@@ -102,32 +136,29 @@
               ${makeSwitch('backReadingSetting', 'Hiragana', load(BACK_READING_KEY, true))}
             </div>
           </section>`;
-        options.appendChild(backdrop);
       }
+      if (backdrop.parentElement !== document.body) document.body.appendChild(backdrop);
 
-      if (gear.dataset.settingsBound !== '1') {
-        gear.dataset.settingsBound = '1';
-        gear.onclick = ev => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          syncPopupFromInputs();
-          backdrop.classList.remove('hidden');
-          document.body.classList.add('display-settings-open');
-        };
+      bindOpenButton(gear);
+      bindOpenButton(floatGear);
+
+      const close = backdrop.querySelector('#displaySettingsClose');
+      if (close && close.dataset.bound !== '1') {
+        close.dataset.bound = '1';
+        close.onclick = closePopup;
       }
-
-      backdrop.querySelector('#displaySettingsClose').onclick = closePopup;
-      backdrop.addEventListener('click', ev => { if (ev.target === backdrop) closePopup(); });
+      if (backdrop.dataset.bound !== '1') {
+        backdrop.dataset.bound = '1';
+        backdrop.addEventListener('click', ev => { if (ev.target === backdrop) closePopup(); });
+      }
       backdrop.querySelectorAll('[data-display-tab]').forEach(btn => {
+        if (btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
         btn.onclick = () => setPopupTab(btn.dataset.displayTab);
       });
       bindPopupSwitches();
     }
 
-    function closePopup() {
-      $('#displaySettingsBackdrop')?.classList.add('hidden');
-      document.body.classList.remove('display-settings-open');
-    }
     function setPopupTab(tab) {
       document.querySelectorAll('[data-display-tab]').forEach(btn => btn.classList.toggle('active', btn.dataset.displayTab === tab));
       document.querySelectorAll('[data-display-panel]').forEach(panel => panel.classList.toggle('active', panel.dataset.displayPanel === tab));
@@ -229,12 +260,12 @@
     }
 
     const oldRender = window.render;
-    if (typeof oldRender === 'function' && !oldRender.__displaySettingsWrapped) {
-      window.render = function displaySettingsRender() {
+    if (typeof oldRender === 'function' && !oldRender.__displaySettingsBodyWrapped) {
+      window.render = function displaySettingsBodyRender() {
         oldRender();
         requestAnimationFrame(applyDisplay);
       };
-      window.render.__displaySettingsWrapped = true;
+      window.render.__displaySettingsBodyWrapped = true;
     }
 
     document.addEventListener('click', ev => {
@@ -249,7 +280,7 @@
 
     ensureControls();
     applyDisplay();
-    try { if (typeof log === 'function') log('Display settings popup loaded.'); } catch (_) {}
+    try { if (typeof log === 'function') log('Fixed display settings popup loaded.'); } catch (_) {}
   } catch (error) {
     try { console.warn('[display-settings disabled]', error); } catch (_) {}
   }
