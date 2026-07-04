@@ -6,7 +6,9 @@
 
     function addTapFeedback() {
       document.addEventListener('click', ev => {
-        const target = ev.target.closest('button,.lesson-btn,.card,.stats span');
+        // Keep tap feedback on controls only. The flashcard has its own state flow;
+        // scaling/dimming it here caused a second animation on every flip.
+        const target = ev.target.closest('button,.lesson-btn,.stats span');
         if (!target) return;
         target.classList.remove('tap-pop');
         void target.offsetWidth;
