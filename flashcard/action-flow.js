@@ -4,7 +4,11 @@
     if (!window.st || !window.e) return;
     const $ = s => document.querySelector(s);
     let forcedWait = false;
+    let releasingFocus = false;
+    let waitTimer = 0;
+    let releaseTimer = 0;
     let unlockTimer = 0;
+
     function loopOn() {
       return !!(st.loop || $('#loopInput')?.checked);
     }
@@ -25,28 +29,51 @@
       const c = currentCard();
       return !!(c && st.again?.has(c.id) && !!st.session?.length && !st.done);
     }
+    function disableButtons(on) {
+      [e.prev, e.flip, e.ok, e.bad].forEach(btn => { if (btn) btn.disabled = !!on; });
+    }
     function lockButtons(on) {
       forcedWait = !!on;
+      if (!on) releasingFocus = false;
       document.body.classList.toggle('force-card-focus', !!on);
       focusPanel()?.classList.toggle('fc-focus-panel', !!on);
-      [e.prev, e.flip, e.ok, e.bad].forEach(btn => { if (btn) btn.disabled = !!on; });
+      disableButtons(on);
+    }
+    function releaseFocusVisual() {
+      releasingFocus = true;
+      document.body.classList.remove('force-card-focus');
+      focusPanel()?.classList.remove('fc-focus-panel');
+      disableButtons(true);
+    }
+    function clearFlowTimers() {
+      clearTimeout(waitTimer);
+      clearTimeout(releaseTimer);
+      clearTimeout(unlockTimer);
     }
     function showBackThen(callback) {
       if (forcedWait || !st.session?.length || st.done) return;
-      clearTimeout(unlockTimer);
+      clearFlowTimers();
       lockButtons(true);
       if (st.face !== 1) {
         st.face = 1;
         if (typeof render === 'function') render();
       }
       if (e.hint) e.hint.textContent = 'Cưỡng chế xem mặt sau 5 giây. Tập trung nhớ lại trước khi qua thẻ tiếp theo.';
-      setTimeout(() => {
-        // Change card while the layout is still locked, then release after the content transition finishes.
-        callback();
-        unlockTimer = setTimeout(() => {
-          lockButtons(false);
-          requestAnimationFrame(polishActions);
-        }, 280);
+
+      waitTimer = setTimeout(() => {
+        // First return the current card to normal view.
+        releaseFocusVisual();
+
+        // Only after the focus layer has visibly gone away do we replace the card.
+        releaseTimer = setTimeout(() => {
+          callback();
+
+          // Keep controls locked until the new card transition has settled.
+          unlockTimer = setTimeout(() => {
+            lockButtons(false);
+            requestAnimationFrame(polishActions);
+          }, 260);
+        }, 220);
       }, 5000);
     }
     function moveForwardWithLoop() {
@@ -102,16 +129,24 @@
         e.bad.classList.remove('primary');
         e.bad.classList.add('bad');
       }
-      if (forcedWait) lockButtons(true);
+      if (forcedWait) {
+        disableButtons(true);
+        if (!releasingFocus) {
+          document.body.classList.add('force-card-focus');
+          focusPanel()?.classList.add('fc-focus-panel');
+        }
+      }
     }
+
     const oldRender = window.render;
-    if (typeof oldRender === 'function' && !oldRender.__actionFlowWrapped) {
-      window.render = function actionFlowRender() {
+    if (typeof oldRender === 'function' && !oldRender.__actionFlowReleaseWrapped) {
+      window.render = function actionFlowReleaseRender() {
         oldRender();
         requestAnimationFrame(polishActions);
       };
-      window.render.__actionFlowWrapped = true;
+      window.render.__actionFlowReleaseWrapped = true;
     }
+
     document.addEventListener('touchmove', ev => {
       if (forcedWait) {
         ev.preventDefault();
@@ -133,6 +168,7 @@
       if (ev.target.closest('#startBtn,#finishRestartBtn')) setReviewMode('all');
       if (ev.target.closest('#finishKnownBtn,#knownText')) setReviewMode('known');
       if (ev.target.closest('#finishAgainBtn,#againText,#reviewBtn')) setReviewMode('again');
+
       const ok = ev.target.closest('#knownBtn');
       if (ok && isKnownCard()) {
         ev.preventDefault();
@@ -141,6 +177,7 @@
         requestAnimationFrame(polishActions);
         return;
       }
+
       const bad = ev.target.closest('#againBtn');
       if (bad) {
         ev.preventDefault();
@@ -149,6 +186,7 @@
         else showBackThen(markAgainThenMove);
         return;
       }
+
       if (ev.target.closest('#knownBtn,#againBtn,#flipBtn,#prevBtn,#loopInput,#finishKnownBtn,#finishAgainBtn,#knownText,#againText,#reviewBtn')) {
         requestAnimationFrame(polishActions);
       }
@@ -156,9 +194,10 @@
     document.addEventListener('change', ev => {
       if (ev.target && ev.target.id === 'loopInput') setTimeout(polishActions, 0);
     }, true);
+
     setReviewMode('all');
     polishActions();
-    try { if (typeof log === 'function') log('Action flow loaded.'); } catch (_) {}
+    try { if (typeof log === 'function') log('Action flow release-first loaded.'); } catch (_) {}
   } catch (error) {
     try { console.warn('[action-flow disabled]', error); } catch (_) {}
   }
