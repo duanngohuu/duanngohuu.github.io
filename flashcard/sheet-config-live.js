@@ -18,6 +18,15 @@
       try { return JSON.parse(String(value)); }
       catch (error) { throw new Error(`JSON config không hợp lệ: ${String(value).slice(0, 80)}`); }
     };
+    const hashText = value => {
+      let hash = 2166136261;
+      const source = String(value || '');
+      for (let index = 0; index < source.length; index++) {
+        hash ^= source.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return (hash >>> 0).toString(16).padStart(8, '0');
+    };
 
     function parseGviz(source) {
       const start = source.indexOf('(');
@@ -82,10 +91,13 @@
       const rows = parseGviz(await response.text());
       const courses = rows.map(rowToCourse).filter(Boolean);
       if (!courses.length) throw new Error(`${configSheet} không có course được bật.`);
-      const rowVersion = text(rows.find(row => text(row.config_version))?.config_version);
+      const rowVersion = text(rows.find(row => text(row.config_version))?.config_version) || 'config';
+      const configHash = hashText(JSON.stringify(rows));
       const config = {
         ...bootstrap,
-        version: rowVersion || bootstrap.version || `sheet-config-${Date.now()}`,
+        version: `${rowVersion}-${configHash}`,
+        configVersion: rowVersion,
+        configHash,
         configSource: 'google-sheet',
         courses
       };
