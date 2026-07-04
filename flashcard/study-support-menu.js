@@ -58,7 +58,7 @@
 
       const trigger = document.createElement('button');
       trigger.id = 'studySupportTrigger';
-      trigger.className = 'study-support-trigger card-options hidden';
+      trigger.className = 'study-support-trigger hidden';
       trigger.type = 'button';
       trigger.setAttribute('aria-label', 'Mở hỗ trợ từ đang học');
       trigger.innerHTML = '<span>✦</span><strong>Hỗ trợ</strong>';
@@ -66,14 +66,14 @@
 
       const backdrop = document.createElement('button');
       backdrop.id = 'studySupportBackdrop';
-      backdrop.className = 'study-support-backdrop card-options hidden';
+      backdrop.className = 'study-support-backdrop hidden';
       backdrop.type = 'button';
       backdrop.setAttribute('aria-label', 'Đóng menu hỗ trợ');
       document.body.appendChild(backdrop);
 
       const panel = document.createElement('aside');
       panel.id = 'studySupportPanel';
-      panel.className = 'study-support-panel card-options hidden';
+      panel.className = 'study-support-panel hidden';
       panel.setAttribute('aria-hidden', 'true');
       panel.innerHTML = `
         <header>
@@ -81,26 +81,26 @@
             <small>HỖ TRỢ TỪ ĐANG HỌC</small>
             <h2>Tra cứu nhanh</h2>
           </div>
-          <button id="studySupportClose" class="study-support-close card-options" type="button" aria-label="Đóng">×</button>
+          <button id="studySupportClose" class="study-support-close" type="button" aria-label="Đóng">×</button>
         </header>
         <section class="study-support-current">
           <span>Nội dung tiếng Nhật</span>
           <strong id="studySupportWord">Chưa có nội dung</strong>
         </section>
         <div class="study-support-actions">
-          <button class="study-support-action card-options" type="button" data-support-action="chat">
+          <button class="study-support-action" type="button" data-support-action="chat">
             <span>ChatGPT</span><strong>Tìm nội dung này</strong><i>↗</i>
           </button>
-          <button class="study-support-action card-options" type="button" data-support-action="reading">
+          <button class="study-support-action" type="button" data-support-action="reading">
             <span>ChatGPT</span><strong>Cách đọc từ này</strong><i>↗</i>
           </button>
-          <button class="study-support-action card-options" type="button" data-support-action="examples">
+          <button class="study-support-action" type="button" data-support-action="examples">
             <span>ChatGPT</span><strong>Thêm câu ví dụ</strong><i>↗</i>
           </button>
-          <button class="study-support-action card-options" type="button" data-support-action="relations">
+          <button class="study-support-action" type="button" data-support-action="relations">
             <span>ChatGPT</span><strong>Đồng nghĩa · gần nghĩa · trái nghĩa</strong><i>↗</i>
           </button>
-          <button class="study-support-action is-mazii card-options" type="button" data-support-action="mazii">
+          <button class="study-support-action is-mazii" type="button" data-support-action="mazii">
             <span>Từ điển</span><strong>Tra trên Mazii</strong><i>↗</i>
           </button>
         </div>
