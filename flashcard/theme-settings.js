@@ -118,6 +118,22 @@
       }
     }
 
+    function loadStartupUnlock() {
+      const version = '20260704-unlock1';
+      let script = document.querySelector('script[data-startup-unlock-script]');
+      if (script && script.dataset.startupUnlockVersion !== version) {
+        script.remove();
+        script = null;
+      }
+      if (!script) {
+        script = document.createElement('script');
+        script.src = `./startup-unlock.js?v=${version}`;
+        script.dataset.startupUnlockScript = '1';
+        script.dataset.startupUnlockVersion = version;
+        document.body.appendChild(script);
+      }
+    }
+
     const bodyObserver = new MutationObserver(() => {
       if (build()) bodyObserver.disconnect();
     });
@@ -130,6 +146,7 @@
       if (ev.target.closest('#themeToggle,#displaySettingsBtn')) setTimeout(() => { build(); sync(); }, 0);
     }, true);
 
+    loadStartupUnlock();
     loadSystemSettings();
     loadDownloadStatus();
     loadBatchProgress();
