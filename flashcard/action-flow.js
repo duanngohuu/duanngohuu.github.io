@@ -1,4 +1,4 @@
-// Action flow: learn by marking known/unknown. Next button is not part of the flow.
+// Action flow: forgotten cards reveal every remaining face for 5 seconds each.
 (() => {
   try {
     if (!window.st || !window.e) return;
@@ -9,28 +9,21 @@
     let releaseTimer = 0;
     let unlockTimer = 0;
 
-    function loopOn() {
-      return !!(st.loop || $('#loopInput')?.checked);
-    }
-    function currentCard() {
-      return st.session?.[st.i] || null;
-    }
-    function focusPanel() {
-      return e.card?.closest('.panel');
-    }
-    function setReviewMode(mode) {
-      st.reviewMode = mode || 'all';
-    }
+    function loopOn() { return !!(st.loop || $('#loopInput')?.checked); }
+    function currentCard() { return st.session?.[st.i] || null; }
+    function currentFaceCount() { return Math.max(1, currentCard()?.faces?.length || 2); }
+    function focusPanel() { return e.card?.closest('.panel'); }
+    function setReviewMode(mode) { st.reviewMode = mode || 'all'; }
     function isKnownCard() {
-      const c = currentCard();
-      return !!(c && st.known?.has(c.id) && !!st.session?.length && !st.done);
+      const card = currentCard();
+      return !!(card && st.known?.has(card.id) && st.session?.length && !st.done);
     }
     function isAgainCard() {
-      const c = currentCard();
-      return !!(c && st.again?.has(c.id) && !!st.session?.length && !st.done);
+      const card = currentCard();
+      return !!(card && st.again?.has(card.id) && st.session?.length && !st.done);
     }
     function disableButtons(on) {
-      [e.prev, e.flip, e.ok, e.bad].forEach(btn => { if (btn) btn.disabled = !!on; });
+      [e.prev, e.flip, e.ok, e.bad].forEach(button => { if (button) button.disabled = !!on; });
     }
     function lockButtons(on) {
       forcedWait = !!on;
@@ -50,40 +43,53 @@
       clearTimeout(releaseTimer);
       clearTimeout(unlockTimer);
     }
+    function waitHint(face, count) {
+      if (!e.hint) return;
+      e.hint.textContent = count > 2
+        ? `Đang xem mặt ${face + 1}/${count} · mỗi mặt 5 giây.`
+        : 'Cưỡng chế xem mặt sau 5 giây. Tập trung nhớ lại trước khi qua thẻ tiếp theo.';
+    }
+    function finishFocusedReview(callback) {
+      releaseFocusVisual();
+      releaseTimer = setTimeout(() => {
+        callback();
+        unlockTimer = setTimeout(() => {
+          lockButtons(false);
+          requestAnimationFrame(polishActions);
+        }, 260);
+      }, 220);
+    }
     function showBackThen(callback) {
       if (forcedWait || !st.session?.length || st.done) return;
       clearFlowTimers();
       lockButtons(true);
-      if (st.face !== 1) {
-        st.face = 1;
-        if (typeof render === 'function') render();
-      }
-      if (e.hint) e.hint.textContent = 'Cưỡng chế xem mặt sau 5 giây. Tập trung nhớ lại trước khi qua thẻ tiếp theo.';
+      const count = currentFaceCount();
+      let face = count > 1 ? 1 : 0;
+      st.face = face;
+      if (typeof render === 'function') render();
+      waitHint(face, count);
 
-      waitTimer = setTimeout(() => {
-        // First return the current card to normal view.
-        releaseFocusVisual();
-
-        // Only after the focus layer has visibly gone away do we replace the card.
-        releaseTimer = setTimeout(() => {
-          callback();
-
-          // Keep controls locked until the new card transition has settled.
-          unlockTimer = setTimeout(() => {
-            lockButtons(false);
-            requestAnimationFrame(polishActions);
-          }, 260);
-        }, 220);
-      }, 5000);
+      const advance = () => {
+        waitTimer = setTimeout(() => {
+          face += 1;
+          if (face < count) {
+            st.face = face;
+            if (typeof render === 'function') render();
+            waitHint(face, count);
+            advance();
+          } else {
+            finishFocusedReview(callback);
+          }
+        }, 5000);
+      };
+      advance();
     }
     function moveForwardWithLoop() {
       if (!st.session?.length || st.done) return;
       if (st.i >= st.session.length - 1) {
         if (!loopOn()) return;
         st.i = 0;
-      } else {
-        st.i += 1;
-      }
+      } else st.i += 1;
       st.face = 0;
       if (typeof render === 'function') render();
     }
@@ -139,65 +145,65 @@
     }
 
     const oldRender = window.render;
-    if (typeof oldRender === 'function' && !oldRender.__actionFlowReleaseWrapped) {
-      window.render = function actionFlowReleaseRender() {
+    if (typeof oldRender === 'function' && !oldRender.__actionMultiFaceWrapped) {
+      window.render = function actionMultiFaceRender() {
         oldRender();
         requestAnimationFrame(polishActions);
       };
-      window.render.__actionFlowReleaseWrapped = true;
+      window.render.__actionMultiFaceWrapped = true;
     }
 
-    document.addEventListener('touchmove', ev => {
+    document.addEventListener('touchmove', event => {
       if (forcedWait) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
+        event.preventDefault();
+        event.stopImmediatePropagation();
       }
-    }, {capture:true, passive:false});
-    document.addEventListener('wheel', ev => {
+    }, { capture: true, passive: false });
+    document.addEventListener('wheel', event => {
       if (forcedWait) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
+        event.preventDefault();
+        event.stopImmediatePropagation();
       }
-    }, {capture:true, passive:false});
-    document.addEventListener('click', ev => {
+    }, { capture: true, passive: false });
+    document.addEventListener('click', event => {
       if (forcedWait) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
+        event.preventDefault();
+        event.stopImmediatePropagation();
         return;
       }
-      if (ev.target.closest('#startBtn,#finishRestartBtn')) setReviewMode('all');
-      if (ev.target.closest('#finishKnownBtn,#knownText')) setReviewMode('known');
-      if (ev.target.closest('#finishAgainBtn,#againText,#reviewBtn')) setReviewMode('again');
+      if (event.target.closest('#startBtn,#finishRestartBtn')) setReviewMode('all');
+      if (event.target.closest('#finishKnownBtn,#knownText')) setReviewMode('known');
+      if (event.target.closest('#finishAgainBtn,#againText,#reviewBtn')) setReviewMode('again');
 
-      const ok = ev.target.closest('#knownBtn');
+      const ok = event.target.closest('#knownBtn');
       if (ok && isKnownCard()) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
+        event.preventDefault();
+        event.stopImmediatePropagation();
         continueOrFinish();
         requestAnimationFrame(polishActions);
         return;
       }
 
-      const bad = ev.target.closest('#againBtn');
+      const bad = event.target.closest('#againBtn');
       if (bad) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
+        event.preventDefault();
+        event.stopImmediatePropagation();
         if (isAgainCard()) showBackThen(continueOrFinish);
         else showBackThen(markAgainThenMove);
         return;
       }
 
-      if (ev.target.closest('#knownBtn,#againBtn,#flipBtn,#prevBtn,#loopInput,#finishKnownBtn,#finishAgainBtn,#knownText,#againText,#reviewBtn')) {
+      if (event.target.closest('#knownBtn,#againBtn,#flipBtn,#prevBtn,#loopInput,#finishKnownBtn,#finishAgainBtn,#knownText,#againText,#reviewBtn')) {
         requestAnimationFrame(polishActions);
       }
     }, true);
-    document.addEventListener('change', ev => {
-      if (ev.target && ev.target.id === 'loopInput') setTimeout(polishActions, 0);
+    document.addEventListener('change', event => {
+      if (event.target?.id === 'loopInput') setTimeout(polishActions, 0);
     }, true);
 
     setReviewMode('all');
     polishActions();
-    try { if (typeof log === 'function') log('Action flow release-first loaded.'); } catch (_) {}
+    try { if (typeof log === 'function') log('Action multi-face flow loaded.'); } catch (_) {}
   } catch (error) {
     try { console.warn('[action-flow disabled]', error); } catch (_) {}
   }
