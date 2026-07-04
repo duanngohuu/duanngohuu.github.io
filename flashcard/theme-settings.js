@@ -163,6 +163,22 @@
       }
     }
 
+    function loadLocalMultiface() {
+      const version = '20260705-localfaces1';
+      let script = document.querySelector('script[data-local-multiface-script]');
+      if (script && script.dataset.localMultifaceVersion !== version) {
+        script.remove();
+        script = null;
+      }
+      if (!script) {
+        script = document.createElement('script');
+        script.src = `./local-multiface.js?v=${version}`;
+        script.dataset.localMultifaceScript = '1';
+        script.dataset.localMultifaceVersion = version;
+        document.body.appendChild(script);
+      }
+    }
+
     const bodyObserver = new MutationObserver(() => {
       hideLegacyDisplayToggles();
       if (build()) bodyObserver.disconnect();
@@ -181,6 +197,7 @@
     loadSystemSettings();
     loadDownloadStatus();
     loadBatchProgress();
+    loadLocalMultiface();
     sync();
   } catch (error) {
     try { console.warn('[theme-settings disabled]', error); } catch (_) {}
