@@ -1,4 +1,4 @@
-// Persist Sheet manifest/course lessons so the menu remains available offline.
+// Persist live Sheet config/course lessons so the menu remains available offline.
 (() => {
   try {
     const offline = window.flashcardOffline;
@@ -13,13 +13,40 @@
       catch (_) { return JSON.parse(JSON.stringify(value)); }
     }
 
+    function courseSignature(course) {
+      const source = JSON.stringify({
+        title: course.title,
+        usedRange: course.usedRange,
+        kind: course.kind,
+        chunkSize: course.chunkSize,
+        primaryCol: course.primaryCol,
+        groupCol: course.groupCol,
+        parser: course.parser,
+        mergeContinuation: course.mergeContinuation,
+        warningAfter: course.warningAfter,
+        lessonTitle: course.lessonTitle,
+        fields: course.fields,
+        ordinary: course.ordinary,
+        sections: course.sections,
+        titleRegex: course.titleRegex,
+        titleRows: course.titleRows
+      });
+      let hash = 2166136261;
+      for (let index = 0; index < source.length; index++) {
+        hash ^= source.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return (hash >>> 0).toString(16).padStart(8, '0');
+    }
+
     async function hydrateCourses(config) {
       if (!config?.courses?.length) return config;
       await Promise.all(config.courses.map(async course => {
         try {
           const cached = await offline.getLibrary(COURSE_PREFIX + course.id);
           if (!cached?.lessons?.length) return;
-          if (cached.manifestVersion && cached.manifestVersion !== config.version) return;
+          const currentSignature = courseSignature(course);
+          if (cached.courseSignature && cached.courseSignature !== currentSignature) return;
           course.lessons = clone(cached.lessons);
           course._lessonsReady = true;
           course._offlineHydrated = true;
@@ -47,7 +74,8 @@
     window.ensureSheetCourseLessons = async function offlineCourseLessons(course) {
       if (course?._lessonsReady && course.lessons?.length) return course.lessons;
       const cached = await offline.getLibrary(COURSE_PREFIX + course.id).catch(() => null);
-      if (cached?.lessons?.length) {
+      const currentSignature = courseSignature(course);
+      if (cached?.lessons?.length && (!cached.courseSignature || cached.courseSignature === currentSignature)) {
         course.lessons = clone(cached.lessons);
         course._lessonsReady = true;
         course._offlineHydrated = true;
@@ -64,12 +92,14 @@
         courseId: course.id,
         title: course.title,
         manifestVersion,
+        courseSignature: currentSignature,
         lessons: clone(lessons)
       });
       return lessons;
     };
 
     window.sheetOfflineKeys = { manifest: MANIFEST_KEY, coursePrefix: COURSE_PREFIX };
+    window.sheetCourseConfigSignature = courseSignature;
   } catch (error) {
     try { console.warn('[sheet-offline-bridge disabled]', error); } catch (_) {}
   }
