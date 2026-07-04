@@ -9,10 +9,22 @@ function collectPageErrors(page) {
   return errors;
 }
 
-async function waitForStableFlashcard(page) {
-  await page.goto('/flashcard/?v=e2e', { waitUntil: 'domcontentloaded' });
+async function openFirstVocabLesson(page, { navigate = true } = {}) {
+  if (navigate) await page.goto('/flashcard/?v=e2e', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#cardFront')).toBeVisible();
-  await expect(page.locator('#lessonList .lesson-btn').first()).toBeAttached({ timeout: 15_000 });
+
+  const vocabTab = page.locator('.library-tab[data-tab="vocab"]');
+  await expect(vocabTab).toBeAttached({ timeout: 15_000 });
+  await vocabTab.click();
+
+  const firstLesson = page.locator('#lessonList .lesson-btn').first();
+  await expect(firstLesson).toBeAttached({ timeout: 15_000 });
+  await firstLesson.click();
+
+  await expect.poll(
+    async () => page.evaluate(() => window.st?.cards?.length || 0),
+    { timeout: 15_000 }
+  ).toBeGreaterThan(0);
   await expect(page.locator('#sessionTitle')).not.toHaveText(/Lỗi JS|Lỗi tải bài/);
   await expect(page.locator('#cardFront')).not.toHaveText(/App lỗi|Không tải được data/);
 }
@@ -20,7 +32,7 @@ async function waitForStableFlashcard(page) {
 test.describe('flashcard smoke', () => {
   test('loads, starts a session, flips and marks a card', async ({ page }) => {
     const errors = collectPageErrors(page);
-    await waitForStableFlashcard(page);
+    await openFirstVocabLesson(page);
 
     await page.locator('#startBtn').click();
     await expect(page.locator('#posText')).toHaveText(/1\/10|1\/20|1\/30|1\/50|1\/\d+/);
@@ -30,19 +42,19 @@ test.describe('flashcard smoke', () => {
     await expect.poll(async () => page.locator('#cardFront').innerText()).not.toBe(frontBefore);
 
     await page.locator('#knownBtn').click();
-    await expect(page.locator('#knownText')).toContainText('Biết: 1');
+    await expect(page.locator('#knownText')).toHaveText(/(?:Biết|Đã nhớ): 1/);
 
     expect(errors, errors.join('\n')).toEqual([]);
   });
 
   test('survives reload after first use', async ({ page }) => {
     const errors = collectPageErrors(page);
-    await waitForStableFlashcard(page);
+    await openFirstVocabLesson(page);
     await page.locator('#startBtn').click();
     await expect(page.locator('#posText')).toContainText('1/');
 
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#lessonList .lesson-btn').first()).toBeAttached({ timeout: 15_000 });
+    await openFirstVocabLesson(page, { navigate: false });
     await expect(page.locator('#cardFront')).toBeVisible();
     await expect(page.locator('#sessionTitle')).not.toHaveText(/Lỗi JS|Lỗi tải bài/);
     await page.locator('#startBtn').click();
@@ -54,13 +66,14 @@ test.describe('flashcard smoke', () => {
   test('mobile viewport has no horizontal overflow and drawer opens', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile-iphone', 'mobile-only layout check');
     const errors = collectPageErrors(page);
-    await waitForStableFlashcard(page);
+    await openFirstVocabLesson(page);
 
     const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 4);
     expect(hasOverflow).toBe(false);
 
-    await page.locator('.open-library-btn').click();
+    await page.locator('.library-fab').click();
     await expect(page.locator('body')).toHaveClass(/library-open/);
+    await page.locator('.library-tab[data-tab="vocab"]').click();
     await page.locator('#lessonList .lesson-btn').first().click();
     await expect(page.locator('body')).not.toHaveClass(/library-open/);
 
