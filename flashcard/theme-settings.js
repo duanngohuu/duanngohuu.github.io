@@ -47,6 +47,35 @@
       return true;
     }
 
+    function hideLegacyDisplayToggles() {
+      if (!$('#legacyDisplayTogglePolicy')) {
+        const style = document.createElement('style');
+        style.id = 'legacyDisplayTogglePolicy';
+        style.textContent = `
+          .card-options>label:has(#readingInput),
+          .card-options>label:has(#hideKanjiInput){display:none!important}`;
+        document.head.appendChild(style);
+      }
+
+      const apply = () => {
+        ['readingInput', 'hideKanjiInput'].forEach(id => {
+          const label = document.getElementById(id)?.closest('label');
+          if (!label) return;
+          label.classList.add('display-option-hidden');
+          label.hidden = true;
+          label.style.setProperty('display', 'none', 'important');
+          label.setAttribute('aria-hidden', 'true');
+        });
+      };
+
+      apply();
+      const options = document.querySelector('.card-options');
+      if (options && options.dataset.legacyDisplayToggleObserved !== '1') {
+        options.dataset.legacyDisplayToggleObserved = '1';
+        new MutationObserver(apply).observe(options, { childList: true, subtree: true });
+      }
+    }
+
     function loadSystemSettings() {
       const navActions = $('.nav-actions');
       const themeButton = $('#themeToggle');
@@ -135,6 +164,7 @@
     }
 
     const bodyObserver = new MutationObserver(() => {
+      hideLegacyDisplayToggles();
       if (build()) bodyObserver.disconnect();
     });
     if (!build()) bodyObserver.observe(document.body, { childList: true, subtree: true });
@@ -146,6 +176,7 @@
       if (ev.target.closest('#themeToggle,#displaySettingsBtn')) setTimeout(() => { build(); sync(); }, 0);
     }, true);
 
+    hideLegacyDisplayToggles();
     loadStartupUnlock();
     loadSystemSettings();
     loadDownloadStatus();
