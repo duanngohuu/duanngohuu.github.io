@@ -1,6 +1,6 @@
 {
-  "version": "2026.07.02-n2-reading-400",
-  "title": "400 từ vựng hay xuất hiện trong bài trường văn N2",
+  "version": "2026.07.04-vocab-593",
+  "title": "Thư viện từ vựng N2",
   "lessonSize": 50,
   "courses": [
     {
@@ -16,6 +16,17 @@
         { "id": "n2-reading-251-300", "title": "Bài 06 · STT 251-300", "description": "Từ 251 đến 300", "path": "./data/n2-reading-251-300.tsv", "count": 50, "startNo": 251, "endNo": 300, "tags": ["n2", "reading"] },
         { "id": "n2-reading-301-350", "title": "Bài 07 · STT 301-350", "description": "Từ 301 đến 350", "path": "./data/n2-reading-301-350.tsv", "count": 50, "startNo": 301, "endNo": 350, "tags": ["n2", "reading"] },
         { "id": "n2-reading-351-400", "title": "Bài 08 · STT 351-400", "description": "Từ 351 đến 400", "path": "./data/n2-reading-351-400.tsv", "count": 50, "startNo": 351, "endNo": 400, "tags": ["n2", "reading"] }
+      ]
+    },
+    {
+      "id": "n2-kanji-exam-2010-2025",
+      "title": "Chữ Hán N2 theo đề 2010–2025",
+      "description": "Batch hiện tại gồm 193 từ từ kỳ 07/2010 đến 12/2019. Sẽ bổ sung tiếp các năm còn lại.",
+      "lessons": [
+        { "id": "n2-kanji-exam-001-050", "title": "Bài 01 · 07/2010–07/2012", "description": "STT 1 đến 50", "path": "./data/n2-kanji-exam-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "kanji", "exam"] },
+        { "id": "n2-kanji-exam-051-100", "title": "Bài 02 · 12/2012–12/2014", "description": "STT 51 đến 100", "path": "./data/n2-kanji-exam-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "tags": ["n2", "kanji", "exam"] },
+        { "id": "n2-kanji-exam-101-150", "title": "Bài 03 · 07/2015–07/2017", "description": "STT 101 đến 150", "path": "./data/n2-kanji-exam-101-150.tsv", "count": 50, "startNo": 101, "endNo": 150, "tags": ["n2", "kanji", "exam"] },
+        { "id": "n2-kanji-exam-151-193", "title": "Bài 04 · 12/2017–12/2019", "description": "STT 151 đến 193", "path": "./data/n2-kanji-exam-151-193.tsv", "count": 43, "startNo": 151, "endNo": 193, "tags": ["n2", "kanji", "exam"] }
       ]
     }
   ]
