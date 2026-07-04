@@ -7,7 +7,8 @@
     let timers = [];
     let internalFlip = false;
     let lastFocus = false;
-    function save(v) { try { localStorage.setItem(AUTO_KEY, v ? 'on' : 'off'); } catch (_) {} }
+
+    function save(value) { try { localStorage.setItem(AUTO_KEY, value ? 'on' : 'off'); } catch (_) {} }
     function load() { try { return localStorage.getItem(AUTO_KEY) === 'on'; } catch (_) { return false; } }
     function currentCard() { return st.session?.[st.i] || null; }
     function faceCount() { return Math.max(1, currentCard()?.faces?.length || 2); }
@@ -48,16 +49,47 @@
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'autoStudyBanner';
+        banner.className = 'hidden';
         document.body.prepend(banner);
       }
-      const count = faceCount();
-      banner.textContent = count > 2 ? `Đang tự động học · ${count} mặt × 5 giây` : 'Đang tự động lật thẻ';
       return banner;
     }
+    function defaultAutoText() {
+      const count = faceCount();
+      return count > 2 ? `Tự động học · ${count} mặt × 5 giây` : 'Tự động học · mỗi mặt 5 giây';
+    }
+    function renderStatusBanner() {
+      const banner = ensureBanner();
+      const offline = document.body.classList.contains('network-offline');
+      const reconnected = document.body.classList.contains('network-reconnected');
+      const auto = autoFocusOn();
+      let text = '';
+      let tone = '';
+
+      if (reconnected) {
+        text = auto ? 'Đã có mạng · tự động học tiếp tục' : 'Đã có mạng';
+        tone = 'is-online';
+      } else if (offline) {
+        text = auto ? 'Offline · tự động học bằng dữ liệu đã lưu' : 'Đang offline · dùng dữ liệu đã lưu';
+        tone = 'is-offline';
+      } else if (auto) {
+        text = defaultAutoText();
+        tone = 'is-auto';
+      }
+
+      banner.classList.remove('hidden', 'is-online', 'is-offline', 'is-auto');
+      if (!text) {
+        banner.classList.add('hidden');
+        banner.textContent = '';
+        return;
+      }
+      banner.classList.add(tone);
+      if (banner.textContent !== text) banner.textContent = text;
+    }
     function updateFocus(forceScroll = false) {
-      ensureBanner();
       const on = autoFocusOn();
       document.body.classList.toggle('auto-card-focus', on);
+      renderStatusBanner();
       if (on && !settingsOpen() && (forceScroll || on !== lastFocus)) {
         requestAnimationFrame(scrollToCard);
         setTimeout(scrollToCard, 80);
@@ -131,6 +163,7 @@
         autoMove();
       }, count * 5000));
     }
+
     const oldRender = window.render;
     if (typeof oldRender === 'function' && !oldRender.__autoMultiFaceWrapped) {
       window.render = function autoMultiFaceRender() {
@@ -144,15 +177,16 @@
       };
       window.render.__autoMultiFaceWrapped = true;
     }
-    document.addEventListener('click', ev => {
-      const opensSettings = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn,#systemSettingsBtn');
-      const closesSettings = ev.target.closest('#displaySettingsClose,#systemSettingsClose')
-        || ev.target.id === 'displaySettingsBackdrop'
-        || ev.target.id === 'systemSettingsBackdrop';
+
+    document.addEventListener('click', event => {
+      const opensSettings = event.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn,#systemSettingsBtn');
+      const closesSettings = event.target.closest('#displaySettingsClose,#systemSettingsClose')
+        || event.target.id === 'displaySettingsBackdrop'
+        || event.target.id === 'systemSettingsBackdrop';
       if (opensSettings && autoOn()) clearTimers();
-      if (document.body.classList.contains('auto-card-focus') && !allowedAutoTarget(ev.target)) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
+      if (document.body.classList.contains('auto-card-focus') && !allowedAutoTarget(event.target)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
         return;
       }
       if (closesSettings && autoOn()) {
@@ -160,22 +194,25 @@
           if (!settingsOpen()) scheduleAuto(true);
         }, 120);
       }
-      if (autoOn() && ev.target.closest('#knownBtn,#againBtn,#prevBtn,#startBtn,.lesson-btn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn,#resetBtn')) {
+      if (autoOn() && event.target.closest('#knownBtn,#againBtn,#prevBtn,#startBtn,.lesson-btn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn,#resetBtn')) {
         setTimeout(() => scheduleAuto(true), 120);
       }
     }, true);
-    document.addEventListener('touchmove', ev => {
-      if (document.body.classList.contains('auto-card-focus') && !allowedAutoTarget(ev.target)) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
+    document.addEventListener('touchmove', event => {
+      if (document.body.classList.contains('auto-card-focus') && !allowedAutoTarget(event.target)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
       }
     }, { capture: true, passive: false });
-    document.addEventListener('change', ev => {
-      if (ev.target?.closest('.card-options input') && autoOn()) setTimeout(() => scheduleAuto(true), 0);
+    document.addEventListener('change', event => {
+      if (event.target?.closest('.card-options input') && autoOn()) setTimeout(() => scheduleAuto(true), 0);
     }, true);
-    document.addEventListener('keydown', ev => {
-      if (ev.key === 'Escape' && autoFocusOn()) setTimeout(() => scheduleAuto(true), 140);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && autoFocusOn()) setTimeout(() => scheduleAuto(true), 140);
     });
+    window.addEventListener('flashcard-connectivity', renderStatusBanner);
+
+    window.refreshFlashcardStatusBanner = renderStatusBanner;
     ensureBanner();
     ensureToggle();
     scheduleAuto();
