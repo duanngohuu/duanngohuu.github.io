@@ -7,6 +7,9 @@ body.auto-card-focus,body.network-offline,body.network-reconnected{--status-bar-
 body.auto-card-focus .shell,body.network-offline .shell,body.network-reconnected .shell{padding-top:var(--status-bar-height)!important;position:relative}
 body.auto-card-focus{overflow:hidden!important}
 body.auto-card-focus::before{content:"";position:fixed;inset:30px 0 0;z-index:9980;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);pointer-events:auto!important;touch-action:none!important}
+body.auto-lesson-switching{overflow:hidden!important;background:#000!important}
+body.auto-lesson-switching::after{content:"";position:fixed;inset:30px 0 0;z-index:13010;background:#000;pointer-events:auto!important;touch-action:none!important}
+body.auto-lesson-switching .shell{visibility:hidden!important}
 body.auto-card-focus .hero,body.auto-card-focus aside,body.auto-card-focus .controls,body.auto-card-focus #logPanel{opacity:.05!important;filter:blur(3px) grayscale(.5)!important;pointer-events:none!important}
 body.auto-card-focus .topbar{position:relative!important;z-index:10006!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 body.auto-card-focus .topbar .brand{opacity:.08!important;filter:grayscale(.5)!important;pointer-events:none!important}
