@@ -4,6 +4,7 @@
     const originalLoadConfig = window.loadSheetLibraryConfig;
     if (typeof originalLoadConfig !== 'function') return;
     const APPROVED = /^OK@(TV|NP|BUN)\s*/i;
+    const CONFIG_TIMEOUT = 5500;
     let livePromise = null;
     let lastLiveConfig = null;
 
@@ -16,7 +17,7 @@
     const jsonValue = (value, fallback = []) => {
       if (!text(value)) return fallback;
       try { return JSON.parse(String(value)); }
-      catch (error) { throw new Error(`JSON config không hợp lệ: ${String(value).slice(0, 80)}`); }
+      catch (_) { throw new Error(`JSON config không hợp lệ: ${String(value).slice(0, 80)}`); }
     };
     const hashText = value => {
       let hash = 2166136261;
@@ -85,32 +86,40 @@
       const spreadsheetId = bootstrap.spreadsheetId;
       const configSheet = bootstrap.configSheet || '__CONFIG';
       if (!spreadsheetId) throw new Error('Thiếu spreadsheetId trong bootstrap.');
-      const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${encodeURIComponent(configSheet)}&range=A1:U100&headers=1&tqx=out:json&_=${Date.now()}`;
-      const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`Không tải được ${configSheet}: ${response.status}`);
-      const rows = parseGviz(await response.text());
-      const courses = rows.map(rowToCourse).filter(Boolean);
-      if (!courses.length) throw new Error(`${configSheet} không có course được bật.`);
-      const rowVersion = text(rows.find(row => text(row.config_version))?.config_version) || 'config';
-      const configHash = hashText(JSON.stringify(rows));
-      const config = {
-        ...bootstrap,
-        version: `${rowVersion}-${configHash}`,
-        configVersion: rowVersion,
-        configHash,
-        configSource: 'google-sheet',
-        courses
-      };
-      lastLiveConfig = config;
-      window.__lastLiveSheetConfig = config;
-      return config;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), CONFIG_TIMEOUT);
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${encodeURIComponent(configSheet)}&range=A1:U100&headers=1&tqx=out:json&_=${Date.now()}`;
+        const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+        if (!response.ok) throw new Error(`Không tải được ${configSheet}: ${response.status}`);
+        const rows = parseGviz(await response.text());
+        const courses = rows.map(rowToCourse).filter(Boolean);
+        if (!courses.length) throw new Error(`${configSheet} không có course được bật.`);
+        const rowVersion = text(rows.find(row => text(row.config_version))?.config_version) || 'config';
+        const configHash = hashText(JSON.stringify(rows));
+        const config = {
+          ...bootstrap,
+          version: `${rowVersion}-${configHash}`,
+          configVersion: rowVersion,
+          configHash,
+          configSource: 'google-sheet',
+          courses
+        };
+        lastLiveConfig = config;
+        window.__lastLiveSheetConfig = config;
+        return config;
+      } catch (error) {
+        if (error?.name === 'AbortError') throw new Error('Google Sheets phản hồi quá chậm.');
+        throw error;
+      } finally {
+        clearTimeout(timeout);
+      }
     }
 
     async function refresh() {
       const bootstrap = await originalLoadConfig();
       const config = await fetchLiveConfig(bootstrap);
       try { await window.flashcardOffline?.putLibrary?.('sheet-manifest', config); } catch (_) {}
-      window.invalidateSheetCategory?.();
       return config;
     }
 
@@ -129,7 +138,6 @@
       return livePromise;
     };
 
-    // Never let a bootstrap-only manifest overwrite a previously loaded live config.
     if (window.flashcardOffline?.putLibrary && !window.flashcardOffline.putLibrary.__liveConfigGuard) {
       const originalPut = window.flashcardOffline.putLibrary.bind(window.flashcardOffline);
       const guardedPut = async (key, value) => {
