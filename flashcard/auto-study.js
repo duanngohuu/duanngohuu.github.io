@@ -1,13 +1,17 @@
-// Auto study: pause for menus/settings and resume directly in focused study mode.
+// Auto study: pause for menus/settings and switch lessons without exposing the main screen.
 (() => {
   try {
     if (!window.st || !window.e) return;
     const $ = selector => document.querySelector(selector);
     const AUTO_KEY = 'fc_vocab_auto_study_v1';
+    const LESSON_WAIT_MS = 30000;
     let timers = [];
     let internalFlip = false;
     let lastFocus = false;
     let resumeTimer = 0;
+    let lessonSwitch = null;
+    let lessonSwitchToken = 0;
+    let menuSnapshot = null;
 
     function save(value) { try { localStorage.setItem(AUTO_KEY, value ? 'on' : 'off'); } catch (_) {} }
     function load() { try { return localStorage.getItem(AUTO_KEY) === 'on'; } catch (_) { return false; } }
@@ -21,8 +25,10 @@
       return document.body.classList.contains('display-settings-open')
         || document.body.classList.contains('system-settings-open');
     }
+    function switchingLesson() { return !!lessonSwitch; }
     function active() {
       return autoFocusOn()
+        && !switchingLesson()
         && !document.body.classList.contains('force-card-focus')
         && !settingsOpen()
         && !menuOpen();
@@ -65,7 +71,7 @@
       const banner = ensureBanner();
       const offline = document.body.classList.contains('network-offline');
       const reconnected = document.body.classList.contains('network-reconnected');
-      const auto = autoFocusOn();
+      const auto = autoFocusOn() || switchingLesson();
       let text = '';
       let tone = '';
 
@@ -90,7 +96,7 @@
       if (banner.textContent !== text) banner.textContent = text;
     }
     function updateFocus(forceScroll = false) {
-      const on = autoFocusOn() && !menuOpen() && !settingsOpen();
+      const on = autoFocusOn() && !switchingLesson() && !menuOpen() && !settingsOpen();
       document.body.classList.toggle('auto-card-focus', on);
       renderStatusBanner();
       if (on && (forceScroll || on !== lastFocus)) {
@@ -114,12 +120,41 @@
         input.onchange = () => {
           save(input.checked);
           clearTimers();
+          if (!input.checked) cancelLessonSwitch(false);
           updateFocus(input.checked);
           if (input.checked) scheduleAuto(true);
         };
       }
       $('#autoLessonMenuDock')?.remove();
       return input;
+    }
+    function takeMenuSnapshot() {
+      if (!autoFocusOn()) return;
+      menuSnapshot = {
+        lesson: st.lesson,
+        cards: st.cards,
+        session: st.session,
+        i: st.i,
+        face: st.face,
+        done: st.done,
+        finishShown: st.finishShown,
+        reviewMode: st.reviewMode
+      };
+    }
+    function restoreMenuSnapshot() {
+      if (!menuSnapshot || switchingLesson()) return false;
+      st.lesson = menuSnapshot.lesson;
+      st.cards = menuSnapshot.cards;
+      st.session = menuSnapshot.session;
+      st.i = menuSnapshot.i;
+      st.face = menuSnapshot.face;
+      st.done = menuSnapshot.done;
+      st.finishShown = menuSnapshot.finishShown;
+      st.reviewMode = menuSnapshot.reviewMode;
+      menuSnapshot = null;
+      window.render?.();
+      scheduleAuto(true);
+      return true;
     }
     function moveDirect() {
       if (!st.session?.length || st.done) return;
@@ -165,48 +200,91 @@
         if (active()) autoMove();
       }, (count - startFace) * 5000));
     }
-    function buildFreshSession() {
-      let from = Math.max(1, Number(e.from?.value) || 1);
-      let to = Math.min(st.cards.length, Number(e.to?.value) || st.cards.length);
-      if (from > to) [from, to] = [to, from];
-      let cards = st.cards.filter(card => card.no >= from && card.no <= to);
-      if (e.shuffle?.checked) cards = [...cards].sort(() => Math.random() - 0.5);
-      if (e.limit?.value !== 'all') cards = cards.slice(0, Number(e.limit?.value) || 10);
-      return cards;
+    function cardsReadyForSwitch(switchState) {
+      return switchState
+        && st.lesson?.id === switchState.lessonId
+        && Array.isArray(st.cards)
+        && st.cards.length > 0
+        && st.cards !== switchState.previousCards;
     }
-    async function enterSelectedLesson(lessonId) {
-      for (let attempt = 0; attempt < 160; attempt++) {
-        if (st.lesson?.id === lessonId && st.cards?.length) break;
-        await wait(50);
-      }
-      if (st.lesson?.id !== lessonId || !st.cards?.length) return;
+    function closeSheetLoadingUi() {
+      $('#sheetLoadOverlay')?.classList.add('hidden');
+      document.body.classList.remove('sheet-loading-open');
+    }
+    function cancelLessonSwitch(restore = true) {
+      lessonSwitchToken += 1;
+      lessonSwitch = null;
+      document.body.classList.remove('auto-lesson-switching');
+      closeSheetLoadingUi();
+      renderStatusBanner();
+      if (restore) restoreMenuSnapshot();
+    }
+    function startSelectedLessonSession(switchState) {
+      if (!cardsReadyForSwitch(switchState) || switchState.token !== lessonSwitchToken) return false;
 
+      closeSheetLoadingUi();
       document.querySelector('#finishModal')?.classList.remove('on');
-      st.reviewMode = 'all';
-      st.session = buildFreshSession();
-      st.i = 0;
-      st.face = 0;
+      document.body.classList.remove('library-open');
+      st.reviewMode = null;
       st.done = false;
       st.finishShown = false;
-      try { window.saveLast?.(); } catch (_) {}
-      window.render?.();
+      st.face = 0;
 
+      // Use the app's normal start chain so range, quantity, shuffle and batch logic stay identical.
+      window.start?.();
+      if (!st.session?.length && typeof window.buildSession === 'function') {
+        st.session = window.buildSession();
+        st.i = 0;
+        st.face = 0;
+        window.render?.();
+      }
+      if (!st.session?.length) return false;
+
+      menuSnapshot = null;
+      lessonSwitch = null;
+      document.body.classList.remove('auto-lesson-switching');
       document.body.classList.add('auto-card-focus');
-      document.body.classList.remove('library-open');
       renderStatusBanner();
+      clearTimers();
       requestAnimationFrame(() => scheduleAuto(true));
+      return true;
+    }
+    async function watchSelectedLesson(switchState) {
+      const deadline = Date.now() + LESSON_WAIT_MS;
+      while (Date.now() < deadline && switchState.token === lessonSwitchToken) {
+        if (startSelectedLessonSession(switchState)) return;
+        await wait(50);
+      }
+      if (switchState.token === lessonSwitchToken) cancelLessonSwitch(true);
+    }
+    function beginLessonSwitch(lessonId) {
+      if (!autoOn() || !lessonId) return null;
+      if (lessonSwitch?.lessonId === lessonId) return lessonSwitch;
+
+      clearTimers();
+      const switchState = {
+        lessonId,
+        previousCards: st.cards,
+        token: ++lessonSwitchToken
+      };
+      lessonSwitch = switchState;
+      document.body.classList.add('auto-lesson-switching');
+      document.body.classList.remove('auto-card-focus');
+      renderStatusBanner();
+      watchSelectedLesson(switchState);
+      return switchState;
     }
     function installFinalLessonWrapper() {
       const finalSelectLesson = window.selectLesson;
-      if (typeof finalSelectLesson !== 'function' || finalSelectLesson.__autoFinalWrapped) return;
-      window.selectLesson = async function autoFinalSelectLesson(id) {
-        const selectedFromAutoMenu = autoOn() && menuOpen();
-        if (selectedFromAutoMenu) clearTimers();
+      if (typeof finalSelectLesson !== 'function' || finalSelectLesson.__autoDirectWrapped) return;
+      window.selectLesson = async function autoDirectSelectLesson(id) {
+        const shouldSwitch = autoOn() && (menuOpen() || switchingLesson());
+        if (shouldSwitch) beginLessonSwitch(id);
         const result = await finalSelectLesson(id);
-        if (selectedFromAutoMenu) await enterSelectedLesson(id);
+        if (shouldSwitch && !switchingLesson()) beginLessonSwitch(id);
         return result;
       };
-      window.selectLesson.__autoFinalWrapped = true;
+      window.selectLesson.__autoDirectWrapped = true;
     }
 
     const oldRender = window.render;
@@ -218,18 +296,25 @@
           internalFlip = false;
           return;
         }
-        requestAnimationFrame(scheduleAuto);
+        if (!switchingLesson()) requestAnimationFrame(scheduleAuto);
       };
       window.render.__autoMultiFaceWrapped = true;
     }
 
     document.addEventListener('click', event => {
+      const lessonButton = event.target.closest('.library-panel .lesson-btn[data-lesson-id]');
+      if (lessonButton && autoOn() && menuOpen()) beginLessonSwitch(lessonButton.dataset.lessonId);
+
       const opensSettings = event.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn,#systemSettingsBtn');
       const closesSettings = event.target.closest('#displaySettingsClose,#systemSettingsClose')
         || event.target.id === 'displaySettingsBackdrop'
         || event.target.id === 'systemSettingsBackdrop';
 
-      if (event.target.closest('#bottomLessonBtn') && autoOn()) clearTimers();
+      if (event.target.closest('#bottomLessonBtn') && autoOn()) {
+        takeMenuSnapshot();
+        clearTimers();
+        installFinalLessonWrapper();
+      }
       if (opensSettings && autoOn()) clearTimers();
 
       if (document.body.classList.contains('auto-card-focus') && !allowedAutoTarget(event.target)) {
@@ -240,7 +325,9 @@
 
       if (event.target.id === 'drawerBackdrop' && autoOn()) {
         clearTimeout(resumeTimer);
-        resumeTimer = setTimeout(() => scheduleAuto(true), 80);
+        resumeTimer = setTimeout(() => {
+          if (!restoreMenuSnapshot()) scheduleAuto(true);
+        }, 80);
       }
       if (closesSettings && autoOn()) {
         setTimeout(() => {
@@ -274,7 +361,8 @@
     window.flashcardAutoStudy = {
       pause: clearTimers,
       resume: () => scheduleAuto(true),
-      refresh: updateFocus
+      refresh: updateFocus,
+      beginLessonSwitch
     };
 
     ensureBanner();
