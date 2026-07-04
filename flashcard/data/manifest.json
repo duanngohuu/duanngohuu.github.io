@@ -1,5 +1,5 @@
 {
-  "version": "2026.07.04-vocab-593",
+  "version": "2026.07.05-vocab-820",
   "title": "Thư viện từ vựng N2",
   "lessonSize": 50,
   "courses": [
@@ -27,6 +27,18 @@
         { "id": "n2-kanji-exam-051-100", "title": "Bài 02 · 12/2012–12/2014", "description": "STT 51 đến 100", "path": "./data/n2-kanji-exam-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "tags": ["n2", "kanji", "exam"] },
         { "id": "n2-kanji-exam-101-150", "title": "Bài 03 · 07/2015–07/2017", "description": "STT 101 đến 150", "path": "./data/n2-kanji-exam-101-150.tsv", "count": 50, "startNo": 101, "endNo": 150, "tags": ["n2", "kanji", "exam"] },
         { "id": "n2-kanji-exam-151-193", "title": "Bài 04 · 12/2017–12/2019", "description": "STT 151 đến 193", "path": "./data/n2-kanji-exam-151-193.tsv", "count": 43, "startNo": 151, "endNo": 193, "tags": ["n2", "kanji", "exam"] }
+      ]
+    },
+    {
+      "id": "vu-quang-dung-jlpt",
+      "title": "Vũ Quang Dũng JLPT",
+      "description": "227 từ vựng từ các bảng Unit 8, Unit 12 và phần ảnh bổ sung STT 34-110.",
+      "lessons": [
+        { "id": "vqd-unit-08-001-050", "title": "Unit 8 · STT 1-50", "description": "50 từ vựng Unit 8", "path": "./data/vqd-unit-08-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "vocabulary", "vqd", "unit-8"] },
+        { "id": "vqd-unit-12-001-050", "title": "Unit 12 · STT 1-50", "description": "50 từ đầu của Unit 12", "path": "./data/vqd-unit-12-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "vocabulary", "vqd", "unit-12"] },
+        { "id": "vqd-unit-12-051-100", "title": "Unit 12 · STT 51-100", "description": "50 từ tiếp theo của Unit 12", "path": "./data/vqd-unit-12-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "tags": ["n2", "vocabulary", "vqd", "unit-12"] },
+        { "id": "vqd-supplement-034-083", "title": "Bổ sung · STT 34-83", "description": "Ảnh nguồn không hiển thị tên Unit", "path": "./data/vqd-supplement-034-083.tsv", "count": 50, "startNo": 34, "endNo": 83, "tags": ["n2", "vocabulary", "vqd", "supplement"] },
+        { "id": "vqd-supplement-084-110", "title": "Bổ sung · STT 84-110", "description": "Ảnh nguồn không hiển thị tên Unit", "path": "./data/vqd-supplement-084-110.tsv", "count": 27, "startNo": 84, "endNo": 110, "tags": ["n2", "vocabulary", "vqd", "supplement"] }
       ]
     }
   ]
