@@ -35,13 +35,15 @@
     function ensureLessonBadge(button) {
       const line = button.querySelector('.lesson-progress-line');
       if (!line) return null;
-      line.classList.add('has-download-state');
-      let badge = line.querySelector('.lesson-download-state');
+      line.classList.remove('has-download-state');
+
+      let badge = button.querySelector(':scope > .lesson-download-state')
+        || line.querySelector('.lesson-download-state');
       if (!badge) {
         badge = document.createElement('span');
         badge.className = 'lesson-download-state';
-        line.appendChild(badge);
       }
+      if (badge.parentElement !== button) button.insertBefore(badge, line);
       return badge;
     }
 
