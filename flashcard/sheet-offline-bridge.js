@@ -1,4 +1,4 @@
-// Persist live Sheet config/course lessons so the menu remains available offline.
+// Cache-first live Sheet config/course lessons so the menu never waits forever.
 (() => {
   try {
     const offline = window.flashcardOffline;
@@ -7,10 +7,19 @@
     const originalEnsureLessons = window.ensureSheetCourseLessons;
     const COURSE_PREFIX = 'sheet-course:';
     const MANIFEST_KEY = 'sheet-manifest';
+    const CONFIG_WAIT_MS = 6200;
+    let refreshInFlight = null;
 
     function clone(value) {
       try { return structuredClone(value); }
       catch (_) { return JSON.parse(JSON.stringify(value)); }
+    }
+
+    function withTimeout(promise, ms, message) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
+      ]);
     }
 
     function courseSignature(course) {
@@ -55,20 +64,66 @@
       return config;
     }
 
-    window.loadSheetLibraryConfig = async function offlineConfigLoader() {
-      let config = null;
-      let onlineError = null;
-      if (typeof originalLoadConfig === 'function') {
-        try {
-          config = await originalLoadConfig();
+    function notifyFreshConfig(previous, next) {
+      const changed = !previous?.configHash || previous.configHash !== next?.configHash;
+      if (!changed) return;
+      window.invalidateSheetCategory?.();
+      window.dispatchEvent(new CustomEvent('sheet-config-updated', { detail: { config: clone(next) } }));
+      setTimeout(() => {
+        const active = document.querySelector('.library-tab.active')?.dataset.tab;
+        if (active === 'sheet') window.switchFlashcardCategory?.('sheet').catch?.(() => {});
+      }, 0);
+    }
+
+    function refreshOnlineInBackground(previousConfig = null) {
+      if (refreshInFlight || typeof originalLoadConfig !== 'function' || navigator.onLine === false) return refreshInFlight;
+      refreshInFlight = originalLoadConfig()
+        .then(async config => {
+          if (!config?.courses?.length) return config;
           await offline.putLibrary(MANIFEST_KEY, clone(config));
-        } catch (error) {
-          onlineError = error;
+          notifyFreshConfig(previousConfig, config);
+          return config;
+        })
+        .catch(() => null)
+        .finally(() => { refreshInFlight = null; });
+      return refreshInFlight;
+    }
+
+    async function readBootstrap() {
+      try {
+        const response = await fetch(`./data/sheet-library-manifest.json?fallback=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) return null;
+        return await response.json();
+      } catch (_) {
+        return null;
+      }
+    }
+
+    window.loadSheetLibraryConfig = async function cacheFirstConfigLoader() {
+      const cached = await offline.getLibrary(MANIFEST_KEY).catch(() => null);
+      if (cached?.courses?.length) {
+        refreshOnlineInBackground(cached);
+        return hydrateCourses(clone(cached));
+      }
+
+      if (typeof originalLoadConfig === 'function' && navigator.onLine !== false) {
+        try {
+          const online = await withTimeout(
+            originalLoadConfig(),
+            CONFIG_WAIT_MS,
+            'Không chờ thêm Google Sheets; app tiếp tục bằng dữ liệu local.'
+          );
+          if (online?.courses?.length) {
+            await offline.putLibrary(MANIFEST_KEY, clone(online));
+            return hydrateCourses(clone(online));
+          }
+        } catch (_) {
+          refreshOnlineInBackground(null);
         }
       }
-      if (!config) config = await offline.getLibrary(MANIFEST_KEY);
-      if (!config) throw onlineError || new Error('Chưa có menu Google Sheets trong bộ nhớ offline.');
-      return hydrateCourses(clone(config));
+
+      const fallback = await readBootstrap();
+      return hydrateCourses(clone(fallback || { courses: [], summary: 'Chưa tải được menu Kho học.' }));
     };
 
     window.ensureSheetCourseLessons = async function offlineCourseLessons(course) {
@@ -85,13 +140,14 @@
         throw new Error('Bộ này chưa được mở khi có mạng nên chưa có menu offline.');
       }
       if (typeof originalEnsureLessons !== 'function') throw new Error('Không có bộ phân tích danh sách bài.');
-      const lessons = await originalEnsureLessons(course);
-      let manifestVersion = '';
-      try { manifestVersion = (await window.loadSheetLibraryConfig())?.version || ''; } catch (_) {}
+      const lessons = await withTimeout(
+        originalEnsureLessons(course),
+        8000,
+        'Google Sheets phản hồi quá chậm. Hãy thử lại.'
+      );
       await offline.putLibrary(COURSE_PREFIX + course.id, {
         courseId: course.id,
         title: course.title,
-        manifestVersion,
         courseSignature: currentSignature,
         lessons: clone(lessons)
       });
