@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v1';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v1';
+const SHELL_CACHE = 'flashcard-shell-20260704-v2';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v2';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
@@ -37,10 +37,12 @@ const SHELL_FILES = [
   './card-3d.js',
   './card-display-options.js',
   './sheet-library.js',
+  './sheet-offline-bridge.js',
+  './sheet-sync-reader.js',
   './auto-study.js',
   './theme-settings.js',
   './multi-face-final.js',
-  './sheet-cache.js',
+  './sheet-cache-v2.js',
   './data/sheet-library-manifest.json',
   './data/manifest.json',
   './data/n2-grammar-manifest.json'
