@@ -1,9 +1,10 @@
 /* Final compact layout for the study support drawer. */
+#studySupportRoot.study-support-root.card-options{display:contents!important;position:static!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;opacity:1!important;filter:none!important;pointer-events:auto!important}
 #studySupportPanel.study-support-panel{width:min(360px,100vw)!important;height:100dvh!important;box-sizing:border-box!important;padding:max(14px,env(safe-area-inset-top)) 12px max(14px,env(safe-area-inset-bottom))!important;background:#f8fafc!important;color:#0f172a!important;overflow:auto!important}
 .study-support-panel header{gap:10px!important;margin-bottom:10px!important}
 .study-support-panel header h2{color:#0f172a!important;font-size:1.18rem!important;line-height:1.15!important}
 .study-support-panel header small{margin-bottom:3px!important;font-size:.62rem!important}
-#studySupportClose.study-support-close{display:grid!important;place-items:center!important;flex:0 0 34px!important;width:34px!important;height:34px!important;min-width:34px!important;margin:0!important;padding:0!important;border:1px solid rgba(148,163,184,.3)!important;border-radius:11px!important;background:#fff!important;color:#334155!important;font-size:1.15rem!important;line-height:1!important;box-shadow:none!important;transform:none!important}
+#studySupportClose.study-support-close{display:grid!important;position:static!important;place-items:center!important;flex:0 0 34px!important;width:34px!important;height:34px!important;min-width:34px!important;margin:0!important;padding:0!important;border:1px solid rgba(148,163,184,.3)!important;border-radius:11px!important;background:#fff!important;color:#334155!important;font-size:1.15rem!important;line-height:1!important;box-shadow:none!important;transform:none!important}
 .study-support-current{gap:5px!important;margin-bottom:10px!important;padding:10px 11px!important;border-radius:15px!important}
 .study-support-current span{font-size:.66rem!important}
 .study-support-current strong{max-height:110px!important;color:#0f172a!important;font-size:.95rem!important;line-height:1.4!important}
