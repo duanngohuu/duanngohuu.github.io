@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v3';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v3';
+const SHELL_CACHE = 'flashcard-shell-20260704-v4';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v4';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
@@ -43,6 +43,7 @@ const SHELL_FILES = [
   './theme-settings.js',
   './multi-face-final.js',
   './sheet-cache-v2.js',
+  './connectivity-monitor.js',
   './data/sheet-library-manifest.json',
   './data/manifest.json',
   './data/n2-grammar-manifest.json'
@@ -119,6 +120,10 @@ self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
+
+  // Real connectivity probe must bypass every cache and hit the network directly.
+  if (url.searchParams.has('__network_probe')) return;
+
   if (url.origin !== self.location.origin) return;
   if (!url.pathname.startsWith(new URL(SCOPE).pathname)) return;
 
