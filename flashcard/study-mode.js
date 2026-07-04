@@ -147,15 +147,23 @@
       if (!modal) return;
       const on = modal.classList.contains('on');
       if (on) setStudy(false);
+      const total = st.session?.length || 0;
+      const knownCount = st.known?.size || 0;
+      const againCount = st.again?.size || 0;
       const title = $('#finishTitle');
       const text = $('#finishText');
-      if (title) title.textContent = '🎉 Chúc mừng bạn!';
-      if (text && on) {
-        const total = st.session?.length || 0;
-        text.innerHTML = `Bạn đã học xong <strong>${total}</strong> thẻ.<div class="finish-stat"><span>Đã nhớ: ${st.known.size}</span><span>Chưa nhớ: ${st.again.size}</span></div>`;
-      }
       const knownBtn = $('#finishKnownBtn');
-      if (knownBtn) knownBtn.textContent = 'Học thẻ đã nhớ';
+      const againBtn = $('#finishAgainBtn');
+      if (title) title.textContent = '🎉 Chúc mừng bạn!';
+      if (text && on) text.textContent = `Bạn đã học xong ${total} thẻ.`;
+      if (knownBtn) {
+        knownBtn.textContent = `Học thẻ đã nhớ (${knownCount})`;
+        knownBtn.disabled = knownCount === 0;
+      }
+      if (againBtn) {
+        againBtn.textContent = `Học thẻ chưa nhớ (${againCount})`;
+        againBtn.disabled = againCount === 0;
+      }
     }
     function refresh(mode) {
       ensureBottomLessonButton();
