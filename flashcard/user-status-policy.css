@@ -4,3 +4,4 @@
 .sheet-load-card h2{margin-bottom:14px!important}
 .course-btn.is-loading>span{display:none!important}
 #lessonMeta:empty{display:none!important}
+body.force-card-focus #cardHint::after{content:none!important;display:none!important}
