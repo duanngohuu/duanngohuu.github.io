@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v4';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v4';
+const SHELL_CACHE = 'flashcard-shell-20260704-v5';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v5';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
@@ -13,6 +13,7 @@ const SHELL_FILES = [
   './drawer-stable.css',
   './features-stable.css',
   './category-menu.css',
+  './sheet-approved.css',
   './header-normal.css',
   './study-mode.css',
   './action-flow.css',
