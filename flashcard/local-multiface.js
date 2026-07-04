@@ -1,6 +1,22 @@
 // Add dynamic faces for local TSV lessons that contain extra study columns.
 (() => {
   try {
+    function loadMenuSessionState() {
+      const version = '20260705-menustate1';
+      let script = document.querySelector('script[data-menu-session-state]');
+      if (script && script.dataset.menuSessionStateVersion !== version) {
+        script.remove();
+        script = null;
+      }
+      if (!script) {
+        script = document.createElement('script');
+        script.src = `./menu-session-state.js?v=${version}`;
+        script.dataset.menuSessionState = '1';
+        script.dataset.menuSessionStateVersion = version;
+        document.body.appendChild(script);
+      }
+    }
+
     function parseRows(text) {
       const lines = String(text || '').trim().split(/\r?\n/).filter(Boolean);
       if (lines.length < 2) return [];
@@ -62,6 +78,7 @@
       return true;
     }
 
+    loadMenuSessionState();
     if (!install()) {
       let attempts = 0;
       const timer = setInterval(() => {
