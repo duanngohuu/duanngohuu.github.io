@@ -1,14 +1,25 @@
-// Search, recent lessons, and exact continue/resume for every library source.
+// Unified learning navigation: exact resume, recent tab and search across every library source.
 (() => {
   try {
     if (!window.st || !window.e) return;
+
     const $ = selector => document.querySelector(selector);
     const RECENT_KEY = 'fc_library_recent_v1';
     const RESUME_KEY = 'fc_library_resume_v1';
     const MAX_RECENT = 8;
-    let saveTimer = 0;
-    let renderingTools = false;
+    const COURSE_CACHE_PREFIX = window.sheetOfflineKeys?.coursePrefix || 'sheet-course:';
 
+    let saveTimer = 0;
+    let menuSearchTimer = 0;
+    let mainSearchTimer = 0;
+    let menuSearchToken = 0;
+    let mainSearchToken = 0;
+    let catalogPromise = null;
+    let arranging = false;
+    let restoring = false;
+    let recentRendering = false;
+
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
     const clone = value => {
       try { return structuredClone(value); }
       catch (_) { return JSON.parse(JSON.stringify(value)); }
@@ -25,39 +36,53 @@
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .replace(/ok@(tv|np|bun)/gi, '')
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+    const cleanCourseTitle = course => String(course?.displayTitle || course?.title || '')
+      .replace(/^OK@(TV|NP|BUN)\s*/i, '')
+      .trim();
 
     function getState() {
-      return window.getFlashcardCategoryState?.() || {};
+      try { return window.getFlashcardCategoryState?.() || {}; }
+      catch (_) { return {}; }
+    }
+
+    function stateCourses() {
+      return Object.entries(getState()).flatMap(([tab, data]) =>
+        (data?.courses || []).map(course => ({ tab, course }))
+      );
     }
 
     function currentTab() {
-      return $('.library-tab.active')?.dataset.tab || 'sheet';
-    }
-
-    function allCourses() {
-      const state = getState();
-      return Object.entries(state).flatMap(([tab, data]) => (data.courses || []).map(course => ({ tab, course })));
+      const active = $('.library-tab.active')?.dataset.tab;
+      if (active && active !== 'recent') return active;
+      if (st.lesson?.source === 'google-sheet') return 'sheet';
+      return st.lesson?.category || 'vocab';
     }
 
     function findCourse(courseId, tabHint = '') {
-      const courses = allCourses();
-      return courses.find(item => item.course.id === courseId && (!tabHint || item.tab === tabHint))
-        || courses.find(item => item.course.id === courseId)
+      const all = stateCourses();
+      return all.find(item => item.course.id === courseId && (!tabHint || item.tab === tabHint))
+        || all.find(item => item.course.id === courseId)
         || null;
     }
 
-    function findLesson(lessonId) {
-      for (const item of allCourses()) {
+    function findLesson(lessonId, courseId = '', tabHint = '') {
+      for (const item of stateCourses()) {
+        if (tabHint && item.tab !== tabHint) continue;
+        if (courseId && item.course.id !== courseId) continue;
+        const lesson = (item.course.lessons || []).find(candidate => candidate.id === lessonId);
+        if (lesson) return { ...item, lesson };
+      }
+      for (const item of stateCourses()) {
         const lesson = (item.course.lessons || []).find(candidate => candidate.id === lessonId);
         if (lesson) return { ...item, lesson };
       }
       return null;
     }
 
-    function safeLessonSnapshot(lesson) {
+    function lessonSnapshot(lesson) {
       if (!lesson) return null;
       const snapshot = clone(lesson);
       delete snapshot._rows;
@@ -75,7 +100,7 @@
         title: st.lesson.title || '',
         tab: st.lesson.source === 'google-sheet' ? 'sheet' : currentTab(),
         source: st.lesson.source || 'local',
-        lesson: safeLessonSnapshot(st.lesson),
+        lesson: lessonSnapshot(st.lesson),
         from: e.from?.value || '1',
         to: e.to?.value || String(st.cards.length),
         limit: e.limit?.value || '10',
@@ -83,8 +108,8 @@
         sessionCardIds: (st.session || []).map(card => card.id),
         sessionNos: (st.session || []).map(card => card.no),
         currentCardId: currentCard?.id || '',
-        index: st.i || 0,
-        face: st.face || 0,
+        index: Number(st.i) || 0,
+        face: Number(st.face) || 0,
         featureFilter: st.featureFilter || 'all',
         started: !!st.session?.length,
         totalCards: st.cards.length,
@@ -93,7 +118,9 @@
     }
 
     function recentEntries() {
-      return readJson(RECENT_KEY, []).filter(item => item?.lessonId && item?.lesson);
+      return readJson(RECENT_KEY, [])
+        .filter(item => item?.lessonId && item?.lesson)
+        .slice(0, MAX_RECENT);
     }
 
     function updateRecent(snapshot) {
@@ -116,59 +143,196 @@
     }
 
     function saveCurrentState() {
+      if (restoring) return;
       const snapshot = resumeSnapshot();
       if (!snapshot) return;
       writeJson(RESUME_KEY, snapshot);
       updateRecent(snapshot);
-      renderTools();
+      renderContinueButton();
+      if ($('.library-tab[data-tab="recent"].active')) renderRecentTab();
     }
 
-    function scheduleSave(delay = 180) {
+    function scheduleSave(delay = 160) {
+      if (restoring) return;
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveCurrentState, delay);
     }
 
-    function ensureUi() {
-      const panel = $('.library-panel');
-      const summary = panel?.querySelector('.library-summary');
-      if (!panel || !summary) return null;
-      let tools = $('#libraryTools');
-      if (!tools) {
-        tools = document.createElement('section');
-        tools.id = 'libraryTools';
-        tools.className = 'library-tools';
-        tools.innerHTML = `
-          <button id="continueLastBtn" class="continue-last hidden" type="button">
-            <span class="continue-icon">▶</span>
-            <span class="continue-copy"><strong>Tiếp tục học</strong><small id="continueLastText"></small></span>
-            <span class="continue-arrow">→</span>
-          </button>
-          <div class="library-search-box">
-            <span aria-hidden="true">⌕</span>
-            <input id="librarySearchInput" type="search" autocomplete="off" placeholder="Tìm bộ hoặc bài học…" aria-label="Tìm bài học">
-            <button id="librarySearchClear" class="hidden" type="button" aria-label="Xóa tìm kiếm">×</button>
-          </div>
-          <div id="librarySearchResults" class="library-search-results hidden"></div>
-          <div id="recentLessonsWrap" class="recent-lessons-wrap hidden">
-            <div class="recent-lessons-head"><strong>Học gần đây</strong><button id="clearRecentLessons" type="button">Xóa</button></div>
-            <div id="recentLessons" class="recent-lessons"></div>
-          </div>`;
-        summary.after(tools);
+    function ensureRecentTab() {
+      const tabs = $('.library-tabs');
+      if (!tabs) return null;
+      let button = tabs.querySelector('.library-tab[data-tab="recent"]');
+      if (!button) {
+        button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'library-tab';
+        button.dataset.tab = 'recent';
+        button.textContent = 'Gần đây';
+      }
+      const sheet = tabs.querySelector('.library-tab[data-tab="sheet"]');
+      if (sheet && button.nextElementSibling !== sheet) tabs.insertBefore(button, sheet);
+      else if (!sheet && button.parentElement !== tabs) tabs.prepend(button);
+      return button;
+    }
 
-        $('#librarySearchInput').addEventListener('input', event => renderSearch(event.target.value));
-        $('#librarySearchClear').onclick = () => {
+    function ensureMenuUi() {
+      const panel = $('.library-panel');
+      const tabs = panel?.querySelector('.library-tabs');
+      if (!panel || !tabs) return false;
+      ensureRecentTab();
+
+      let continueButton = $('#continueLastBtn');
+      if (!continueButton) {
+        continueButton = document.createElement('button');
+        continueButton.id = 'continueLastBtn';
+        continueButton.className = 'continue-last hidden';
+        continueButton.type = 'button';
+        continueButton.innerHTML = '<span class="continue-icon">▶</span><span class="continue-copy"><strong>Tiếp tục học</strong><small id="continueLastText"></small></span><span class="continue-arrow">→</span>';
+        continueButton.onclick = continueLast;
+      }
+
+      let searchBox = $('#librarySearchInput')?.closest('.library-search-box');
+      if (!searchBox) {
+        searchBox = document.createElement('div');
+        searchBox.className = 'library-search-box';
+        searchBox.innerHTML = '<span aria-hidden="true">⌕</span><input id="librarySearchInput" type="search" autocomplete="off" placeholder="Tìm bộ hoặc bài học…" aria-label="Tìm bài học"><button id="librarySearchClear" class="hidden" type="button" aria-label="Xóa tìm kiếm">×</button>';
+        searchBox.querySelector('input').addEventListener('input', event => {
+          clearTimeout(menuSearchTimer);
+          menuSearchTimer = setTimeout(() => renderMenuSearch(event.target.value), 100);
+        });
+        searchBox.querySelector('button').onclick = () => {
           const input = $('#librarySearchInput');
-          input.value = '';
-          renderSearch('');
-          input.focus();
-        };
-        $('#continueLastBtn').onclick = continueLast;
-        $('#clearRecentLessons').onclick = () => {
-          writeJson(RECENT_KEY, []);
-          renderTools();
+          if (input) input.value = '';
+          renderMenuSearch('');
+          input?.focus();
         };
       }
-      return tools;
+
+      let results = $('#librarySearchResults');
+      if (!results) {
+        results = document.createElement('div');
+        results.id = 'librarySearchResults';
+        results.className = 'library-search-results hidden';
+      }
+
+      const oldTools = $('#libraryTools');
+      const oldRecent = $('#recentLessonsWrap');
+      oldRecent?.remove();
+
+      if (continueButton.nextElementSibling !== searchBox) panel.insertBefore(continueButton, tabs);
+      if (searchBox.nextElementSibling !== results) panel.insertBefore(searchBox, tabs);
+      if (results.nextElementSibling !== tabs) panel.insertBefore(results, tabs);
+      if (oldTools && !oldTools.children.length) oldTools.remove();
+
+      renderContinueButton();
+      return true;
+    }
+
+    function ensureMainSearchUi() {
+      const setupPanel = $('#startBtn')?.closest('.panel');
+      const titleRow = setupPanel?.querySelector('.title-row');
+      if (!setupPanel || !titleRow) return false;
+      let root = $('#mainQuickSearch');
+      if (root) return true;
+
+      root = document.createElement('section');
+      root.id = 'mainQuickSearch';
+      root.className = 'main-quick-search';
+      root.innerHTML = '<label><span aria-hidden="true">⌕</span><input id="mainQuickSearchInput" type="search" autocomplete="off" placeholder="Tìm bài và học ngay…" aria-label="Tìm nhanh bài học"><button id="mainQuickSearchClear" class="hidden" type="button" aria-label="Xóa tìm kiếm">×</button></label><div id="mainQuickSearchResults" class="main-quick-results hidden"></div>';
+      titleRow.after(root);
+
+      $('#mainQuickSearchInput').addEventListener('input', event => {
+        clearTimeout(mainSearchTimer);
+        mainSearchTimer = setTimeout(() => renderMainSearch(event.target.value), 100);
+      });
+      $('#mainQuickSearchClear').onclick = () => {
+        const input = $('#mainQuickSearchInput');
+        if (input) input.value = '';
+        renderMainSearch('');
+        input?.focus();
+      };
+      return true;
+    }
+
+    function arrangeUi() {
+      if (arranging) return;
+      arranging = true;
+      try {
+        ensureMenuUi();
+        ensureMainSearchUi();
+      } finally {
+        arranging = false;
+      }
+    }
+
+    function renderContinueButton() {
+      const button = $('#continueLastBtn');
+      const text = $('#continueLastText');
+      if (!button || !text) return;
+      const resume = readJson(RESUME_KEY, null);
+      button.classList.toggle('hidden', !resume?.lessonId);
+      if (!resume?.lessonId) return;
+      const length = resume.sessionCardIds?.length || 0;
+      const progress = length ? ` · thẻ ${Math.min((resume.index || 0) + 1, length)}/${length}` : '';
+      text.textContent = `${resume.title || 'Bài gần nhất'}${progress}`;
+    }
+
+    async function loadManifestCourses(path, tab) {
+      try {
+        const response = await fetch(`${path}?catalog=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) return [];
+        const manifest = await response.json();
+        return (manifest.courses || []).map(course => ({ tab, course }));
+      } catch (_) {
+        return [];
+      }
+    }
+
+    async function loadSheetCatalogFallback() {
+      try {
+        const config = await window.loadSheetLibraryConfig?.();
+        return (config?.courses || []).map(course => ({ tab: 'sheet', course }));
+      } catch (_) {
+        return [];
+      }
+    }
+
+    async function hydrateCachedSheetLessons(items) {
+      const offline = window.flashcardOffline;
+      if (!offline?.getLibrary) return items;
+      await Promise.all(items.map(async item => {
+        if (item.tab !== 'sheet' || item.course.lessons?.length || !item.course.id) return;
+        try {
+          const cached = await offline.getLibrary(COURSE_CACHE_PREFIX + item.course.id);
+          if (cached?.lessons?.length) item.course.lessons = clone(cached.lessons);
+        } catch (_) {}
+      }));
+      return items;
+    }
+
+    async function buildCatalog(force = false) {
+      if (catalogPromise && !force) return catalogPromise;
+      catalogPromise = (async () => {
+        const [vocab, grammar, sheetFallback] = await Promise.all([
+          loadManifestCourses('./data/manifest.json', 'vocab'),
+          loadManifestCourses('./data/n2-grammar-manifest.json', 'grammar'),
+          loadSheetCatalogFallback()
+        ]);
+        const candidates = await hydrateCachedSheetLessons([
+          ...stateCourses(),
+          ...sheetFallback,
+          ...vocab,
+          ...grammar
+        ]);
+        const map = new Map();
+        candidates.forEach(item => {
+          const id = `${item.tab}:${item.course.id || item.course.title}`;
+          const previous = map.get(id);
+          if (!previous || (item.course.lessons?.length || 0) > (previous.course.lessons?.length || 0)) map.set(id, item);
+        });
+        return [...map.values()];
+      })();
+      return catalogPromise;
     }
 
     function labelFor(tab, course, lesson) {
@@ -179,115 +343,302 @@
       return 'Bài học';
     }
 
-    function collectSearchIndex() {
-      const output = [];
+    async function searchCatalog(query) {
+      const needle = normalize(query);
+      if (!needle) return [];
+      const courses = await buildCatalog();
+      const results = [];
       const lessonIds = new Set();
-      for (const { tab, course } of allCourses()) {
-        const courseTitle = course.displayTitle || course.title || '';
-        output.push({ type: 'course', tab, courseId: course.id, title: courseTitle, subtitle: labelFor(tab, course), search: normalize(`${courseTitle} ${course.sheetGroupLabel || ''}`) });
-        for (const lesson of course.lessons || []) {
-          lessonIds.add(lesson.id);
-          output.push({
-            type: 'lesson', tab, courseId: course.id, lessonId: lesson.id,
-            title: lesson.title || '', subtitle: courseTitle, label: labelFor(tab, course, lesson), lesson,
-            search: normalize(`${lesson.title} ${courseTitle} ${lesson.sheetGroupLabel || course.sheetGroupLabel || ''}`)
-          });
-        }
-      }
-      for (const recent of recentEntries()) {
-        if (lessonIds.has(recent.lessonId)) continue;
-        output.push({
-          type: 'lesson', tab: recent.tab, courseId: recent.courseId, lessonId: recent.lessonId,
-          title: recent.title, subtitle: recent.courseTitle, label: 'Gần đây', lesson: recent.lesson,
-          search: normalize(`${recent.title} ${recent.courseTitle}`)
+
+      recentEntries().forEach(item => {
+        if (!normalize(`${item.title} ${item.courseTitle} gần đây`).includes(needle)) return;
+        lessonIds.add(item.lessonId);
+        results.push({
+          type: 'lesson', tab: item.tab || 'sheet', courseId: item.courseId,
+          courseTitle: item.courseTitle, title: item.title, lessonId: item.lessonId,
+          lesson: item.lesson, label: 'Gần đây', recent: true
         });
-      }
-      return output;
+      });
+
+      courses.forEach(({ tab, course }) => {
+        const title = cleanCourseTitle(course);
+        const group = labelFor(tab, course);
+        if (normalize(`${title} ${group}`).includes(needle)) {
+          results.push({ type: 'course', tab, courseId: course.id, courseTitle: title, title, course, label: group });
+        }
+        (course.lessons || []).forEach(lesson => {
+          if (lessonIds.has(lesson.id)) return;
+          if (!normalize(`${lesson.title} ${title} ${group}`).includes(needle)) return;
+          lessonIds.add(lesson.id);
+          results.push({
+            type: 'lesson', tab, courseId: course.id, courseTitle: title,
+            title: lesson.title, lessonId: lesson.id, lesson, course,
+            label: labelFor(tab, course, lesson)
+          });
+        });
+      });
+
+      return results
+        .sort((a, b) => (a.type === 'lesson' ? 0 : 1) - (b.type === 'lesson' ? 0 : 1))
+        .slice(0, 18);
     }
 
-    function renderSearch(query) {
-      ensureUi();
+    function createResultButton(item, actionText, className) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = className;
+      const copy = document.createElement('span');
+      const strong = document.createElement('strong');
+      const small = document.createElement('small');
+      const action = document.createElement('em');
+      strong.textContent = item.title || 'Bài học';
+      small.textContent = item.courseTitle || item.label || 'Bài học';
+      action.textContent = actionText;
+      copy.append(strong, small);
+      button.append(copy, action);
+      return button;
+    }
+
+    async function ensureCourse(item) {
+      const tab = item.tab || 'sheet';
+      if (tab === 'recent') return null;
+      if (typeof window.switchFlashcardCategory === 'function') await window.switchFlashcardCategory(tab);
+      await wait(0);
+      return findCourse(item.courseId, tab)?.course || item.course || null;
+    }
+
+    async function ensureCourseLessons(item) {
+      const course = await ensureCourse(item);
+      if (!course) return item.lesson ? [item.lesson] : [];
+      if (course.lessons?.length) return course.lessons;
+      if (item.tab === 'sheet' && typeof window.ensureSheetCourseLessons === 'function') {
+        const lessons = await window.ensureSheetCourseLessons(course);
+        course.lessons = lessons || [];
+        course._lessonsReady = !!course.lessons.length;
+        catalogPromise = null;
+        return course.lessons;
+      }
+      return [];
+    }
+
+    async function waitForCards(lessonId, timeoutMs = 10000) {
+      const started = Date.now();
+      while (Date.now() - started < timeoutMs) {
+        if (st.lesson?.id === lessonId && st.cards?.length) return true;
+        await wait(80);
+      }
+      return false;
+    }
+
+    async function selectLessonItem(item, { startNow = false, closeMenu = true } = {}) {
+      const lessons = await ensureCourseLessons(item);
+      const lesson = lessons.find(candidate => candidate.id === (item.lessonId || item.lesson?.id))
+        || item.lesson
+        || lessons[0];
+      if (!lesson) throw new Error('Không tìm thấy bài học.');
+      st.lessons = lessons.length ? lessons : [lesson];
+      await window.selectLesson?.(lesson.id);
+      if (!await waitForCards(lesson.id)) throw new Error('Không tải được nội dung bài học.');
+      if (startNow) e.start?.click();
+      if (closeMenu) document.body.classList.remove('library-open');
+      scheduleSave(0);
+      return lesson;
+    }
+
+    async function openCourse(item) {
+      const course = await ensureCourse(item);
+      if (!course) throw new Error('Không tìm thấy bộ học.');
+      await wait(0);
+      const block = [...document.querySelectorAll('#lessonList .course-block')]
+        .find(node => node.dataset.courseId === course.id);
+      if (!block) return;
+      const button = block.querySelector(':scope > .course-btn');
+      button?.click();
+    }
+
+    async function renderMenuSearch(query) {
+      arrangeUi();
       const results = $('#librarySearchResults');
       const clear = $('#librarySearchClear');
-      const normalized = normalize(query);
-      clear?.classList.toggle('hidden', !normalized);
-      if (!normalized) {
+      const needle = normalize(query);
+      const token = ++menuSearchToken;
+      clear?.classList.toggle('hidden', !needle);
+      if (!needle) {
         results?.classList.add('hidden');
         if (results) results.innerHTML = '';
         return;
       }
-      const matches = collectSearchIndex()
-        .filter(item => item.search.includes(normalized))
-        .sort((a, b) => (a.type === 'lesson' ? 0 : 1) - (b.type === 'lesson' ? 0 : 1))
-        .slice(0, 14);
-      results.classList.remove('hidden');
-      results.innerHTML = matches.length ? '' : '<div class="library-search-empty">Không tìm thấy bài phù hợp.</div>';
+      results?.classList.remove('hidden');
+      if (results) results.innerHTML = '<div class="library-search-empty">Đang tìm…</div>';
+      const matches = await searchCatalog(query);
+      if (token !== menuSearchToken || normalize($('#librarySearchInput')?.value) !== needle) return;
+      results.innerHTML = '';
+      if (!matches.length) {
+        results.innerHTML = '<div class="library-search-empty">Không tìm thấy bài phù hợp.</div>';
+        return;
+      }
       matches.forEach(item => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'library-search-result';
-        button.innerHTML = `<span><strong>${item.title}</strong><small>${item.subtitle || item.label || ''}</small></span><em>${item.type === 'course' ? 'Bộ' : item.label || 'Bài'}</em>`;
+        const actionText = item.type === 'lesson' ? 'Học ngay' : 'Chọn bài';
+        const button = createResultButton(item, actionText, 'library-search-result');
         button.onclick = async () => {
-          if (item.type === 'course') await openCourse(item.tab, item.courseId);
-          else await openLesson(item);
-          const input = $('#librarySearchInput');
-          if (input) input.value = '';
-          renderSearch('');
+          button.classList.add('is-loading');
+          try {
+            if (item.type === 'lesson') await selectLessonItem(item, { startNow: true });
+            else await openCourse(item);
+            const input = $('#librarySearchInput');
+            if (input) input.value = '';
+            renderMenuSearch('');
+          } catch (error) {
+            try { window.err?.(error); } catch (_) {}
+          } finally {
+            button.classList.remove('is-loading');
+          }
         };
         results.appendChild(button);
       });
     }
 
-    function tagCourseBlocks() {
-      const tab = currentTab();
-      const courses = getState()?.[tab]?.courses || [];
-      document.querySelectorAll('.library-panel .course-block').forEach((block, index) => {
-        const course = courses[index];
-        if (!course) return;
-        block.dataset.courseId = course.id || '';
-        block.dataset.courseTab = tab;
+    async function showMainCourseLessons(item, container, sourceButton) {
+      sourceButton?.classList.add('is-loading');
+      try {
+        const lessons = await ensureCourseLessons(item);
+        container.innerHTML = '';
+        if (!lessons.length) {
+          container.innerHTML = '<div class="main-quick-empty">Bộ này chưa có bài học.</div>';
+          return;
+        }
+        const heading = document.createElement('div');
+        heading.className = 'main-quick-course-head';
+        heading.textContent = `Chọn bài trong ${item.courseTitle || item.title}`;
+        container.appendChild(heading);
+        lessons.slice(0, 60).forEach(lesson => {
+          const lessonItem = { ...item, type: 'lesson', lessonId: lesson.id, lesson, title: lesson.title };
+          const button = createResultButton(lessonItem, 'Học ngay', 'main-quick-result');
+          button.onclick = async () => {
+            button.classList.add('is-loading');
+            try {
+              await selectLessonItem(lessonItem, { startNow: true });
+              clearMainSearch();
+            } catch (error) {
+              try { window.err?.(error); } catch (_) {}
+            } finally {
+              button.classList.remove('is-loading');
+            }
+          };
+          container.appendChild(button);
+        });
+      } catch (error) {
+        container.innerHTML = `<div class="main-quick-empty">${error?.message || 'Không tải được danh sách bài.'}</div>`;
+      } finally {
+        sourceButton?.classList.remove('is-loading');
+      }
+    }
+
+    function clearMainSearch() {
+      const input = $('#mainQuickSearchInput');
+      const results = $('#mainQuickSearchResults');
+      if (input) input.value = '';
+      $('#mainQuickSearchClear')?.classList.add('hidden');
+      results?.classList.add('hidden');
+      if (results) results.innerHTML = '';
+    }
+
+    async function renderMainSearch(query) {
+      ensureMainSearchUi();
+      const results = $('#mainQuickSearchResults');
+      const clear = $('#mainQuickSearchClear');
+      const needle = normalize(query);
+      const token = ++mainSearchToken;
+      clear?.classList.toggle('hidden', !needle);
+      if (!needle) {
+        results?.classList.add('hidden');
+        if (results) results.innerHTML = '';
+        return;
+      }
+      results?.classList.remove('hidden');
+      if (results) results.innerHTML = '<div class="main-quick-empty">Đang tìm…</div>';
+      const matches = await searchCatalog(query);
+      if (token !== mainSearchToken || normalize($('#mainQuickSearchInput')?.value) !== needle) return;
+      results.innerHTML = '';
+      if (!matches.length) {
+        results.innerHTML = '<div class="main-quick-empty">Không tìm thấy bài phù hợp.</div>';
+        return;
+      }
+      matches.forEach(item => {
+        const button = createResultButton(item, item.type === 'lesson' ? 'Học ngay' : 'Chọn bài', 'main-quick-result');
+        button.onclick = async () => {
+          if (item.type === 'course') {
+            await showMainCourseLessons(item, results, button);
+            return;
+          }
+          button.classList.add('is-loading');
+          try {
+            await selectLessonItem(item, { startNow: true });
+            clearMainSearch();
+          } catch (error) {
+            try { window.err?.(error); } catch (_) {}
+          } finally {
+            button.classList.remove('is-loading');
+          }
+        };
+        results.appendChild(button);
       });
     }
 
-    async function openCourse(tab, courseId) {
-      if (typeof window.switchFlashcardCategory === 'function') await window.switchFlashcardCategory(tab);
-      await wait(0);
-      tagCourseBlocks();
-      const block = [...document.querySelectorAll('.library-panel .course-block')].find(item => item.dataset.courseId === courseId);
-      block?.querySelector('.course-btn')?.click();
-    }
-
-    async function ensureLessonAvailable(item) {
-      let found = findLesson(item.lessonId);
-      if (found) return found.lesson;
-      const courseInfo = findCourse(item.courseId, item.tab);
-      if (courseInfo) {
-        const { course } = courseInfo;
-        if (!course._lessonsReady && item.tab === 'sheet' && typeof window.ensureSheetCourseLessons === 'function') {
-          await window.ensureSheetCourseLessons(course);
+    function renderRecentTab() {
+      if (recentRendering) return;
+      recentRendering = true;
+      try {
+        arrangeUi();
+        document.querySelectorAll('.library-tab').forEach(button =>
+          button.classList.toggle('active', button.dataset.tab === 'recent')
+        );
+        const list = e.list || $('#lessonList');
+        if (!list) return;
+        const recent = recentEntries();
+        list.className = 'lesson-list recent-tab-list';
+        list.style.display = 'grid';
+        list.innerHTML = '';
+        const summary = $('.library-summary');
+        if (summary) summary.textContent = 'Các bài vừa học, mới nhất ở trên.';
+        if (e.meta) e.meta.textContent = `${recent.length} bài`;
+        if (!recent.length) {
+          list.innerHTML = '<div class="recent-tab-empty"><strong>Chưa có bài gần đây</strong><span>Mở một bài học để bắt đầu lưu lịch sử.</span></div>';
+          return;
         }
-        const lesson = (course.lessons || []).find(candidate => candidate.id === item.lessonId);
-        if (lesson) return lesson;
+        recent.forEach(item => {
+          const total = item.sessionLength || item.totalCards || 0;
+          const current = item.sessionLength ? Math.min((item.lastIndex || 0) + 1, item.sessionLength) : 0;
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'recent-tab-item';
+          const copy = document.createElement('span');
+          const strong = document.createElement('strong');
+          const small = document.createElement('small');
+          const progress = document.createElement('em');
+          strong.textContent = item.title || 'Bài học';
+          small.textContent = item.courseTitle || 'Bài học';
+          progress.textContent = item.sessionLength ? `Thẻ ${current}/${total}` : `${total} thẻ`;
+          copy.append(strong, small);
+          button.append(copy, progress);
+          button.onclick = async () => {
+            button.classList.add('is-loading');
+            try {
+              await selectLessonItem({
+                type: 'lesson', tab: item.tab || 'sheet', courseId: item.courseId,
+                lessonId: item.lessonId, lesson: item.lesson, courseTitle: item.courseTitle
+              }, { startNow: true });
+            } catch (error) {
+              try { window.err?.(error); } catch (_) {}
+            } finally {
+              button.classList.remove('is-loading');
+            }
+          };
+          list.appendChild(button);
+        });
+      } finally {
+        recentRendering = false;
       }
-      return item.lesson || null;
-    }
-
-    async function openLesson(item) {
-      const lesson = await ensureLessonAvailable(item);
-      if (!lesson) return;
-      const courseInfo = findCourse(item.courseId, item.tab);
-      st.lessons = courseInfo?.course?.lessons?.length ? courseInfo.course.lessons : [lesson];
-      await window.selectLesson?.(lesson.id);
-      document.body.classList.remove('library-open');
-    }
-
-    async function waitForCards(lessonId, timeoutMs = 8000) {
-      const start = Date.now();
-      while (Date.now() - start < timeoutMs) {
-        if (st.lesson?.id === lessonId && st.cards?.length) return true;
-        await wait(80);
-      }
-      return false;
     }
 
     async function continueLast() {
@@ -295,17 +646,12 @@
       if (!resume?.lessonId || !resume.lesson) return;
       const button = $('#continueLastBtn');
       button?.classList.add('is-loading');
+      restoring = true;
       try {
-        if (typeof window.switchFlashcardCategory === 'function') {
-          await window.switchFlashcardCategory(resume.tab || 'sheet').catch(() => {});
-        }
-        const item = {
+        await selectLessonItem({
           type: 'lesson', tab: resume.tab || 'sheet', courseId: resume.courseId,
-          lessonId: resume.lessonId, lesson: resume.lesson
-        };
-        await openLesson(item);
-        const ready = await waitForCards(resume.lessonId);
-        if (!ready) throw new Error('Không tải được bài để tiếp tục.');
+          lessonId: resume.lessonId, lesson: resume.lesson, courseTitle: resume.courseTitle
+        }, { startNow: false, closeMenu: false });
 
         if (e.from) e.from.value = resume.from || 1;
         if (e.to) e.to.value = resume.to || st.cards.length;
@@ -320,106 +666,95 @@
           if (!session.length) session = typeof window.buildSession === 'function' ? window.buildSession() : st.cards.slice(0, 10);
           st.session = session;
           const currentIndex = resume.currentCardId ? session.findIndex(card => card.id === resume.currentCardId) : -1;
-          st.i = Math.max(0, Math.min(currentIndex >= 0 ? currentIndex : Number(resume.index) || 0, session.length - 1));
+          st.i = Math.max(0, Math.min(currentIndex >= 0 ? currentIndex : Number(resume.index) || 0, Math.max(0, session.length - 1)));
           const faceCount = session[st.i]?.faces?.length || 2;
           st.face = Math.max(0, Math.min(Number(resume.face) || 0, faceCount - 1));
-          st.done = false;
           st.featureFilter = resume.featureFilter || 'all';
+          st.done = false;
+          st.finishShown = false;
           window.render?.();
         }
-        scheduleSave(0);
+        document.body.classList.remove('library-open');
       } catch (error) {
         try { window.err?.(error); } catch (_) {}
       } finally {
+        restoring = false;
         button?.classList.remove('is-loading');
+        scheduleSave(0);
       }
     }
 
-    function renderRecent() {
-      const wrap = $('#recentLessonsWrap');
-      const list = $('#recentLessons');
-      if (!wrap || !list) return;
-      const recent = recentEntries().slice(0, 5);
-      wrap.classList.toggle('hidden', !recent.length);
-      list.innerHTML = '';
-      recent.forEach(item => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'recent-lesson';
-        const progress = item.sessionLength ? `Thẻ ${Math.min((item.lastIndex || 0) + 1, item.sessionLength)}/${item.sessionLength}` : `${item.totalCards || 0} thẻ`;
-        button.innerHTML = `<span><strong>${item.title}</strong><small>${item.courseTitle || 'Bài học'}</small></span><em>${progress}</em>`;
-        button.onclick = () => openLesson({ type: 'lesson', tab: item.tab, courseId: item.courseId, lessonId: item.lessonId, lesson: item.lesson });
-        list.appendChild(button);
-      });
-    }
-
-    function renderContinue() {
-      const button = $('#continueLastBtn');
-      const copy = $('#continueLastText');
-      if (!button || !copy) return;
-      const resume = readJson(RESUME_KEY, null);
-      button.classList.toggle('hidden', !resume?.lessonId);
-      if (!resume?.lessonId) return;
-      const progress = resume.sessionCardIds?.length
-        ? ` · thẻ ${Math.min((resume.index || 0) + 1, resume.sessionCardIds.length)}/${resume.sessionCardIds.length}`
-        : '';
-      copy.textContent = `${resume.title || 'Bài gần nhất'}${progress}`;
-    }
-
-    function renderTools() {
-      if (renderingTools) return;
-      renderingTools = true;
-      try {
-        if (!ensureUi()) return;
-        renderContinue();
-        renderRecent();
-        tagCourseBlocks();
-      } finally {
-        renderingTools = false;
+    function bindTracking() {
+      const baseSelectLesson = window.selectLesson;
+      if (typeof baseSelectLesson === 'function' && !baseSelectLesson.__libraryExperienceWrapped) {
+        window.selectLesson = async function trackedSelectLesson(id) {
+          const result = await baseSelectLesson(id);
+          scheduleSave(100);
+          setTimeout(() => scheduleSave(0), 850);
+          return result;
+        };
+        window.selectLesson.__libraryExperienceWrapped = true;
       }
-    }
 
-    window.invalidateSheetCategory = function invalidateSheetCategory() {
-      const state = getState();
-      if (state.sheet) {
-        state.sheet.loaded = false;
-        state.sheet.courses = [];
+      const baseRender = window.render;
+      if (typeof baseRender === 'function' && !baseRender.__libraryExperienceWrapped) {
+        window.render = function trackedRender() {
+          const result = baseRender();
+          scheduleSave();
+          return result;
+        };
+        window.render.__libraryExperienceWrapped = true;
       }
-    };
 
-    const baseSelectLesson = window.selectLesson;
-    if (typeof baseSelectLesson === 'function' && !baseSelectLesson.__libraryToolsWrapped) {
-      window.selectLesson = async function trackedSelectLesson(id) {
-        const result = await baseSelectLesson(id);
-        scheduleSave(80);
-        setTimeout(() => scheduleSave(0), 700);
-        return result;
-      };
-      window.selectLesson.__libraryToolsWrapped = true;
+      document.addEventListener('change', event => {
+        if (event.target.closest('#fromInput,#toInput,#limitSelect,#shuffleInput')) scheduleSave(0);
+      }, true);
+      document.addEventListener('click', event => {
+        if (event.target.closest('#startBtn,#knownBtn,#againBtn,#prevBtn,#nextBtn,#flipBtn,#card,#posText,#knownText,#againText,.lesson-btn')) scheduleSave(220);
+      }, true);
     }
 
-    const baseRender = window.render;
-    if (typeof baseRender === 'function' && !baseRender.__libraryToolsWrapped) {
-      window.render = function trackedRender() {
-        const result = baseRender();
-        scheduleSave();
-        return result;
-      };
-      window.render.__libraryToolsWrapped = true;
-    }
-
-    document.addEventListener('change', event => {
-      if (event.target.closest('#fromInput,#toInput,#limitSelect,#shuffleInput')) scheduleSave(0);
+    // Window capture runs before the category loader's document capture listener.
+    window.addEventListener('click', event => {
+      const recentTab = event.target.closest?.('.library-tab[data-tab="recent"]');
+      if (!recentTab) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      renderRecentTab();
     }, true);
+
     document.addEventListener('click', event => {
-      if (event.target.closest('#startBtn,#knownBtn,#againBtn,#prevBtn,#flipBtn,#card,.lesson-btn')) scheduleSave(260);
+      const tab = event.target.closest?.('.library-tab:not([data-tab="recent"])');
+      if (!tab) return;
+      e.list?.classList.remove('recent-tab-list');
+      setTimeout(arrangeUi, 0);
     }, true);
 
-    const menuObserver = new MutationObserver(() => renderTools());
-    if (e.list) menuObserver.observe(e.list, { childList: true, subtree: true });
-    ensureUi();
-    renderTools();
-    window.flashcardLibraryTools = { continueLast, render: renderTools, recent: recentEntries, search: renderSearch };
+    const panel = $('.library-panel');
+    if (panel) {
+      new MutationObserver(() => requestAnimationFrame(arrangeUi))
+        .observe(panel, { childList: true, subtree: true });
+    }
+
+    window.addEventListener('sheet-config-updated', () => {
+      catalogPromise = null;
+      arrangeUi();
+    });
+
+    arrangeUi();
+    bindTracking();
+    renderContinueButton();
+
+    window.flashcardLibraryTools = {
+      continueLast,
+      recent: recentEntries,
+      renderRecent: renderRecentTab,
+      searchMenu: renderMenuSearch,
+      searchMain: renderMainSearch,
+      refreshCatalog: () => { catalogPromise = null; return buildCatalog(true); },
+      save: saveCurrentState,
+      arrange: arrangeUi
+    };
   } catch (error) {
     try { console.warn('[library-tools disabled]', error); } catch (_) {}
   }
