@@ -33,7 +33,7 @@
     }
 
     function chatUrl(query) {
-      return `https://chat.com/?q=${encodeURIComponent(query)}`;
+      return `https://chatgpt.com/?q=${encodeURIComponent(query)}`;
     }
 
     function maziiUrl(word) {
@@ -41,16 +41,51 @@
     }
 
     function promptFor(type, word) {
+      const target = `「${word}」`;
       if (type === 'reading') {
-        return `Hãy cho tôi cách đọc của từ hoặc câu tiếng Nhật sau bằng hiragana và romaji, sau đó giải thích ngắn bằng tiếng Việt: 「${word}」`;
+        return [
+          'Hãy phân tích cách đọc của nội dung tiếng Nhật sau cho người Việt đang học tiếng Nhật.',
+          `Nội dung: ${target}`,
+          'Yêu cầu:',
+          '1. Viết cách đọc bằng hiragana.',
+          '2. Viết romaji.',
+          '3. Nếu là câu hoặc cụm dài, hãy tách từng từ và ghi cách đọc của từng phần.',
+          '4. Giải thích ngắn nghĩa tiếng Việt và lưu ý cách phát âm nếu cần.'
+        ].join('\n');
       }
       if (type === 'examples') {
-        return `Hãy cho tôi 5 câu ví dụ tự nhiên sử dụng từ hoặc mẫu câu tiếng Nhật sau. Mỗi câu gồm tiếng Nhật, hiragana và nghĩa tiếng Việt: 「${word}」`;
+        return [
+          'Hãy tạo ví dụ tự nhiên cho nội dung tiếng Nhật sau.',
+          `Nội dung: ${target}`,
+          'Yêu cầu:',
+          '1. Cho 5 câu ví dụ thường dùng trong đời sống hoặc công việc.',
+          '2. Mỗi ví dụ gồm: câu tiếng Nhật, dòng hiragana và nghĩa tiếng Việt.',
+          '3. Giải thích ngắn sắc thái hoặc tình huống sử dụng.',
+          '4. Không dùng ví dụ quá sách vở.'
+        ].join('\n');
       }
       if (type === 'relations') {
-        return `Hãy liệt kê các từ đồng nghĩa, gần nghĩa và trái nghĩa của từ hoặc câu tiếng Nhật sau. Giải thích sắc thái khác nhau và cho ví dụ ngắn bằng tiếng Việt: 「${word}」`;
+        return [
+          'Hãy phân tích các từ liên quan đến nội dung tiếng Nhật sau.',
+          `Nội dung: ${target}`,
+          'Yêu cầu:',
+          '1. Liệt kê từ đồng nghĩa.',
+          '2. Liệt kê từ gần nghĩa và giải thích điểm khác nhau.',
+          '3. Liệt kê từ trái nghĩa nếu có.',
+          '4. Cho ví dụ ngắn để thấy rõ sắc thái sử dụng.',
+          '5. Giải thích bằng tiếng Việt.'
+        ].join('\n');
       }
-      return word;
+      return [
+        'Hãy phân tích nội dung tiếng Nhật sau cho người Việt đang học tiếng Nhật.',
+        `Nội dung: ${target}`,
+        'Yêu cầu:',
+        '1. Dịch nghĩa tự nhiên sang tiếng Việt.',
+        '2. Giải thích từ loại hoặc cấu trúc ngữ pháp.',
+        '3. Nêu sắc thái, ngữ cảnh và cách dùng thực tế.',
+        '4. Chỉ ra điểm dễ nhầm nếu có.',
+        '5. Cho ít nhất 2 câu ví dụ tự nhiên kèm nghĩa tiếng Việt.'
+      ].join('\n');
     }
 
     function ensureStyle() {
