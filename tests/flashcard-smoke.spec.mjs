@@ -78,14 +78,16 @@ test.describe('flashcard smoke', () => {
     const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 4);
     expect(hasOverflow).toBe(false);
 
-    await page.locator('.library-fab').click();
+    const selectedLessonButton = page.locator('#selectedLessonBox');
+    await expect(selectedLessonButton).toBeVisible();
+    await selectedLessonButton.click();
     await expect(page.locator('body')).toHaveClass(/library-open/);
 
-    await page.evaluate(async () => {
-      const lessonId = window.st?.lesson?.id;
-      if (!lessonId) throw new Error('Không có bài đang chọn để đóng drawer.');
-      await window.selectLesson(lessonId);
-    });
+    const backdrop = page.locator('#drawerBackdrop');
+    await expect(backdrop).toBeVisible();
+    const backdropBox = await backdrop.boundingBox();
+    if (!backdropBox) throw new Error('Không lấy được vùng backdrop của drawer.');
+    await page.mouse.click(backdropBox.x + backdropBox.width - 8, backdropBox.y + 80);
     await expect(page.locator('body')).not.toHaveClass(/library-open/);
 
     expect(errors, errors.join('\n')).toEqual([]);
