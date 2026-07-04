@@ -1,16 +1,16 @@
-// Auto study: 5s first side, 5s back side, then continue/mark forgotten.
+// Auto study: every visible face gets 5 seconds, then move/mark forgotten.
 (() => {
   try {
     if (!window.st || !window.e) return;
     const $ = s => document.querySelector(s);
     const AUTO_KEY = 'fc_vocab_auto_study_v1';
-    let tFlip = 0;
-    let tMove = 0;
+    let timers = [];
     let internalFlip = false;
     let lastFocus = false;
     function save(v) { try { localStorage.setItem(AUTO_KEY, v ? 'on' : 'off'); } catch (_) {} }
     function load() { try { return localStorage.getItem(AUTO_KEY) === 'on'; } catch (_) { return false; } }
     function currentCard() { return st.session?.[st.i] || null; }
+    function faceCount() { return Math.max(1, currentCard()?.faces?.length || 2); }
     function autoOn() { return !!$('#autoInput')?.checked; }
     function autoFocusOn() { return autoOn() && !!st.session?.length && !st.done; }
     function active() {
@@ -19,10 +19,8 @@
         && !document.body.classList.contains('display-settings-open');
     }
     function clearTimers() {
-      clearTimeout(tFlip);
-      clearTimeout(tMove);
-      tFlip = 0;
-      tMove = 0;
+      timers.forEach(clearTimeout);
+      timers = [];
     }
     function scrollToCard() {
       try { e.card?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
@@ -32,18 +30,16 @@
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'autoStudyBanner';
-        banner.textContent = 'Đang tự động lật thẻ';
         document.body.prepend(banner);
-      } else {
-        banner.textContent = 'Đang tự động lật thẻ';
       }
+      const count = faceCount();
+      banner.textContent = count > 2 ? `Đang tự động học · ${count} mặt × 5 giây` : 'Đang tự động lật thẻ';
       return banner;
     }
     function updateFocus(forceScroll = false) {
       ensureBanner();
       const on = autoFocusOn();
       document.body.classList.toggle('auto-card-focus', on);
-      // Never scroll in manual mode. This used to cause three smooth-scroll calls on every manual action.
       if (on && (forceScroll || on !== lastFocus)) {
         requestAnimationFrame(scrollToCard);
         setTimeout(scrollToCard, 80);
@@ -55,7 +51,7 @@
       let input = $('#autoInput');
       if (!input) {
         const label = document.createElement('label');
-        label.title = 'Auto: tự lật và tự chuyển thẻ';
+        label.title = 'Auto: mỗi mặt 5 giây rồi tự chuyển thẻ';
         label.innerHTML = '<input id="autoInput" type="checkbox"> ▶';
         document.querySelector('.card-options')?.appendChild(label);
         input = $('#autoInput');
@@ -90,9 +86,9 @@
     }
     function autoMove() {
       if (!active()) return;
-      const c = currentCard();
-      if (!c) return;
-      if (st.known?.has(c.id) || st.again?.has(c.id)) moveDirect();
+      const card = currentCard();
+      if (!card) return;
+      if (st.known?.has(card.id) || st.again?.has(card.id)) moveDirect();
       else if (typeof window.mark === 'function') window.mark('again');
       else moveDirect();
       updateFocus(true);
@@ -102,21 +98,24 @@
       updateFocus(forceScroll);
       clearTimers();
       if (!active()) return;
-      tFlip = setTimeout(() => {
-        if (!active()) return;
-        internalFlip = true;
-        st.face = 1;
-        if (typeof render === 'function') render();
-        updateFocus(true);
-      }, 5000);
-      tMove = setTimeout(() => {
+      const count = faceCount();
+      for (let face = 1; face < count; face++) {
+        timers.push(setTimeout(() => {
+          if (!active()) return;
+          internalFlip = true;
+          st.face = face;
+          if (typeof render === 'function') render();
+          updateFocus(true);
+        }, face * 5000));
+      }
+      timers.push(setTimeout(() => {
         if (!active()) return;
         autoMove();
-      }, 10000);
+      }, count * 5000));
     }
     const oldRender = window.render;
-    if (typeof oldRender === 'function' && !oldRender.__autoStudyWrapped) {
-      window.render = function autoStudyRender() {
+    if (typeof oldRender === 'function' && !oldRender.__autoMultiFaceWrapped) {
+      window.render = function autoMultiFaceRender() {
         oldRender();
         updateFocus();
         if (internalFlip) {
@@ -125,7 +124,7 @@
         }
         requestAnimationFrame(scheduleAuto);
       };
-      window.render.__autoStudyWrapped = true;
+      window.render.__autoMultiFaceWrapped = true;
     }
     document.addEventListener('click', ev => {
       const openDisplay = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn');
@@ -148,7 +147,7 @@
         ev.preventDefault();
         ev.stopImmediatePropagation();
       }
-    }, {capture:true, passive:false});
+    }, { capture: true, passive: false });
     document.addEventListener('change', ev => {
       if (ev.target?.closest('#autoInput,#loopInput') && autoOn()) setTimeout(() => scheduleAuto(true), 0);
     }, true);
@@ -158,7 +157,7 @@
     ensureBanner();
     ensureToggle();
     scheduleAuto();
-    try { if (typeof log === 'function') log('Auto study loaded.'); } catch (_) {}
+    try { if (typeof log === 'function') log('Auto multi-face study loaded.'); } catch (_) {}
   } catch (error) {
     try { console.warn('[auto-study disabled]', error); } catch (_) {}
   }
