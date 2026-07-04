@@ -86,7 +86,6 @@
     function ensurePopup() {
       const options = document.querySelector('.card-options');
       if (!options) return;
-
       $('#displaySettingsFloatBtn')?.remove();
 
       let gear = $('#displaySettingsBtn');
@@ -127,7 +126,6 @@
           </section>`;
       }
       if (backdrop.parentElement !== document.body) document.body.appendChild(backdrop);
-
       bindOpenButton(gear);
 
       const close = backdrop.querySelector('#displaySettingsClose');
@@ -240,6 +238,7 @@
       ensureControls();
       const c = currentCard();
       if (!c) return;
+      if (c.faces?.length) return;
       const reverse = on('#reverseInput');
       const showMeaningSide = reverse ? st.face === 0 : st.face === 1;
       if (showMeaningSide) meaningSide(c);
