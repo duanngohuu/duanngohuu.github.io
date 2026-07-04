@@ -14,7 +14,9 @@
     function autoOn() { return !!$('#autoInput')?.checked; }
     function autoFocusOn() { return autoOn() && !!st.session?.length && !st.done; }
     function active() {
-      return autoFocusOn() && !document.body.classList.contains('force-card-focus');
+      return autoFocusOn()
+        && !document.body.classList.contains('force-card-focus')
+        && !document.body.classList.contains('display-settings-open');
     }
     function clearTimers() {
       clearTimeout(tFlip);
@@ -125,7 +127,11 @@
       window.render.__autoStudyWrapped = true;
     }
     document.addEventListener('click', ev => {
+      const openDisplay = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn');
+      const closeDisplay = ev.target.closest('#displaySettingsClose') || ev.target.id === 'displaySettingsBackdrop';
       const displayUi = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn,#displaySettingsBackdrop');
+      if (openDisplay) clearTimers();
+      if (closeDisplay) setTimeout(() => scheduleAuto(true), 100);
       if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options,#autoInput') && !displayUi) {
         ev.preventDefault();
         ev.stopImmediatePropagation();
@@ -145,6 +151,9 @@
     document.addEventListener('change', ev => {
       if (ev.target?.closest('#autoInput,#loopInput')) setTimeout(() => scheduleAuto(true), 0);
     }, true);
+    document.addEventListener('keydown', ev => {
+      if (ev.key === 'Escape' && autoFocusOn()) setTimeout(() => scheduleAuto(true), 100);
+    });
     ensureBanner();
     ensureToggle();
     scheduleAuto();
