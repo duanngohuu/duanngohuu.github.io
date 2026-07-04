@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v9';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v9';
+const SHELL_CACHE = 'flashcard-shell-20260704-v10';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v10';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
@@ -33,7 +33,6 @@ const SHELL_FILES = [
   './offline-store.js',
   './hotfix-completion.js',
   './category-loader.js',
-  './sheet-group-collapse.js',
   './study-mode.js',
   './action-flow.js',
   './card-tap-flow.js',
