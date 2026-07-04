@@ -53,8 +53,36 @@
       return word;
     }
 
+    function ensureStyle() {
+      if (document.querySelector('link[data-study-support-fix]')) return;
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = './study-support-fix.css?v=20260704-support2';
+      link.dataset.studySupportFix = '1';
+      document.head.appendChild(link);
+    }
+
+    function ensureRoot() {
+      let root = $('#studySupportRoot');
+      if (!root) {
+        root = document.createElement('div');
+        root.id = 'studySupportRoot';
+        root.className = 'study-support-root card-options';
+        document.body.appendChild(root);
+      }
+      return root;
+    }
+
     function ensureUi() {
-      if ($('#studySupportTrigger')) return;
+      ensureStyle();
+      const root = ensureRoot();
+      const existing = [$('#studySupportTrigger'), $('#studySupportBackdrop'), $('#studySupportPanel')].filter(Boolean);
+      if (existing.length) {
+        existing.forEach(node => {
+          if (node.parentNode !== root) root.appendChild(node);
+        });
+        return;
+      }
 
       const trigger = document.createElement('button');
       trigger.id = 'studySupportTrigger';
@@ -62,14 +90,14 @@
       trigger.type = 'button';
       trigger.setAttribute('aria-label', 'Mở hỗ trợ từ đang học');
       trigger.innerHTML = '<span>✦</span><strong>Hỗ trợ</strong>';
-      document.body.appendChild(trigger);
+      root.appendChild(trigger);
 
       const backdrop = document.createElement('button');
       backdrop.id = 'studySupportBackdrop';
       backdrop.className = 'study-support-backdrop hidden';
       backdrop.type = 'button';
       backdrop.setAttribute('aria-label', 'Đóng menu hỗ trợ');
-      document.body.appendChild(backdrop);
+      root.appendChild(backdrop);
 
       const panel = document.createElement('aside');
       panel.id = 'studySupportPanel';
@@ -105,7 +133,7 @@
           </button>
         </div>
         <p id="studySupportEmpty" class="study-support-empty hidden">Chưa có nội dung tiếng Nhật trong thẻ hiện tại.</p>`;
-      document.body.appendChild(panel);
+      root.appendChild(panel);
 
       trigger.addEventListener('pointerdown', event => {
         event.preventDefault();
