@@ -47,6 +47,35 @@
       return true;
     }
 
+    function loadSystemSettings() {
+      const navActions = $('.nav-actions');
+      const themeButton = $('#themeToggle');
+      if (navActions && !$('#systemSettingsBtn')) {
+        const button = document.createElement('button');
+        button.id = 'systemSettingsBtn';
+        button.className = 'icon-btn system-settings-nav-btn';
+        button.type = 'button';
+        button.title = 'Cài đặt hệ thống';
+        button.setAttribute('aria-label', 'Cài đặt hệ thống');
+        button.textContent = '⚙';
+        if (themeButton) navActions.insertBefore(button, themeButton);
+        else navActions.appendChild(button);
+      }
+      if (!document.querySelector('link[data-system-settings-style]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = './system-settings.css?v=20260704-system1';
+        link.dataset.systemSettingsStyle = '1';
+        document.head.appendChild(link);
+      }
+      if (!document.querySelector('script[data-system-settings-script]')) {
+        const script = document.createElement('script');
+        script.src = './system-settings.js?v=20260704-system1';
+        script.dataset.systemSettingsScript = '1';
+        document.body.appendChild(script);
+      }
+    }
+
     const bodyObserver = new MutationObserver(() => {
       if (build()) bodyObserver.disconnect();
     });
@@ -59,6 +88,7 @@
       if (ev.target.closest('#themeToggle,#displaySettingsBtn')) setTimeout(() => { build(); sync(); }, 0);
     }, true);
 
+    loadSystemSettings();
     sync();
   } catch (error) {
     try { console.warn('[theme-settings disabled]', error); } catch (_) {}
