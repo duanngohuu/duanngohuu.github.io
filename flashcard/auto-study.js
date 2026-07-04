@@ -43,7 +43,8 @@
       ensureBanner();
       const on = autoFocusOn();
       document.body.classList.toggle('auto-card-focus', on);
-      if (forceScroll || on !== lastFocus) {
+      // Never scroll in manual mode. This used to cause three smooth-scroll calls on every manual action.
+      if (on && (forceScroll || on !== lastFocus)) {
         requestAnimationFrame(scrollToCard);
         setTimeout(scrollToCard, 80);
         setTimeout(scrollToCard, 260);
@@ -65,7 +66,7 @@
         input.onchange = () => {
           save(input.checked);
           if (!input.checked) clearTimers();
-          updateFocus(true);
+          updateFocus(input.checked);
           if (input.checked) scheduleAuto(true);
         };
       }
@@ -130,14 +131,14 @@
       const openDisplay = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn');
       const closeDisplay = ev.target.closest('#displaySettingsClose') || ev.target.id === 'displaySettingsBackdrop';
       const displayUi = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn,#displaySettingsBackdrop');
-      if (openDisplay) clearTimers();
-      if (closeDisplay) setTimeout(() => scheduleAuto(true), 100);
+      if (openDisplay && autoOn()) clearTimers();
+      if (closeDisplay && autoOn()) setTimeout(() => scheduleAuto(true), 100);
       if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options,#autoInput') && !displayUi) {
         ev.preventDefault();
         ev.stopImmediatePropagation();
         return;
       }
-      if (ev.target.closest('#knownBtn,#againBtn,#prevBtn,#startBtn,.lesson-btn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn,#resetBtn')) {
+      if (autoOn() && ev.target.closest('#knownBtn,#againBtn,#prevBtn,#startBtn,.lesson-btn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn,#resetBtn')) {
         setTimeout(() => scheduleAuto(true), 120);
       }
     }, true);
@@ -149,7 +150,7 @@
       }
     }, {capture:true, passive:false});
     document.addEventListener('change', ev => {
-      if (ev.target?.closest('#autoInput,#loopInput')) setTimeout(() => scheduleAuto(true), 0);
+      if (ev.target?.closest('#autoInput,#loopInput') && autoOn()) setTimeout(() => scheduleAuto(true), 0);
     }, true);
     document.addEventListener('keydown', ev => {
       if (ev.key === 'Escape' && autoFocusOn()) setTimeout(() => scheduleAuto(true), 100);
