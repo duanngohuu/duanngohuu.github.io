@@ -73,7 +73,7 @@
 
       const panel = document.createElement('aside');
       panel.id = 'studySupportPanel';
-      panel.className = 'study-support-panel hidden';
+      panel.className = 'study-support-panel card-options hidden';
       panel.setAttribute('aria-hidden', 'true');
       panel.innerHTML = `
         <header>
@@ -100,7 +100,7 @@
           <button class="study-support-action card-options" type="button" data-support-action="relations">
             <span>ChatGPT</span><strong>Đồng nghĩa · gần nghĩa · trái nghĩa</strong><i>↗</i>
           </button>
-          <button class="study-support-action is-maz ii card-options" type="button" data-support-action="mazii">
+          <button class="study-support-action is-mazii card-options" type="button" data-support-action="mazii">
             <span>Từ điển</span><strong>Tra trên Mazii</strong><i>↗</i>
           </button>
         </div>
