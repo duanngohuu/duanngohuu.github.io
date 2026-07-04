@@ -1,8 +1,8 @@
-// Action flow: forgotten cards reveal every remaining face for 5 seconds each.
+// Forgotten-card review: keep the screen focused, swap to the next card while still covered, then reveal it.
 (() => {
   try {
     if (!window.st || !window.e) return;
-    const $ = s => document.querySelector(s);
+    const $ = selector => document.querySelector(selector);
     let forcedWait = false;
     let releasingFocus = false;
     let waitTimer = 0;
@@ -22,10 +22,8 @@
       const card = currentCard();
       return !!(card && st.again?.has(card.id) && st.session?.length && !st.done);
     }
-    function transitionCardChange(change) {
-      if (typeof window.smoothCardTransition === 'function') return window.smoothCardTransition(change);
-      change();
-      return false;
+    function changeImmediately(change) {
+      if (typeof change === 'function') change();
     }
     function disableButtons(on) {
       [e.prev, e.flip, e.ok, e.bad].forEach(button => { if (button) button.disabled = !!on; });
@@ -48,21 +46,18 @@
       clearTimeout(releaseTimer);
       clearTimeout(unlockTimer);
     }
-    function waitHint(face, count) {
-      if (!e.hint) return;
-      e.hint.textContent = count > 2
-        ? `Đang xem mặt ${face + 1}/${count} · mỗi mặt 5 giây.`
-        : 'Cưỡng chế xem mặt sau 5 giây. Tập trung nhớ lại trước khi qua thẻ tiếp theo.';
-    }
     function finishFocusedReview(callback) {
-      releaseFocusVisual();
-      releaseTimer = setTimeout(() => {
-        callback();
-        unlockTimer = setTimeout(() => {
-          lockButtons(false);
-          requestAnimationFrame(polishActions);
-        }, 300);
-      }, 220);
+      // Important order: change the card while the black focus layer is still visible.
+      changeImmediately(callback);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          releaseFocusVisual();
+          releaseTimer = setTimeout(() => {
+            lockButtons(false);
+            requestAnimationFrame(polishActions);
+          }, 90);
+        });
+      });
     }
     function showBackThen(callback) {
       if (forcedWait || !st.session?.length || st.done) return;
@@ -72,7 +67,6 @@
       let face = count > 1 ? 1 : 0;
       st.face = face;
       if (typeof render === 'function') render();
-      waitHint(face, count);
 
       const advance = () => {
         waitTimer = setTimeout(() => {
@@ -80,7 +74,6 @@
           if (face < count) {
             st.face = face;
             if (typeof render === 'function') render();
-            waitHint(face, count);
             advance();
           } else {
             finishFocusedReview(callback);
@@ -94,7 +87,9 @@
       if (st.i >= st.session.length - 1) {
         if (!loopOn()) return;
         st.i = 0;
-      } else st.i += 1;
+      } else {
+        st.i += 1;
+      }
       st.face = 0;
       if (typeof render === 'function') render();
     }
@@ -107,12 +102,11 @@
       moveForwardNow();
     }
     function continueOrFinish() {
-      if (!st.session?.length || st.done) return;
-      transitionCardChange(continueOrFinishNow);
+      changeImmediately(continueOrFinishNow);
     }
     function markAgainThenMove() {
       if (typeof window.mark === 'function') window.mark('again');
-      else continueOrFinish();
+      else continueOrFinishNow();
     }
     function polishActions() {
       if (e.next) {
@@ -197,7 +191,7 @@
       if (bad) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        if (isAgainCard()) showBackThen(continueOrFinish);
+        if (isAgainCard()) showBackThen(continueOrFinishNow);
         else showBackThen(markAgainThenMove);
         return;
       }
@@ -212,7 +206,7 @@
 
     setReviewMode('all');
     polishActions();
-    try { if (typeof log === 'function') log('Action multi-face flow loaded.'); } catch (_) {}
+    try { if (typeof log === 'function') log('Action focus flow loaded.'); } catch (_) {}
   } catch (error) {
     try { console.warn('[action-flow disabled]', error); } catch (_) {}
   }
