@@ -1,18 +1,16 @@
-// Real connectivity monitor: persistent offline banner + bounded reconnect sync without reload.
+// Real connectivity monitor: silent background sync + one shared user-facing status bar.
 (() => {
   try {
     if (!window.flashcardOffline) return;
     const offline = window.flashcardOffline;
-    const $ = selector => document.querySelector(selector);
     const PROBE_INTERVAL = 30000;
     const PROBE_TIMEOUT = 4500;
     const SYNC_TIMEOUT = 6500;
-    const OFFLINE_TEXT = 'Đang offline · dùng dữ liệu đã lưu';
+    const RECONNECTED_MS = 30000;
     let onlineState = null;
     let probeTimer = 0;
-    let bannerTimer = 0;
+    let reconnectTimer = 0;
     let syncing = false;
-    let enforcingOffline = false;
 
     function clone(value) {
       try { return structuredClone(value); }
@@ -26,61 +24,31 @@
       ]);
     }
 
-    function ensureBanner() {
-      let banner = $('#sheetSyncBanner');
-      if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'sheetSyncBanner';
-        banner.className = 'sheet-sync-banner hidden';
-        banner.innerHTML = '<span class="sheet-sync-dot"></span><strong id="sheetSyncBannerText">Đang kiểm tra Internet…</strong>';
-        document.body.appendChild(banner);
-      }
-      return banner;
+    function refreshSharedBanner() {
+      try { window.refreshFlashcardStatusBanner?.(); } catch (_) {}
     }
 
-    function renderBanner(text, tone = 'loading', autoHideMs = 0) {
-      const banner = ensureBanner();
-      clearTimeout(bannerTimer);
-      banner.classList.remove('hidden', 'is-ready', 'is-warning', 'is-error', 'network-persistent');
-      if (tone === 'ready') banner.classList.add('is-ready');
-      if (tone === 'warning') banner.classList.add('is-warning');
-      if (tone === 'error') banner.classList.add('is-error');
-      const label = banner.querySelector('#sheetSyncBannerText');
-      if (label && label.textContent !== text) label.textContent = text;
-      if (autoHideMs > 0 && onlineState !== false) {
-        bannerTimer = setTimeout(() => banner.classList.add('hidden'), autoHideMs);
-      }
-      return banner;
+    function setOffline() {
+      clearTimeout(reconnectTimer);
+      document.body.classList.remove('network-reconnected');
+      document.body.classList.add('network-offline');
+      refreshSharedBanner();
     }
 
-    function offlineBannerIsCorrect() {
-      const banner = ensureBanner();
-      const label = banner.querySelector('#sheetSyncBannerText');
-      return document.body.classList.contains('network-offline')
-        && !banner.classList.contains('hidden')
-        && banner.classList.contains('is-warning')
-        && banner.classList.contains('network-persistent')
-        && label?.textContent === OFFLINE_TEXT;
-    }
-
-    function renderOffline() {
-      if (enforcingOffline || offlineBannerIsCorrect()) return;
-      enforcingOffline = true;
-      try {
-        document.body.classList.add('network-offline');
-        const banner = renderBanner(OFFLINE_TEXT, 'warning', 0);
-        banner.classList.add('network-persistent');
-        banner.dataset.connectivityState = 'offline';
-      } finally {
-        enforcingOffline = false;
-      }
-    }
-
-    function releaseOffline() {
+    function setOnlineSilently() {
       document.body.classList.remove('network-offline');
-      const banner = ensureBanner();
-      banner.classList.remove('network-persistent');
-      banner.dataset.connectivityState = 'online';
+      refreshSharedBanner();
+    }
+
+    function showReconnected() {
+      clearTimeout(reconnectTimer);
+      document.body.classList.remove('network-offline');
+      document.body.classList.add('network-reconnected');
+      refreshSharedBanner();
+      reconnectTimer = setTimeout(() => {
+        document.body.classList.remove('network-reconnected');
+        refreshSharedBanner();
+      }, RECONNECTED_MS);
     }
 
     async function probeInternet() {
@@ -129,11 +97,7 @@
 
     async function syncManifest() {
       if (typeof window.refreshSheetLibraryConfig === 'function') {
-        return withTimeout(
-          window.refreshSheetLibraryConfig(),
-          SYNC_TIMEOUT,
-          'Đồng bộ menu quá thời gian.'
-        );
+        return withTimeout(window.refreshSheetLibraryConfig(), SYNC_TIMEOUT, 'Menu sync timeout.');
       }
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), SYNC_TIMEOUT);
@@ -143,7 +107,7 @@
           credentials: 'same-origin',
           signal: controller.signal
         });
-        if (!response.ok) throw new Error('Không đồng bộ được menu.');
+        if (!response.ok) throw new Error('Menu sync failed.');
         const manifest = await response.json();
         if (manifest?.courses?.length) await offline.putLibrary('sheet-manifest', manifest);
         return manifest;
@@ -176,9 +140,9 @@
       const cards = await withTimeout(
         window.fetchSheetLessonCardsFresh(lesson),
         SYNC_TIMEOUT,
-        'Đồng bộ bài hiện tại quá thời gian.'
+        'Current lesson sync timeout.'
       );
-      if (!cards.length) throw new Error('Google Sheets trả về bài trống.');
+      if (!cards.length) throw new Error('Empty lesson.');
       const previous = await offline.getLesson(lesson.id).catch(() => null);
       const parserVersion = window.sheetLessonCache?.parserVersion || 'sheet-parser-2026.07.04-v2';
       const contentHash = await hashCards(cards);
@@ -201,34 +165,17 @@
       return { status: 'synced', changed, applied, count: cards.length };
     }
 
-    async function syncAfterReconnect() {
+    async function syncInBackground() {
       if (syncing || onlineState === false) return;
       syncing = true;
-      releaseOffline();
-      renderBanner('Đã có mạng · đang đồng bộ dữ liệu…', 'ready', 0);
       try {
-        const results = await withTimeout(
+        await withTimeout(
           Promise.allSettled([syncManifest(), syncCurrentLesson()]),
           SYNC_TIMEOUT + 300,
-          'Đồng bộ đang chạy nền.'
+          'Background sync timeout.'
         );
-        const [manifestResult, lessonResult] = results;
-        const lesson = lessonResult.status === 'fulfilled' ? lessonResult.value : null;
-        let message = 'Có mạng · menu đã đồng bộ';
-        let tone = 'ready';
-        if (lesson?.status === 'synced' && lesson.changed && lesson.applied) {
-          message = `Có mạng · đã cập nhật ${lesson.count} thẻ`;
-        } else if (lesson?.status === 'synced' && lesson.changed) {
-          message = 'Có mạng · đã lưu bản mới cho lần mở sau';
-        } else if (lesson?.status === 'synced') {
-          message = 'Có mạng · dữ liệu bài hiện tại không đổi';
-        } else if (manifestResult.status === 'rejected') {
-          message = 'Có mạng · đang dùng menu đã lưu';
-          tone = 'warning';
-        }
-        renderBanner(message, tone, 2600);
       } catch (_) {
-        renderBanner('Có mạng · sync chạy nền, app vẫn dùng dữ liệu đã lưu', 'warning', 2800);
+        // Silent by design: this is internal maintenance, not a user notification.
       } finally {
         syncing = false;
       }
@@ -240,16 +187,23 @@
       onlineState = detectedOnline;
 
       if (!detectedOnline) {
-        renderOffline();
+        setOffline();
+      } else if (previous === false) {
+        showReconnected();
+        syncInBackground();
       } else {
-        releaseOffline();
-        if (previous === false || previous === null || reason === 'browser-online') {
-          syncAfterReconnect();
-        }
+        setOnlineSilently();
+        if (previous === null) syncInBackground();
       }
 
       window.dispatchEvent(new CustomEvent('flashcard-connectivity', {
-        detail: { online: detectedOnline, previous, reason, checkedAt: new Date().toISOString() }
+        detail: {
+          online: detectedOnline,
+          previous,
+          reconnected: detectedOnline && previous === false,
+          reason,
+          checkedAt: new Date().toISOString()
+        }
       }));
       return detectedOnline;
     }
@@ -264,7 +218,7 @@
 
     window.addEventListener('offline', () => {
       onlineState = false;
-      renderOffline();
+      setOffline();
       scheduleProbe(5000);
     });
     window.addEventListener('online', async () => {
@@ -276,24 +230,11 @@
     });
     window.addEventListener('focus', () => evaluateConnectivity('focus'));
 
-    const bannerObserver = new MutationObserver(() => {
-      if (onlineState === false && !enforcingOffline && !offlineBannerIsCorrect()) {
-        queueMicrotask(renderOffline);
-      }
-    });
-    bannerObserver.observe(ensureBanner(), {
-      attributes: true,
-      attributeFilter: ['class'],
-      childList: true,
-      subtree: true,
-      characterData: true
-    });
-
     window.flashcardConnectivity = {
       check: evaluateConnectivity,
-      sync: syncAfterReconnect,
+      sync: syncInBackground,
       isOnline: () => onlineState,
-      renderOffline
+      renderOffline: setOffline
     };
 
     evaluateConnectivity('initial').finally(scheduleProbe);
