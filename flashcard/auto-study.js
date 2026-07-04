@@ -1,4 +1,4 @@
-// Auto study: pause for menus/settings, then restart the full timer on the current face.
+// Auto study: pause for menus/settings and resume directly in focused study mode.
 (() => {
   try {
     if (!window.st || !window.e) return;
@@ -30,8 +30,7 @@
     function allowedAutoTarget(target) {
       return !!target?.closest?.([
         '.card-options',
-        '.nav-actions',
-        '#autoLessonMenuDock',
+        '#bottomLessonBtn',
         '.library-panel',
         '#drawerBackdrop',
         '#displaySettingsBackdrop',
@@ -96,7 +95,7 @@
       renderStatusBanner();
       if (on && (forceScroll || on !== lastFocus)) {
         requestAnimationFrame(scrollToCard);
-        setTimeout(scrollToCard, 80);
+        setTimeout(scrollToCard, 70);
       }
       lastFocus = on;
     }
@@ -119,50 +118,8 @@
           if (input.checked) scheduleAuto(true);
         };
       }
+      $('#autoLessonMenuDock')?.remove();
       return input;
-    }
-    function ensureLessonMenuButton() {
-      let dock = $('#autoLessonMenuDock');
-      if (dock) return dock;
-      dock = document.createElement('div');
-      dock.id = 'autoLessonMenuDock';
-      dock.className = 'auto-lesson-menu-dock nav-actions';
-      dock.innerHTML = '<button id="autoLessonMenuBtn" type="button">☰ Bài học</button>';
-      document.body.appendChild(dock);
-      $('#autoLessonMenuBtn').onclick = event => {
-        event.preventDefault();
-        event.stopPropagation();
-        openLessonMenu();
-      };
-      return dock;
-    }
-    function focusFirstLibraryTab() {
-      window.flashcardLibraryTools?.arrange?.();
-      const panel = $('.library-panel');
-      const tabs = panel?.querySelector('.library-tabs');
-      const firstTab = tabs?.querySelector('.library-tab');
-      if (!panel || !tabs || !firstTab) return;
-      panel.scrollTop = 0;
-      tabs.scrollLeft = 0;
-      firstTab.click();
-      requestAnimationFrame(() => {
-        panel.scrollTop = 0;
-        tabs.scrollLeft = 0;
-      });
-    }
-    function openLessonMenu() {
-      clearTimers();
-      document.body.classList.add('library-open');
-      updateFocus(false);
-      requestAnimationFrame(focusFirstLibraryTab);
-    }
-    function closeMenuAndResume(delay = 120) {
-      document.body.classList.remove('library-open');
-      clearTimeout(resumeTimer);
-      resumeTimer = setTimeout(() => {
-        updateFocus(true);
-        scheduleAuto(false);
-      }, delay);
     }
     function moveDirect() {
       if (!st.session?.length || st.done) return;
@@ -170,13 +127,13 @@
         if (st.loop || $('#loopInput')?.checked) st.i = 0;
         else {
           if (typeof window.finishSession === 'function') window.finishSession();
-          else { st.done = true; if (typeof render === 'function') render(); }
+          else { st.done = true; window.render?.(); }
           updateFocus(true);
           return;
         }
       } else st.i += 1;
       st.face = 0;
-      if (typeof render === 'function') render();
+      window.render?.();
       updateFocus(true);
     }
     function autoMove() {
@@ -190,7 +147,6 @@
     }
     function scheduleAuto(forceScroll = false) {
       ensureToggle();
-      ensureLessonMenuButton();
       updateFocus(forceScroll);
       clearTimers();
       if (!active()) return;
@@ -201,14 +157,56 @@
           if (!active()) return;
           internalFlip = true;
           st.face = face;
-          if (typeof render === 'function') render();
+          window.render?.();
           updateFocus(true);
         }, (face - startFace) * 5000));
       }
       timers.push(setTimeout(() => {
-        if (!active()) return;
-        autoMove();
+        if (active()) autoMove();
       }, (count - startFace) * 5000));
+    }
+    function buildFreshSession() {
+      let from = Math.max(1, Number(e.from?.value) || 1);
+      let to = Math.min(st.cards.length, Number(e.to?.value) || st.cards.length);
+      if (from > to) [from, to] = [to, from];
+      let cards = st.cards.filter(card => card.no >= from && card.no <= to);
+      if (e.shuffle?.checked) cards = [...cards].sort(() => Math.random() - 0.5);
+      if (e.limit?.value !== 'all') cards = cards.slice(0, Number(e.limit?.value) || 10);
+      return cards;
+    }
+    async function enterSelectedLesson(lessonId) {
+      for (let attempt = 0; attempt < 160; attempt++) {
+        if (st.lesson?.id === lessonId && st.cards?.length) break;
+        await wait(50);
+      }
+      if (st.lesson?.id !== lessonId || !st.cards?.length) return;
+
+      document.querySelector('#finishModal')?.classList.remove('on');
+      st.reviewMode = 'all';
+      st.session = buildFreshSession();
+      st.i = 0;
+      st.face = 0;
+      st.done = false;
+      st.finishShown = false;
+      try { window.saveLast?.(); } catch (_) {}
+      window.render?.();
+
+      document.body.classList.add('auto-card-focus');
+      document.body.classList.remove('library-open');
+      renderStatusBanner();
+      requestAnimationFrame(() => scheduleAuto(true));
+    }
+    function installFinalLessonWrapper() {
+      const finalSelectLesson = window.selectLesson;
+      if (typeof finalSelectLesson !== 'function' || finalSelectLesson.__autoFinalWrapped) return;
+      window.selectLesson = async function autoFinalSelectLesson(id) {
+        const selectedFromAutoMenu = autoOn() && menuOpen();
+        if (selectedFromAutoMenu) clearTimers();
+        const result = await finalSelectLesson(id);
+        if (selectedFromAutoMenu) await enterSelectedLesson(id);
+        return result;
+      };
+      window.selectLesson.__autoFinalWrapped = true;
     }
 
     const oldRender = window.render;
@@ -225,81 +223,64 @@
       window.render.__autoMultiFaceWrapped = true;
     }
 
-    const oldSelectLesson = window.selectLesson;
-    if (typeof oldSelectLesson === 'function' && !oldSelectLesson.__autoLessonMenuWrapped) {
-      window.selectLesson = async function autoLessonSelect(id) {
-        const selectedFromAutoMenu = autoOn() && menuOpen();
-        if (selectedFromAutoMenu) clearTimers();
-        const result = await oldSelectLesson(id);
-        if (selectedFromAutoMenu) {
-          for (let attempt = 0; attempt < 40 && !st.cards?.length; attempt++) await wait(50);
-          if (!st.session?.length && st.cards?.length) window.start?.();
-          st.face = 0;
-          if (typeof window.render === 'function') window.render();
-          closeMenuAndResume(100);
-        }
-        return result;
-      };
-      window.selectLesson.__autoLessonMenuWrapped = true;
-    }
-
     document.addEventListener('click', event => {
       const opensSettings = event.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn,#systemSettingsBtn');
       const closesSettings = event.target.closest('#displaySettingsClose,#systemSettingsClose')
         || event.target.id === 'displaySettingsBackdrop'
         || event.target.id === 'systemSettingsBackdrop';
-      if (opensSettings && autoOn()) {
-        clearTimers();
-        updateFocus(false);
-      }
+
+      if (event.target.closest('#bottomLessonBtn') && autoOn()) clearTimers();
+      if (opensSettings && autoOn()) clearTimers();
+
       if (document.body.classList.contains('auto-card-focus') && !allowedAutoTarget(event.target)) {
         event.preventDefault();
         event.stopImmediatePropagation();
         return;
       }
-      if (event.target.id === 'drawerBackdrop' && autoOn()) closeMenuAndResume(80);
+
+      if (event.target.id === 'drawerBackdrop' && autoOn()) {
+        clearTimeout(resumeTimer);
+        resumeTimer = setTimeout(() => scheduleAuto(true), 80);
+      }
       if (closesSettings && autoOn()) {
         setTimeout(() => {
           if (!settingsOpen()) scheduleAuto(true);
         }, 100);
       }
-      if (autoOn() && event.target.closest('#knownBtn,#againBtn,#prevBtn,#startBtn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn,#resetBtn')) {
-        setTimeout(() => scheduleAuto(true), 100);
-      }
     }, true);
+
     document.addEventListener('touchmove', event => {
       if (document.body.classList.contains('auto-card-focus') && !allowedAutoTarget(event.target)) {
         event.preventDefault();
         event.stopImmediatePropagation();
       }
     }, { capture: true, passive: false });
+
     document.addEventListener('change', event => {
       if (event.target?.closest('.card-options input') && autoOn()) setTimeout(() => scheduleAuto(true), 0);
     }, true);
+
     window.addEventListener('flashcard-connectivity', renderStatusBanner);
 
-    const bodyObserver = new MutationObserver(() => {
+    new MutationObserver(() => {
       if (!autoOn()) return;
       if (menuOpen()) {
         clearTimers();
         updateFocus(false);
       }
-    });
-    bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
     window.refreshFlashcardStatusBanner = renderStatusBanner;
     window.flashcardAutoStudy = {
       pause: clearTimers,
       resume: () => scheduleAuto(true),
-      openLessonMenu,
       refresh: updateFocus
     };
 
     ensureBanner();
     ensureToggle();
-    ensureLessonMenuButton();
     scheduleAuto();
-    try { if (typeof log === 'function') log('Auto study loaded.'); } catch (_) {}
+    setTimeout(installFinalLessonWrapper, 0);
   } catch (error) {
     try { console.warn('[auto-study disabled]', error); } catch (_) {}
   }
