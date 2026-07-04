@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v7';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v7';
+const SHELL_CACHE = 'flashcard-shell-20260704-v8';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v8';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
