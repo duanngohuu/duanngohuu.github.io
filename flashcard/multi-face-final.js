@@ -28,7 +28,8 @@
         const expectedFront = long ? (face.label || `Mặt ${st.face + 1}`) : face.text;
         const expectedSub = long ? face.text : (face.label || '');
         const expectedHint = `Mặt ${st.face + 1}/${faces.length} · ${face.label || 'Nội dung'}`;
-        const expectedMeta = `Mặt ${st.face + 1}/${faces.length} · ${card.sourceSheet || st.lesson?.courseTitle || ''}`;
+        const shownCourse = st.lesson?.courseTitle || String(card.sourceSheet || '').replace(/^OK@(TV|NP|BUN)\s*/i, '');
+        const expectedMeta = `Mặt ${st.face + 1}/${faces.length} · ${shownCourse}`;
 
         if (e.front?.textContent !== expectedFront) e.front.textContent = expectedFront;
         if (e.sub?.textContent !== expectedSub) e.sub.textContent = expectedSub;
