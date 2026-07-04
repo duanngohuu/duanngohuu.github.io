@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v12';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v12';
+const SHELL_CACHE = 'flashcard-shell-20260704-v14';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v14';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
@@ -27,6 +27,7 @@ const SHELL_FILES = [
   './sheet-library.css',
   './sheet-cache.css',
   './dark-calm.css',
+  './user-status-policy.css',
   './core-stable-mini.js',
   './features-stable.js',
   './sheet-tabs.js',
@@ -125,9 +126,7 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
-  // Real connectivity probe must bypass every cache and hit the network directly.
   if (url.searchParams.has('__network_probe')) return;
-
   if (url.origin !== self.location.origin) return;
   if (!url.pathname.startsWith(new URL(SCOPE).pathname)) return;
 
@@ -136,7 +135,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Versioned assets must prefer the network so a new index never receives stale JS/CSS.
   if (url.search) {
     event.respondWith(networkFirst(request, false));
     return;
