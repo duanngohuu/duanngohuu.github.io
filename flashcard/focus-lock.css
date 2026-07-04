@@ -1,10 +1,13 @@
-/* Forced review focus: block interaction without changing card geometry. */
+/* Forced review focus: isolate only the flashcard text, never the large panel/card shell. */
 body.force-card-focus{overflow:hidden!important;touch-action:none!important}
-body.force-card-focus::before{content:"";position:fixed;inset:0;z-index:9990;background:rgba(15,23,42,.48);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);pointer-events:auto!important;touch-action:none!important}
-body.force-card-focus .fc-focus-panel{position:relative!important;z-index:9994!important;filter:none!important;opacity:1!important}
-body.force-card-focus .fc-focus-panel>*:not(#card){opacity:.18!important;filter:grayscale(.35)!important;pointer-events:none!important}
-body.force-card-focus #card{position:relative!important;z-index:9998!important;filter:none!important;opacity:1!important;pointer-events:none!important;box-shadow:0 30px 92px rgba(15,23,42,.42),0 0 0 3px rgba(255,255,255,.72)!important;transform:none!important}
-body.force-card-focus #card *{filter:none!important;opacity:1!important}
-body.force-card-focus #cardHint,body.force-card-focus #cardMeta{position:relative!important;z-index:9997!important;opacity:.18!important;filter:grayscale(.35)!important;pointer-events:none!important}
+body.force-card-focus::before{content:"";position:fixed;inset:0;z-index:9990;background:rgba(15,23,42,.58);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);pointer-events:auto!important;touch-action:none!important}
+body.force-card-focus .fc-focus-panel{position:relative!important;z-index:9994!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;filter:none!important;opacity:1!important}
+body.force-card-focus .fc-focus-panel>*:not(#card){opacity:.14!important;filter:grayscale(.4)!important;pointer-events:none!important}
+body.force-card-focus #card{position:relative!important;z-index:9998!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;filter:none!important;opacity:1!important;pointer-events:none!important;transform:none!important;overflow:visible!important}
+body.force-card-focus #card::before,body.force-card-focus #card::after{opacity:0!important;display:none!important}
+body.force-card-focus #card .card-inner{position:relative!important;z-index:9999!important;filter:none!important;opacity:1!important;text-shadow:0 3px 18px rgba(0,0,0,.34)}
+body.force-card-focus #card .front{color:#fff!important}
+body.force-card-focus #card .sub{color:rgba(255,255,255,.9)!important}
+body.force-card-focus #cardHint,body.force-card-focus #cardMeta{position:relative!important;z-index:9997!important;opacity:.14!important;filter:grayscale(.4)!important;pointer-events:none!important}
 body.force-card-focus #actions,body.force-card-focus .actions{pointer-events:none!important}
-body.force-card-focus #cardHint::after{content:"  ⏳";font-weight:950;color:#2563eb}
+body.force-card-focus #cardHint::after{content:"  ⏳";font-weight:950;color:#93c5fd}
