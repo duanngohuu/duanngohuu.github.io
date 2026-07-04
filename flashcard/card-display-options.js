@@ -1,4 +1,4 @@
-// Card display settings: compact gear button + fixed floating shortcut + body-level popup.
+// Card display settings: gear button in the toggle row + body-level popup.
 (() => {
   try {
     if (!window.st || !window.e) return;
@@ -62,7 +62,6 @@
     function makeSwitch(id, label, checked) {
       return `<label class="display-setting-row" for="${id}"><span>${label}</span><input id="${id}" type="checkbox" ${checked ? 'checked' : ''}><i></i></label>`;
     }
-
     function openPopup() {
       const backdrop = $('#displaySettingsBackdrop');
       if (!backdrop) return;
@@ -88,6 +87,8 @@
       const options = document.querySelector('.card-options');
       if (!options) return;
 
+      $('#displaySettingsFloatBtn')?.remove();
+
       let gear = $('#displaySettingsBtn');
       if (!gear) {
         gear = document.createElement('button');
@@ -100,18 +101,6 @@
         const reverseLabel = $('#reverseInput')?.closest('label');
         if (reverseLabel) reverseLabel.after(gear);
         else options.appendChild(gear);
-      }
-
-      let floatGear = $('#displaySettingsFloatBtn');
-      if (!floatGear) {
-        floatGear = document.createElement('button');
-        floatGear.id = 'displaySettingsFloatBtn';
-        floatGear.type = 'button';
-        floatGear.className = 'display-settings-float-btn';
-        floatGear.title = 'Tùy chỉnh hiển thị thẻ';
-        floatGear.setAttribute('aria-label', 'Mở cài đặt hiển thị thẻ');
-        floatGear.innerHTML = '<span>⚙</span><b>Hiển thị</b>';
-        document.body.appendChild(floatGear);
       }
 
       let backdrop = $('#displaySettingsBackdrop');
@@ -140,7 +129,6 @@
       if (backdrop.parentElement !== document.body) document.body.appendChild(backdrop);
 
       bindOpenButton(gear);
-      bindOpenButton(floatGear);
 
       const close = backdrop.querySelector('#displaySettingsClose');
       if (close && close.dataset.bound !== '1') {
@@ -260,12 +248,12 @@
     }
 
     const oldRender = window.render;
-    if (typeof oldRender === 'function' && !oldRender.__displaySettingsBodyWrapped) {
-      window.render = function displaySettingsBodyRender() {
+    if (typeof oldRender === 'function' && !oldRender.__displaySettingsRowWrapped) {
+      window.render = function displaySettingsRowRender() {
         oldRender();
         requestAnimationFrame(applyDisplay);
       };
-      window.render.__displaySettingsBodyWrapped = true;
+      window.render.__displaySettingsRowWrapped = true;
     }
 
     document.addEventListener('click', ev => {
@@ -280,7 +268,7 @@
 
     ensureControls();
     applyDisplay();
-    try { if (typeof log === 'function') log('Fixed display settings popup loaded.'); } catch (_) {}
+    try { if (typeof log === 'function') log('Display settings row button loaded.'); } catch (_) {}
   } catch (error) {
     try { console.warn('[display-settings disabled]', error); } catch (_) {}
   }
