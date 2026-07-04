@@ -44,11 +44,11 @@
       wrap.className = 'finish-modal-backdrop';
       wrap.innerHTML = `
         <div class="finish-modal" role="dialog" aria-modal="true" aria-labelledby="finishTitle">
-          <h2 id="finishTitle">🎉 Chúc mừng!</h2>
+          <h2 id="finishTitle">🎉 Chúc mừng bạn!</h2>
           <p id="finishText">Bạn đã học xong phiên này.</p>
           <div class="finish-actions">
-            <button id="finishKnownBtn" class="primary" type="button">Học thẻ đã nhớ</button>
-            <button id="finishAgainBtn" class="bad" type="button">Học thẻ chưa nhớ</button>
+            <button id="finishKnownBtn" class="primary" type="button">Học thẻ đã nhớ (0)</button>
+            <button id="finishAgainBtn" class="bad" type="button">Học thẻ chưa nhớ (0)</button>
             <button id="finishRestartBtn" class="secondary" type="button">Học lại từ đầu</button>
             <button id="finishCloseBtn" class="ghost close" type="button">Đóng</button>
           </div>
@@ -63,10 +63,29 @@
 
     function hideModal() { document.querySelector('#finishModal')?.classList.remove('on'); }
 
+    function updateFinishSummary() {
+      const total = st.session?.length || 0;
+      const knownCount = st.known?.size || 0;
+      const againCount = st.again?.size || 0;
+      const title = document.querySelector('#finishTitle');
+      const text = document.querySelector('#finishText');
+      const knownBtn = document.querySelector('#finishKnownBtn');
+      const againBtn = document.querySelector('#finishAgainBtn');
+      if (title) title.textContent = '🎉 Chúc mừng bạn!';
+      if (text) text.textContent = `Bạn đã học xong ${total} thẻ.`;
+      if (knownBtn) {
+        knownBtn.textContent = `Học thẻ đã nhớ (${knownCount})`;
+        knownBtn.disabled = knownCount === 0;
+      }
+      if (againBtn) {
+        againBtn.textContent = `Học thẻ chưa nhớ (${againCount})`;
+        againBtn.disabled = againCount === 0;
+      }
+    }
+
     function showModal() {
       ensureModal();
-      const text = document.querySelector('#finishText');
-      if (text) text.textContent = `Đã học xong ${st.session?.length || 0} thẻ. Biết: ${st.known.size} · Chưa nhớ: ${st.again.size}.`;
+      updateFinishSummary();
       document.querySelector('#finishModal')?.classList.add('on');
     }
 
@@ -112,7 +131,7 @@
       st.face = 0;
       if (e.title) e.title.textContent = 'Hoàn thành phiên học';
       if (e.front) e.front.textContent = '🎉 Hoàn thành';
-      if (e.sub) e.sub.textContent = 'Đã học xong ' + (st.session?.length || 0) + ' thẻ.\nBiết: ' + st.known.size + ' · Chưa nhớ: ' + st.again.size;
+      if (e.sub) e.sub.textContent = 'Đã học xong ' + (st.session?.length || 0) + ' thẻ.';
       if (e.hint) e.hint.textContent = 'Chọn trong popup để học thẻ đã nhớ, thẻ chưa nhớ hoặc học lại từ đầu.';
       const meta = document.querySelector('#cardMeta');
       if (meta) meta.textContent = st.lesson?.title || '';
@@ -208,6 +227,7 @@
     window.finishSession = paintComplete;
     window.next = moveNext;
     window.mark = markAndMove;
+    window.updateFinishSummary = updateFinishSummary;
     if (e.start) e.start.onclick = window.start;
     if (e.next) e.next.onclick = moveNext;
     if (e.ok) e.ok.onclick = () => markAndMove('known');
