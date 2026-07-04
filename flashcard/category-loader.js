@@ -1,4 +1,4 @@
-// Category/course menu hotfix: tabs keep their own category data and show course -> lesson hierarchy.
+// Category/course menu: live Sheet library + local vocab/grammar/kanji data.
 (() => {
   try {
     if (!window.st || !window.e) return;
@@ -6,15 +6,18 @@
     const logSafe = msg => { try { if (typeof log === 'function') log(msg); } catch (_) {} };
     const PROGRESS_KEY = 'fc_vocab_progress_v2';
     const categoryState = {
+      sheet: { loaded: false, courses: [], summary: 'Dữ liệu học đọc trực tiếp từ Google Sheets public.' },
       vocab: { loaded: false, courses: [], summary: 'Từ vựng Đọc hiểu các năm JLPT.' },
       grammar: { loaded: false, courses: [], summary: 'Ngữ pháp N2 các năm JLPT.' },
       kanji: { loaded: true, courses: [{ title: 'Kanji N2 2010-2025', lessons: [], note: 'Đang nhập data Kanji từ ảnh. Chưa có TSV nên chưa bật bài nhỏ.' }], summary: 'Kanji N2 2010-2025.' }
     };
+    let activeTab = 'sheet';
 
     function flatten(m) {
       return (m.courses || []).map(c => ({
+        ...c,
         title: c.title || 'Untitled',
-        lessons: (c.lessons || []).map(l => ({...l, courseTitle: c.title || 'Untitled'}))
+        lessons: (c.lessons || []).map(l => ({ ...l, courseTitle: c.title || 'Untitled' }))
       }));
     }
 
@@ -23,9 +26,7 @@
         const all = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}');
         const p = all[lessonId] || {};
         return { known: (p.known || []).length, again: (p.again || []).length };
-      } catch (_) {
-        return { known: 0, again: 0 };
-      }
+      } catch (_) { return { known: 0, again: 0 }; }
     }
 
     function lessonMetaHtml(l) {
@@ -34,11 +35,14 @@
       return `<span>${count} thẻ</span><span>Đã nhớ: ${p.known}</span><span>Chưa nhớ: ${p.again}</span>`;
     }
 
+    function allLessons() {
+      return Object.values(categoryState).flatMap(data => data.courses || []).flatMap(course => course.lessons || []);
+    }
+
     function refreshLessonProgressBadges() {
+      const lessons = allLessons();
       document.querySelectorAll('.lesson-btn[data-lesson-id]').forEach(btn => {
-        const lesson = categoryState.vocab.courses.concat(categoryState.grammar.courses)
-          .flatMap(c => c.lessons || [])
-          .find(l => l.id === btn.dataset.lessonId);
+        const lesson = lessons.find(item => item.id === btn.dataset.lessonId);
         const meta = btn.querySelector('.lesson-progress-line');
         if (lesson && meta) meta.innerHTML = lessonMetaHtml(lesson);
       });
@@ -46,6 +50,15 @@
 
     async function fetchCourses(tab) {
       if (categoryState[tab]?.loaded) return categoryState[tab].courses;
+      if (tab === 'sheet') {
+        let config;
+        if (typeof window.loadSheetLibraryConfig === 'function') config = await window.loadSheetLibraryConfig();
+        else config = JSON.parse(await getText('./data/sheet-library-manifest.json?v=' + Date.now()));
+        categoryState.sheet.courses = flatten(config);
+        categoryState.sheet.loaded = true;
+        categoryState.sheet.summary = `${config.summary || 'Kho học Google Sheets'} · ${categoryState.sheet.courses.length} bộ.`;
+        return categoryState.sheet.courses;
+      }
       const path = tab === 'grammar' ? './data/n2-grammar-manifest.json' : './data/manifest.json';
       const text = await getText(path + '?v=' + Date.now());
       const m = JSON.parse(text);
@@ -62,10 +75,12 @@
       st.face = 0;
       st.done = false;
       st.finishShown = false;
+      st.multiFaceMode = false;
       if (typeof render === 'function') render();
     }
 
     function renderCategory(tab, openIndex = null) {
+      activeTab = tab;
       const data = categoryState[tab];
       if (!e.list || !data) return;
       e.list.style.display = 'grid';
@@ -74,22 +89,33 @@
       if (empty) empty.style.display = 'none';
       const summary = $('.library-summary');
       if (summary) summary.textContent = data.summary;
-      if (e.meta) e.meta.textContent = tab === 'kanji' ? 'Chưa có data' : data.courses.reduce((n, c) => n + c.lessons.length, 0) + ' mục';
+      if (e.meta) {
+        if (tab === 'kanji') e.meta.textContent = 'Chưa có data';
+        else if (tab === 'sheet') e.meta.textContent = data.courses.length + ' bộ';
+        else e.meta.textContent = data.courses.reduce((n, c) => n + (c.lessons?.length || 0), 0) + ' mục';
+      }
 
       data.courses.forEach((course, index) => {
         const box = document.createElement('div');
         box.className = 'course-block';
-        const countText = course.lessons.length ? course.lessons.length + ' bài nhỏ' : 'Chưa có bài';
+        const ready = tab !== 'sheet' || course._lessonsReady;
+        const countText = ready
+          ? (course.lessons?.length ? course.lessons.length + ' bài nhỏ' : 'Chưa có bài')
+          : 'Chạm để tải';
         box.innerHTML = `<button class="course-btn" type="button"><strong>${course.title}</strong><span>${countText}</span></button><div class="course-lessons"></div>`;
         const btn = box.querySelector('.course-btn');
         const lessonsBox = box.querySelector('.course-lessons');
-        const open = openIndex === index || (data.courses.length === 1 && course.lessons.length > 0);
+        const open = openIndex === index || (data.courses.length === 1 && course.lessons?.length > 0);
         box.classList.toggle('open', open);
         lessonsBox.style.display = open ? 'grid' : 'none';
-        if (!course.lessons.length) {
-          lessonsBox.innerHTML = `<div class="empty-tab">${course.note || 'Chưa có TSV sạch trong repo.'}</div>`;
+
+        if (!ready) {
+          lessonsBox.innerHTML = '<div class="empty-tab">Chạm vào tên bộ để đọc danh sách bài từ Google Sheets.</div>';
+        } else if (!course.lessons?.length) {
+          lessonsBox.innerHTML = `<div class="empty-tab">${course.note || 'Chưa có dữ liệu bài học.'}</div>`;
         } else {
           course.lessons.forEach(l => {
+            l.courseTitle = course.title;
             const b = document.createElement('button');
             b.className = 'lesson-btn lesson-btn-grid';
             b.type = 'button';
@@ -102,12 +128,27 @@
             lessonsBox.appendChild(b);
           });
         }
-        btn.onclick = () => {
+
+        btn.onclick = async () => {
+          if (tab === 'sheet' && !course._lessonsReady) {
+            btn.classList.add('is-loading');
+            btn.querySelector('span').textContent = 'Đang đọc sheet';
+            try {
+              if (typeof window.ensureSheetCourseLessons !== 'function') throw new Error('Sheet loader chưa sẵn sàng.');
+              await window.ensureSheetCourseLessons(course);
+              renderCategory(tab, index);
+            } catch (error) {
+              btn.classList.remove('is-loading');
+              btn.querySelector('span').textContent = 'Lỗi tải';
+              logSafe('Sheet course error: ' + error.message);
+            }
+            return;
+          }
           const willOpen = !box.classList.contains('open');
-          e.list.querySelectorAll('.course-block').forEach(x => {
-            x.classList.remove('open');
-            const lx = x.querySelector('.course-lessons');
-            if (lx) lx.style.display = 'none';
+          e.list.querySelectorAll('.course-block').forEach(item => {
+            item.classList.remove('open');
+            const list = item.querySelector('.course-lessons');
+            if (list) list.style.display = 'none';
           });
           box.classList.toggle('open', willOpen);
           lessonsBox.style.display = willOpen ? 'grid' : 'none';
@@ -121,9 +162,11 @@
     }
 
     async function switchCategory(tab) {
+      activeTab = tab;
       document.querySelectorAll('.library-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
       await fetchCourses(tab);
       renderCategory(tab);
+      document.querySelector(`.library-tab[data-tab="${tab}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
     document.addEventListener('click', ev => {
@@ -131,7 +174,7 @@
       if (!btn) return;
       ev.preventDefault();
       ev.stopPropagation();
-      switchCategory(btn.dataset.tab).catch(err => logSafe('Category load error: ' + err.message));
+      switchCategory(btn.dataset.tab).catch(error => logSafe('Category load error: ' + error.message));
     }, true);
 
     document.addEventListener('click', ev => {
@@ -140,9 +183,10 @@
       }
     }, true);
 
-    setTimeout(() => switchCategory('vocab').catch(err => logSafe('Vocab category error: ' + err.message)), 0);
+    setTimeout(() => switchCategory('sheet').catch(error => logSafe('Sheet category error: ' + error.message)), 0);
     window.switchFlashcardCategory = switchCategory;
     window.refreshLessonProgressBadges = refreshLessonProgressBadges;
+    window.getFlashcardCategoryState = () => categoryState;
     logSafe('Course category loader loaded.');
   } catch (error) {
     try { console.warn('[category loader disabled]', error); } catch (_) {}
