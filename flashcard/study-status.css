@@ -1,0 +1,10 @@
+/* User-facing lesson study status. */
+.lesson-btn-grid>.lesson-download-state.is-study-idle{color:#1d4ed8!important;background:#dbeafe!important;border-color:#93c5fd!important}
+.lesson-btn-grid>.lesson-download-state.is-study-progress{color:#9a3412!important;background:#ffedd5!important;border-color:#fdba74!important}
+.lesson-btn-grid>.lesson-download-state.is-study-complete{color:#166534!important;background:#dcfce7!important;border-color:#86efac!important}
+.lesson-btn.active>.lesson-download-state.is-study-idle{color:#dbeafe!important;background:rgba(37,99,235,.48)!important;border-color:rgba(191,219,254,.7)!important}
+.lesson-btn.active>.lesson-download-state.is-study-progress{color:#fff7ed!important;background:rgba(234,88,12,.62)!important;border-color:rgba(254,215,170,.75)!important}
+.lesson-btn.active>.lesson-download-state.is-study-complete{color:#ecfdf5!important;background:rgba(22,163,74,.6)!important;border-color:rgba(187,247,208,.7)!important}
+.dark .lesson-btn-grid>.lesson-download-state.is-study-idle{color:#bfdbfe!important;background:rgba(30,64,175,.32)!important;border-color:rgba(96,165,250,.55)!important}
+.dark .lesson-btn-grid>.lesson-download-state.is-study-progress{color:#fed7aa!important;background:rgba(154,52,18,.35)!important;border-color:rgba(251,146,60,.58)!important}
+.dark .lesson-btn-grid>.lesson-download-state.is-study-complete{color:#bbf7d0!important;background:rgba(22,101,52,.38)!important;border-color:rgba(74,222,128,.55)!important}
