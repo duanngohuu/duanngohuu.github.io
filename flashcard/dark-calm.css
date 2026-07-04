@@ -86,6 +86,24 @@
   box-shadow:none!important;
   animation:none!important;
 }
+:root.dark .selected-lesson-box{
+  background:#101217!important;
+  background-image:none!important;
+  color:#eef1f5!important;
+  border-color:#343a46!important;
+  box-shadow:none!important;
+}
+:root.dark .selected-lesson-box span{
+  color:#9dbde7!important;
+}
+:root.dark .selected-lesson-box strong{
+  color:#f4f6f8!important;
+  -webkit-text-fill-color:#f4f6f8!important;
+}
+:root.dark .selected-lesson-box:not(.has-lesson) strong{
+  color:#929aa6!important;
+  -webkit-text-fill-color:#929aa6!important;
+}
 :root.dark .ok{
   background:#294c39!important;
   background-image:none!important;
