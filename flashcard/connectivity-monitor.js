@@ -1,4 +1,4 @@
-// Real connectivity monitor: persistent offline banner + automatic reconnect sync without reload.
+// Real connectivity monitor: persistent offline banner + bounded reconnect sync without reload.
 (() => {
   try {
     if (!window.flashcardOffline) return;
@@ -6,6 +6,7 @@
     const $ = selector => document.querySelector(selector);
     const PROBE_INTERVAL = 30000;
     const PROBE_TIMEOUT = 4500;
+    const SYNC_TIMEOUT = 6500;
     const OFFLINE_TEXT = 'Đang offline · dùng dữ liệu đã lưu';
     let onlineState = null;
     let probeTimer = 0;
@@ -16,6 +17,13 @@
     function clone(value) {
       try { return structuredClone(value); }
       catch (_) { return JSON.parse(JSON.stringify(value)); }
+    }
+
+    function withTimeout(promise, ms, message) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
+      ]);
     }
 
     function ensureBanner() {
@@ -120,14 +128,28 @@
     }
 
     async function syncManifest() {
-      const response = await fetch(`./data/sheet-library-manifest.json?__sync=${Date.now()}`, {
-        cache: 'no-store',
-        credentials: 'same-origin'
-      });
-      if (!response.ok) throw new Error('Không đồng bộ được menu.');
-      const manifest = await response.json();
-      await offline.putLibrary('sheet-manifest', manifest);
-      return manifest;
+      if (typeof window.refreshSheetLibraryConfig === 'function') {
+        return withTimeout(
+          window.refreshSheetLibraryConfig(),
+          SYNC_TIMEOUT,
+          'Đồng bộ menu quá thời gian.'
+        );
+      }
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), SYNC_TIMEOUT);
+      try {
+        const response = await fetch(`./data/sheet-library-manifest.json?__sync=${Date.now()}`, {
+          cache: 'no-store',
+          credentials: 'same-origin',
+          signal: controller.signal
+        });
+        if (!response.ok) throw new Error('Không đồng bộ được menu.');
+        const manifest = await response.json();
+        if (manifest?.courses?.length) await offline.putLibrary('sheet-manifest', manifest);
+        return manifest;
+      } finally {
+        clearTimeout(timeout);
+      }
     }
 
     function applyCardsWhenIdle(lesson, cards) {
@@ -151,7 +173,11 @@
       if (!lesson || lesson.source !== 'google-sheet') return { status: 'no-lesson' };
       if (typeof window.fetchSheetLessonCardsFresh !== 'function') return { status: 'reader-missing' };
 
-      const cards = await window.fetchSheetLessonCardsFresh(lesson);
+      const cards = await withTimeout(
+        window.fetchSheetLessonCardsFresh(lesson),
+        SYNC_TIMEOUT,
+        'Đồng bộ bài hiện tại quá thời gian.'
+      );
       if (!cards.length) throw new Error('Google Sheets trả về bài trống.');
       const previous = await offline.getLesson(lesson.id).catch(() => null);
       const parserVersion = window.sheetLessonCache?.parserVersion || 'sheet-parser-2026.07.04-v2';
@@ -181,12 +207,15 @@
       releaseOffline();
       renderBanner('Đã có mạng · đang đồng bộ dữ liệu…', 'ready', 0);
       try {
-        const [manifestResult, lessonResult] = await Promise.allSettled([
-          syncManifest(),
-          syncCurrentLesson()
-        ]);
+        const results = await withTimeout(
+          Promise.allSettled([syncManifest(), syncCurrentLesson()]),
+          SYNC_TIMEOUT + 300,
+          'Đồng bộ đang chạy nền.'
+        );
+        const [manifestResult, lessonResult] = results;
         const lesson = lessonResult.status === 'fulfilled' ? lessonResult.value : null;
         let message = 'Có mạng · menu đã đồng bộ';
+        let tone = 'ready';
         if (lesson?.status === 'synced' && lesson.changed && lesson.applied) {
           message = `Có mạng · đã cập nhật ${lesson.count} thẻ`;
         } else if (lesson?.status === 'synced' && lesson.changed) {
@@ -194,11 +223,12 @@
         } else if (lesson?.status === 'synced') {
           message = 'Có mạng · dữ liệu bài hiện tại không đổi';
         } else if (manifestResult.status === 'rejected') {
-          message = 'Có mạng · chưa đồng bộ được dữ liệu';
+          message = 'Có mạng · đang dùng menu đã lưu';
+          tone = 'warning';
         }
-        renderBanner(message, manifestResult.status === 'rejected' && lessonResult.status === 'rejected' ? 'warning' : 'ready', 3200);
+        renderBanner(message, tone, 2600);
       } catch (_) {
-        renderBanner('Có mạng nhưng đồng bộ chưa thành công', 'warning', 3200);
+        renderBanner('Có mạng · sync chạy nền, app vẫn dùng dữ liệu đã lưu', 'warning', 2800);
       } finally {
         syncing = false;
       }
@@ -214,7 +244,7 @@
       } else {
         releaseOffline();
         if (previous === false || previous === null || reason === 'browser-online') {
-          await syncAfterReconnect();
+          syncAfterReconnect();
         }
       }
 
