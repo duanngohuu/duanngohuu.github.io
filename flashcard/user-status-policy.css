@@ -1,3 +1,4 @@
+@import url('./review-focus-clean.css?v=20260704-review1');
 /* User-facing status policy: hide internal cache/sync diagnostics. */
 #sheetSyncBanner,.sheet-sync-banner{display:none!important}
 .sheet-load-kicker,.sheet-load-status{display:none!important}
