@@ -77,17 +77,27 @@
     }
 
     function loadDownloadStatus() {
-      if (!document.querySelector('link[data-download-status-style]')) {
-        const link = document.createElement('link');
+      const version = '20260704-download2';
+      let link = document.querySelector('link[data-download-status-style]');
+      if (!link) {
+        link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = './download-status.css?v=20260704-download1';
         link.dataset.downloadStatusStyle = '1';
         document.head.appendChild(link);
       }
-      if (!document.querySelector('script[data-download-status-script]')) {
-        const script = document.createElement('script');
-        script.src = './download-status.js?v=20260704-download1';
+      const cssHref = `./download-status.css?v=${version}`;
+      if (!link.href.includes(version)) link.href = cssHref;
+
+      let script = document.querySelector('script[data-download-status-script]');
+      if (script && script.dataset.downloadStatusVersion !== version) {
+        script.remove();
+        script = null;
+      }
+      if (!script) {
+        script = document.createElement('script');
+        script.src = `./download-status.js?v=${version}`;
         script.dataset.downloadStatusScript = '1';
+        script.dataset.downloadStatusVersion = version;
         document.body.appendChild(script);
       }
     }
