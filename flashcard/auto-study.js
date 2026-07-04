@@ -13,10 +13,28 @@
     function faceCount() { return Math.max(1, currentCard()?.faces?.length || 2); }
     function autoOn() { return !!$('#autoInput')?.checked; }
     function autoFocusOn() { return autoOn() && !!st.session?.length && !st.done; }
+    function settingsOpen() {
+      return document.body.classList.contains('display-settings-open')
+        || document.body.classList.contains('system-settings-open');
+    }
     function active() {
       return autoFocusOn()
         && !document.body.classList.contains('force-card-focus')
-        && !document.body.classList.contains('display-settings-open');
+        && !settingsOpen();
+    }
+    function allowedAutoTarget(target) {
+      return !!target?.closest?.([
+        '.card-options',
+        '.nav-actions',
+        '#displaySettingsBackdrop',
+        '#systemSettingsBackdrop',
+        '.display-settings-backdrop',
+        '.system-settings-backdrop',
+        '#displaySettingsBtn',
+        '#displaySettingsFloatBtn',
+        '#systemSettingsBtn',
+        '#themeToggle'
+      ].join(','));
     }
     function clearTimers() {
       timers.forEach(clearTimeout);
@@ -40,7 +58,7 @@
       ensureBanner();
       const on = autoFocusOn();
       document.body.classList.toggle('auto-card-focus', on);
-      if (on && (forceScroll || on !== lastFocus)) {
+      if (on && !settingsOpen() && (forceScroll || on !== lastFocus)) {
         requestAnimationFrame(scrollToCard);
         setTimeout(scrollToCard, 80);
         setTimeout(scrollToCard, 260);
@@ -127,32 +145,36 @@
       window.render.__autoMultiFaceWrapped = true;
     }
     document.addEventListener('click', ev => {
-      const openDisplay = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn');
-      const closeDisplay = ev.target.closest('#displaySettingsClose') || ev.target.id === 'displaySettingsBackdrop';
-      const displayUi = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn,#displaySettingsBackdrop');
-      if (openDisplay && autoOn()) clearTimers();
-      if (closeDisplay && autoOn()) setTimeout(() => scheduleAuto(true), 100);
-      if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options,#autoInput') && !displayUi) {
+      const opensSettings = ev.target.closest('#displaySettingsBtn,#displaySettingsFloatBtn,#systemSettingsBtn');
+      const closesSettings = ev.target.closest('#displaySettingsClose,#systemSettingsClose')
+        || ev.target.id === 'displaySettingsBackdrop'
+        || ev.target.id === 'systemSettingsBackdrop';
+      if (opensSettings && autoOn()) clearTimers();
+      if (document.body.classList.contains('auto-card-focus') && !allowedAutoTarget(ev.target)) {
         ev.preventDefault();
         ev.stopImmediatePropagation();
         return;
+      }
+      if (closesSettings && autoOn()) {
+        setTimeout(() => {
+          if (!settingsOpen()) scheduleAuto(true);
+        }, 120);
       }
       if (autoOn() && ev.target.closest('#knownBtn,#againBtn,#prevBtn,#startBtn,.lesson-btn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn,#resetBtn')) {
         setTimeout(() => scheduleAuto(true), 120);
       }
     }, true);
     document.addEventListener('touchmove', ev => {
-      const displayUi = ev.target.closest('#displaySettingsBackdrop');
-      if (document.body.classList.contains('auto-card-focus') && !ev.target.closest('.card-options') && !displayUi) {
+      if (document.body.classList.contains('auto-card-focus') && !allowedAutoTarget(ev.target)) {
         ev.preventDefault();
         ev.stopImmediatePropagation();
       }
     }, { capture: true, passive: false });
     document.addEventListener('change', ev => {
-      if (ev.target?.closest('#autoInput,#loopInput') && autoOn()) setTimeout(() => scheduleAuto(true), 0);
+      if (ev.target?.closest('.card-options input') && autoOn()) setTimeout(() => scheduleAuto(true), 0);
     }, true);
     document.addEventListener('keydown', ev => {
-      if (ev.key === 'Escape' && autoFocusOn()) setTimeout(() => scheduleAuto(true), 100);
+      if (ev.key === 'Escape' && autoFocusOn()) setTimeout(() => scheduleAuto(true), 140);
     });
     ensureBanner();
     ensureToggle();
