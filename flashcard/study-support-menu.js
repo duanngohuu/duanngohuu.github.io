@@ -123,6 +123,7 @@
       trigger.id = 'studySupportTrigger';
       trigger.className = 'study-support-trigger hidden';
       trigger.type = 'button';
+      trigger.dataset.supportMenuTrigger = '1';
       trigger.setAttribute('aria-label', 'Mở hỗ trợ từ đang học');
       trigger.innerHTML = '<span>✦</span><strong>Hỗ trợ</strong>';
       root.appendChild(trigger);
@@ -170,14 +171,6 @@
         <p id="studySupportEmpty" class="study-support-empty hidden">Chưa có nội dung tiếng Nhật trong thẻ hiện tại.</p>`;
       root.appendChild(panel);
 
-      trigger.addEventListener('pointerdown', event => {
-        event.preventDefault();
-        openMenu();
-      });
-      trigger.addEventListener('click', event => {
-        event.preventDefault();
-        openMenu();
-      });
       backdrop.addEventListener('click', () => closeMenu(true));
       $('#studySupportClose')?.addEventListener('click', () => closeMenu(true));
       panel.addEventListener('click', event => {
