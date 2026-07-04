@@ -1,0 +1,227 @@
+/* Calm dark mode: black background, quiet borders, low-saturation controls, no large glow. */
+:root.dark{
+  color-scheme:dark;
+  --bg:#000;
+  --panel:#090909;
+  --text:#e5e7eb;
+  --muted:#8b93a1;
+  --line:#27272a;
+  --brand:#687095;
+  --cyan:#4f747a;
+  --pink:#765b69;
+  --ok:#315c45;
+  --bad:#6b343a;
+  --shadow:none;
+  --card:#0b0b0b;
+}
+:root.dark body,
+:root.dark body::before{
+  background:#000!important;
+  background-image:none!important;
+}
+:root.dark .glass,
+:root.dark .panel,
+:root.dark .hero,
+:root.dark .topbar{
+  background:#090909!important;
+  background-image:none!important;
+  border-color:#252525!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+:root.dark .hero h1{
+  background:none!important;
+  color:#f1f3f5!important;
+  -webkit-text-fill-color:#f1f3f5!important;
+  animation:none!important;
+}
+:root.dark .hero p,
+:root.dark .library-summary,
+:root.dark .hint,
+:root.dark .card-note,
+:root.dark .sub,
+:root.dark .log{
+  color:#8b93a1!important;
+}
+:root.dark .brand-mark{
+  background:#17191f!important;
+  color:#c8ceda!important;
+  border:1px solid #30333a!important;
+}
+:root.dark button,
+:root.dark .lesson-btn,
+:root.dark .course-btn,
+:root.dark .stats span{
+  box-shadow:none!important;
+  animation:none!important;
+}
+:root.dark .secondary,
+:root.dark .icon-btn,
+:root.dark .nav-log-btn,
+:root.dark .course-btn,
+:root.dark .lesson-btn,
+:root.dark .library-tab,
+:root.dark .display-settings-btn,
+:root.dark .card-options label,
+:root.dark .badge,
+:root.dark .stats span,
+:root.dark .empty-tab{
+  background:#101010!important;
+  background-image:none!important;
+  color:#c9ced6!important;
+  border-color:#2b2b2b!important;
+  box-shadow:none!important;
+}
+:root.dark .primary,
+:root.dark .library-fab,
+:root.dark .topbar .open-library-btn,
+:root.dark .lesson-btn.active,
+:root.dark .library-tab.active,
+:root.dark .stats span.status-active{
+  background:#20242d!important;
+  background-image:none!important;
+  color:#edf0f5!important;
+  border:1px solid #39404d!important;
+  box-shadow:none!important;
+  animation:none!important;
+}
+:root.dark .ok{
+  background:#294c39!important;
+  background-image:none!important;
+  color:#d8eadf!important;
+  border:1px solid #3d6850!important;
+  box-shadow:none!important;
+}
+:root.dark .bad{
+  background:#563036!important;
+  background-image:none!important;
+  color:#f0dadd!important;
+  border:1px solid #75434a!important;
+  box-shadow:none!important;
+}
+:root.dark input,
+:root.dark select{
+  background:#0d0d0d!important;
+  color:#e5e7eb!important;
+  border-color:#303030!important;
+  box-shadow:none!important;
+}
+:root.dark .card{
+  background:#0a0a0a!important;
+  background-image:none!important;
+  border-color:#2a2a2a!important;
+  box-shadow:none!important;
+  filter:none!important;
+}
+:root.dark .card::before,
+:root.dark .card::after{
+  display:none!important;
+  opacity:0!important;
+}
+:root.dark .card.status-known{
+  border-color:#3f7355!important;
+  box-shadow:none!important;
+}
+:root.dark .card.status-again{
+  border-color:#81454d!important;
+  box-shadow:none!important;
+}
+:root.dark .progress{
+  background:#181818!important;
+  border:1px solid #242424!important;
+}
+:root.dark .progress div{
+  background:#596171!important;
+  background-image:none!important;
+}
+:root.dark #cardMeta.card-meta{
+  background:#0e0e0e!important;
+  color:#9aa3b1!important;
+  border-color:#303030!important;
+  box-shadow:none!important;
+}
+:root.dark .course-block.open>.course-btn{
+  border-color:#4b5366!important;
+  box-shadow:none!important;
+}
+:root.dark .course-lessons{
+  border-left-color:#30343d!important;
+}
+:root.dark .lesson-progress-line,
+:root.dark .lesson-progress-line span{
+  color:#929aa6!important;
+}
+:root.dark .lesson-progress-line span{
+  background:#111!important;
+  border-color:#2d2d2d!important;
+}
+:root.dark .lesson-btn.active .lesson-progress-line span{
+  background:#262b34!important;
+  border-color:#414856!important;
+  color:#dce1e9!important;
+}
+:root.dark .card-options input,
+:root.dark .switch-track,
+:root.dark .display-setting-row i{
+  background:#2b2b2b!important;
+  border-color:#3a3a3a!important;
+  box-shadow:none!important;
+}
+:root.dark .card-options input::after,
+:root.dark .switch-track::before,
+:root.dark .display-setting-row i::after{
+  background:#aeb4bd!important;
+  box-shadow:none!important;
+}
+:root.dark .card-options input:checked,
+:root.dark .ios-switch input:checked+.switch-track,
+:root.dark .display-setting-row input:checked+i{
+  background:#4d566b!important;
+  background-image:none!important;
+  border-color:#667086!important;
+}
+:root.dark .display-settings-backdrop{
+  background:rgba(0,0,0,.82)!important;
+  backdrop-filter:blur(5px)!important;
+  -webkit-backdrop-filter:blur(5px)!important;
+}
+:root.dark .display-settings-popup,
+:root.dark .finish-modal,
+:root.dark .complete-panel{
+  background:#0a0a0a!important;
+  background-image:none!important;
+  color:#e5e7eb!important;
+  border-color:#292929!important;
+  box-shadow:none!important;
+}
+:root.dark .display-settings-popup header button{
+  background:#171717!important;
+  color:#cfd4dc!important;
+  border:1px solid #303030!important;
+}
+:root.dark .display-settings-tabs button,
+:root.dark .display-setting-row{
+  background:#111!important;
+  color:#cbd0d7!important;
+  border-color:#2d2d2d!important;
+  box-shadow:none!important;
+}
+:root.dark .display-settings-tabs button.active{
+  background:#242933!important;
+  background-image:none!important;
+  color:#eef1f5!important;
+  border-color:#414957!important;
+}
+:root.dark .finish-modal p{
+  color:#969eaa!important;
+}
+:root.dark button:hover,
+:root.dark .lesson-btn:hover,
+:root.dark .stats span:hover{
+  filter:none!important;
+  box-shadow:none!important;
+}
+:root.dark .tap-pop{
+  animation:none!important;
+}
