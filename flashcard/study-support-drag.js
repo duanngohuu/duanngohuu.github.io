@@ -1,13 +1,11 @@
-// Make the study-support trigger draggable like a chat bubble and remember its position.
+// Draggable study-support bubble for touch, pointer and mouse devices.
 (() => {
   try {
-    const KEY = 'fc_study_support_position_v1';
-    const MOVE_THRESHOLD = 6;
+    const KEY = 'fc_study_support_position_v2';
+    const MOVE_THRESHOLD = 7;
     const EDGE_GAP = 8;
-    let drag = null;
+    let active = null;
     let restoreTimer = 0;
-
-    const trigger = () => document.querySelector('#studySupportTrigger');
 
     function viewportBox() {
       const viewport = window.visualViewport;
@@ -19,44 +17,53 @@
       };
     }
 
-    function clampPosition(left, top, element) {
+    function trigger() {
+      return document.querySelector('#studySupportTrigger');
+    }
+
+    function clamp(left, top, element) {
       const viewport = viewportBox();
-      const rect = element.getBoundingClientRect();
+      const width = element.offsetWidth || element.getBoundingClientRect().width || 1;
+      const height = element.offsetHeight || element.getBoundingClientRect().height || 1;
       const minLeft = viewport.left + EDGE_GAP;
       const minTop = viewport.top + EDGE_GAP;
-      const maxLeft = Math.max(minLeft, viewport.left + viewport.width - rect.width - EDGE_GAP);
-      const maxTop = Math.max(minTop, viewport.top + viewport.height - rect.height - EDGE_GAP);
+      const maxLeft = Math.max(minLeft, viewport.left + viewport.width - width - EDGE_GAP);
+      const maxTop = Math.max(minTop, viewport.top + viewport.height - height - EDGE_GAP);
       return {
         left: Math.min(maxLeft, Math.max(minLeft, left)),
         top: Math.min(maxTop, Math.max(minTop, top)),
         viewport,
-        rect
+        width,
+        height
       };
     }
 
-    function setPosition(left, top, persist = false) {
-      const element = trigger();
-      if (!element || element.classList.contains('hidden')) return false;
-      const position = clampPosition(left, top, element);
+    function applyPosition(element, left, top, persist = false) {
+      if (!element || element.classList.contains('hidden')) return;
+      const position = clamp(left, top, element);
       element.style.setProperty('left', `${Math.round(position.left)}px`, 'important');
       element.style.setProperty('top', `${Math.round(position.top)}px`, 'important');
       element.style.setProperty('right', 'auto', 'important');
       element.style.setProperty('bottom', 'auto', 'important');
       element.dataset.dragPositioned = '1';
 
-      if (persist) {
-        const horizontalSpace = Math.max(1, position.viewport.width - position.rect.width - EDGE_GAP * 2);
-        const verticalSpace = Math.max(1, position.viewport.height - position.rect.height - EDGE_GAP * 2);
-        const x = (position.left - position.viewport.left - EDGE_GAP) / horizontalSpace;
-        const y = (position.top - position.viewport.top - EDGE_GAP) / verticalSpace;
-        try {
-          localStorage.setItem(KEY, JSON.stringify({
-            x: Math.min(1, Math.max(0, x)),
-            y: Math.min(1, Math.max(0, y))
-          }));
-        } catch (_) {}
-      }
-      return true;
+      if (!persist) return;
+      const horizontalSpace = Math.max(1, position.viewport.width - position.width - EDGE_GAP * 2);
+      const verticalSpace = Math.max(1, position.viewport.height - position.height - EDGE_GAP * 2);
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          x: Math.min(1, Math.max(0, (position.left - position.viewport.left - EDGE_GAP) / horizontalSpace)),
+          y: Math.min(1, Math.max(0, (position.top - position.viewport.top - EDGE_GAP) / verticalSpace))
+        }));
+      } catch (_) {}
+    }
+
+    function savedPosition() {
+      try {
+        const value = JSON.parse(localStorage.getItem(KEY) || 'null');
+        if (Number.isFinite(value?.x) && Number.isFinite(value?.y)) return value;
+      } catch (_) {}
+      return null;
     }
 
     function restorePosition() {
@@ -66,101 +73,142 @@
         restoreTimer = setTimeout(restorePosition, 120);
         return;
       }
-
-      let saved = null;
-      try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) {}
-      if (!saved || !Number.isFinite(saved.x) || !Number.isFinite(saved.y)) return;
-
+      bindTrigger(element);
+      const saved = savedPosition();
+      if (!saved) return;
       const viewport = viewportBox();
-      const rect = element.getBoundingClientRect();
-      const horizontalSpace = Math.max(1, viewport.width - rect.width - EDGE_GAP * 2);
-      const verticalSpace = Math.max(1, viewport.height - rect.height - EDGE_GAP * 2);
-      setPosition(
+      const width = element.offsetWidth || 1;
+      const height = element.offsetHeight || 1;
+      const horizontalSpace = Math.max(1, viewport.width - width - EDGE_GAP * 2);
+      const verticalSpace = Math.max(1, viewport.height - height - EDGE_GAP * 2);
+      applyPosition(
+        element,
         viewport.left + EDGE_GAP + horizontalSpace * saved.x,
         viewport.top + EDGE_GAP + verticalSpace * saved.y,
         false
       );
     }
 
-    function finishDrag(event, cancelled = false) {
-      if (!drag || event.pointerId !== drag.pointerId) return;
-      const element = trigger();
-      event.preventDefault();
-      event.stopImmediatePropagation();
-
-      try { element?.releasePointerCapture?.(drag.pointerId); } catch (_) {}
-      element?.classList.remove('is-dragging');
-      const moved = drag.moved;
-      drag = null;
-
-      if (moved && !cancelled && element) {
-        const rect = element.getBoundingClientRect();
-        setPosition(rect.left, rect.top, true);
-      } else if (!moved && !cancelled) {
-        setTimeout(() => window.studySupportMenu?.open?.(), 0);
-      }
+    function pointFromEvent(event) {
+      if (event.touches?.length) return event.touches[0];
+      if (event.changedTouches?.length) return event.changedTouches[0];
+      return event;
     }
 
-    document.addEventListener('pointerdown', event => {
-      const element = event.target.closest?.('#studySupportTrigger');
-      if (!element || event.button > 0) return;
-
+    function startDrag(element, event, kind) {
+      const point = pointFromEvent(event);
+      if (!point || (kind === 'mouse' && event.button !== 0)) return;
       event.preventDefault();
-      event.stopImmediatePropagation();
+      event.stopPropagation();
       const rect = element.getBoundingClientRect();
-      drag = {
+      active = {
+        element,
+        kind,
         pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        offsetX: event.clientX - rect.left,
-        offsetY: event.clientY - rect.top,
+        touchId: point.identifier,
+        startX: point.clientX,
+        startY: point.clientY,
+        offsetX: point.clientX - rect.left,
+        offsetY: point.clientY - rect.top,
         moved: false
       };
       element.classList.add('is-dragging');
-      try { element.setPointerCapture?.(event.pointerId); } catch (_) {}
-    }, true);
+      if (kind === 'pointer') {
+        try { element.setPointerCapture?.(event.pointerId); } catch (_) {}
+      }
+    }
 
-    document.addEventListener('pointermove', event => {
-      if (!drag || event.pointerId !== drag.pointerId) return;
-      const distanceX = event.clientX - drag.startX;
-      const distanceY = event.clientY - drag.startY;
-      if (!drag.moved && Math.hypot(distanceX, distanceY) >= MOVE_THRESHOLD) drag.moved = true;
-      if (!drag.moved) return;
+    function moveDrag(event) {
+      if (!active) return;
+      if (active.kind === 'pointer' && event.pointerId !== active.pointerId) return;
+      const point = pointFromEvent(event);
+      if (!point) return;
+      if (active.kind === 'touch' && active.touchId != null && point.identifier !== active.touchId) return;
+
+      const dx = point.clientX - active.startX;
+      const dy = point.clientY - active.startY;
+      if (!active.moved && Math.hypot(dx, dy) >= MOVE_THRESHOLD) active.moved = true;
+      if (!active.moved) return;
 
       event.preventDefault();
-      event.stopImmediatePropagation();
-      setPosition(event.clientX - drag.offsetX, event.clientY - drag.offsetY, false);
-    }, { capture: true, passive: false });
+      event.stopPropagation();
+      applyPosition(active.element, point.clientX - active.offsetX, point.clientY - active.offsetY, false);
+    }
 
-    document.addEventListener('pointerup', event => finishDrag(event, false), true);
-    document.addEventListener('pointercancel', event => finishDrag(event, true), true);
-
-    document.addEventListener('click', event => {
-      if (!event.target.closest?.('#studySupportTrigger')) return;
+    function endDrag(event, cancelled = false) {
+      if (!active) return;
+      if (active.kind === 'pointer' && event.pointerId !== active.pointerId) return;
+      const current = active;
+      active = null;
       event.preventDefault();
-      event.stopImmediatePropagation();
-      if (event.detail === 0) window.studySupportMenu?.open?.();
-    }, true);
+      event.stopPropagation();
+      current.element.classList.remove('is-dragging');
+      if (current.kind === 'pointer') {
+        try { current.element.releasePointerCapture?.(current.pointerId); } catch (_) {}
+      }
 
-    const observer = new MutationObserver(() => {
-      const element = trigger();
-      if (element && !element.classList.contains('hidden')) restorePosition();
-    });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+      if (current.moved && !cancelled) {
+        const rect = current.element.getBoundingClientRect();
+        applyPosition(current.element, rect.left, rect.top, true);
+      } else if (!cancelled) {
+        window.studySupportMenu?.open?.();
+      }
+    }
 
-    const keepInsideViewport = () => {
+    function bindTrigger(original) {
+      if (!original || original.dataset.dragBound === '1') return original;
+
+      // Replace the original node to remove the old pointerdown handler that opened the menu before dragging.
+      const element = original.cloneNode(true);
+      element.dataset.dragBound = '1';
+      element.style.cssText = original.style.cssText;
+      original.replaceWith(element);
+
+      element.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+      }, true);
+
+      if (window.PointerEvent) {
+        element.addEventListener('pointerdown', event => startDrag(element, event, 'pointer'), { passive: false });
+        window.addEventListener('pointermove', moveDrag, { passive: false, capture: true });
+        window.addEventListener('pointerup', event => endDrag(event, false), { passive: false, capture: true });
+        window.addEventListener('pointercancel', event => endDrag(event, true), { passive: false, capture: true });
+      } else {
+        element.addEventListener('touchstart', event => startDrag(element, event, 'touch'), { passive: false });
+        window.addEventListener('touchmove', moveDrag, { passive: false, capture: true });
+        window.addEventListener('touchend', event => endDrag(event, false), { passive: false, capture: true });
+        window.addEventListener('touchcancel', event => endDrag(event, true), { passive: false, capture: true });
+        element.addEventListener('mousedown', event => startDrag(element, event, 'mouse'));
+        window.addEventListener('mousemove', moveDrag, true);
+        window.addEventListener('mouseup', event => endDrag(event, false), true);
+      }
+      return element;
+    }
+
+    function keepInsideViewport() {
       const element = trigger();
       if (!element || element.classList.contains('hidden') || element.dataset.dragPositioned !== '1') return;
       const rect = element.getBoundingClientRect();
-      setPosition(rect.left, rect.top, true);
-    };
+      applyPosition(element, rect.left, rect.top, true);
+    }
+
+    const observer = new MutationObserver(() => {
+      const element = trigger();
+      if (!element) return;
+      bindTrigger(element);
+      if (!element.classList.contains('hidden')) restorePosition();
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 
     window.addEventListener('resize', keepInsideViewport);
     window.addEventListener('orientationchange', () => setTimeout(restorePosition, 180));
     window.visualViewport?.addEventListener('resize', keepInsideViewport);
-    window.visualViewport?.addEventListener('scroll', keepInsideViewport);
     window.addEventListener('pageshow', () => setTimeout(restorePosition, 80));
 
+    window.studySupportDrag = { restore: restorePosition };
+    const initial = trigger();
+    if (initial) bindTrigger(initial);
     restorePosition();
   } catch (error) {
     try { console.warn('[study-support-drag disabled]', error); } catch (_) {}
