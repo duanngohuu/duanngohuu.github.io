@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v2';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v2';
+const SHELL_CACHE = 'flashcard-shell-20260704-v3';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v3';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
@@ -80,19 +80,21 @@ self.addEventListener('activate', event => {
   })());
 });
 
-async function networkFirstNavigation(request) {
-  const cache = await caches.open(SHELL_CACHE);
+async function networkFirst(request, fallbackToIndex = false) {
+  const shell = await caches.open(SHELL_CACHE);
+  const runtime = await caches.open(RUNTIME_CACHE);
   const key = normalizedRequest(request);
   try {
     const response = await fetch(request);
-    if (response.ok) await cache.put(key, response.clone());
+    if (response.ok) await runtime.put(key, response.clone());
     return response;
   } catch (_) {
-    return await cache.match(key)
-      || await cache.match(normalizedRequest(new Request(absolute('./index.html'))))
-      || new Response('Flashcard đang offline và chưa có bản lưu ứng dụng.', {
-        status: 503,
-        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    return await shell.match(key)
+      || await runtime.match(key)
+      || (fallbackToIndex ? await shell.match(normalizedRequest(new Request(absolute('./index.html')))) : null)
+      || new Response(fallbackToIndex ? 'Flashcard đang offline và chưa có bản lưu ứng dụng.' : '', {
+        status: fallbackToIndex ? 503 : 504,
+        headers: fallbackToIndex ? { 'Content-Type': 'text/plain; charset=utf-8' } : undefined
       });
   }
 }
@@ -121,8 +123,15 @@ self.addEventListener('fetch', event => {
   if (!url.pathname.startsWith(new URL(SCOPE).pathname)) return;
 
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirstNavigation(request));
+    event.respondWith(networkFirst(request, true));
     return;
   }
+
+  // Versioned assets must prefer the network so a new index never receives stale JS/CSS.
+  if (url.search) {
+    event.respondWith(networkFirst(request, false));
+    return;
+  }
+
   event.respondWith(staleWhileRevalidate(request));
 });
