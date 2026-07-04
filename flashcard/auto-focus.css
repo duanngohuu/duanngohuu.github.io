@@ -1,10 +1,8 @@
-/* One top status bar for Auto study + offline/reconnected state. */
+/* Shared status bar and focused Auto study layout. */
 #autoStudyBanner{display:none;position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:30px!important;z-index:13030;box-sizing:border-box!important;align-items:center;justify-content:center;margin:0!important;padding:0 10px!important;text-align:center;font-size:.82rem!important;line-height:30px!important;font-weight:950;letter-spacing:.01em;color:#fff;border-radius:0!important;overflow:hidden!important;white-space:nowrap;text-overflow:ellipsis;border:0!important;box-shadow:0 3px 9px rgba(15,23,42,.18)!important}
 #autoStudyBanner:not(.hidden){display:flex}
 #autoStudyBanner.is-auto,#autoStudyBanner.is-offline{background:linear-gradient(115deg,#f97316,#fb923c,#f59e0b,#ea580c);background-size:260% 260%;animation:buttonColorFlow 6s ease-in-out infinite alternate}
 #autoStudyBanner.is-online{background:linear-gradient(115deg,#16a34a,#22c55e,#0f766e);animation:none}
-#autoStudyBanner.is-auto{font-size:0!important}
-#autoStudyBanner.is-auto::before{content:"Đang tự động học";font-size:.82rem!important;line-height:30px!important}
 body.auto-card-focus,body.network-offline,body.network-reconnected{--status-bar-height:30px}
 body.auto-card-focus .shell,body.network-offline .shell,body.network-reconnected .shell{padding-top:var(--status-bar-height)!important;position:relative}
 body.auto-card-focus{overflow:hidden!important}
@@ -29,28 +27,37 @@ body.auto-card-focus #cardMeta{display:none!important}
 body.auto-card-focus .progress{margin-bottom:8px!important;background:rgba(255,255,255,.16)!important;border-color:rgba(255,255,255,.12)!important}
 body.auto-card-focus .display-settings-backdrop,body.auto-card-focus .system-settings-backdrop{pointer-events:auto!important;touch-action:auto!important}
 body.display-settings-open #autoStudyBanner,body.system-settings-open #autoStudyBanner{z-index:12040!important}
+#autoLessonMenuDock{display:none}
+body.auto-card-focus #autoLessonMenuDock{display:block;position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:10020}
+#autoLessonMenuBtn{min-width:116px;height:44px;padding:0 16px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(17,17,17,.94);color:#fff;font-size:.82rem;font-weight:900;box-shadow:0 10px 28px rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+body.library-open #autoLessonMenuDock{display:none!important}
 @supports not selector(:has(*)){body.auto-card-focus #card{z-index:10000!important}}
 @media(max-width:820px){
-  body.auto-card-focus{--auto-controls-height:58px}
+  body.auto-card-focus{--auto-controls-height:52px}
   body.auto-card-focus .shell{padding-top:calc(30px + var(--auto-controls-height))!important}
   body.auto-card-focus::before{inset:calc(30px + var(--auto-controls-height)) 0 0!important;background:#000!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-  body.auto-card-focus .topbar{position:fixed!important;top:30px!important;right:0!important;left:auto!important;width:auto!important;height:var(--auto-controls-height)!important;margin:0!important;padding:0 6px!important;z-index:13025!important;pointer-events:none!important}
-  body.auto-card-focus .topbar .brand{display:none!important}
-  body.auto-card-focus .topbar .nav-actions{height:100%!important;display:flex!important;align-items:center!important;gap:5px!important;pointer-events:auto!important}
-  body.auto-card-focus .topbar .nav-log-btn{display:none!important}
-  body.auto-card-focus .topbar .nav-actions button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;border-radius:13px!important;background:#151515!important;border-color:#303030!important;color:#fff!important}
-  body.auto-card-focus .card-options{position:fixed!important;top:30px!important;left:0!important;right:0!important;width:100vw!important;height:var(--auto-controls-height)!important;box-sizing:border-box!important;z-index:13020!important;display:grid!important;grid-template-columns:repeat(6,44px)!important;grid-auto-flow:column!important;justify-content:start!important;align-items:center!important;gap:4px!important;margin:0!important;padding:5px calc(94px + env(safe-area-inset-right,0px)) 5px max(6px,env(safe-area-inset-left,0px))!important;overflow-x:auto!important;overflow-y:hidden!important;overscroll-behavior-x:contain!important;background:#050505!important;border:0!important;border-bottom:1px solid #262626!important;border-radius:0!important;box-shadow:none!important;scrollbar-width:none!important}
+  body.auto-card-focus .topbar{display:none!important}
+  body.auto-card-focus .card-options{position:fixed!important;top:30px!important;left:0!important;right:0!important;width:100vw!important;height:var(--auto-controls-height)!important;box-sizing:border-box!important;z-index:13020!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:7px!important;margin:0!important;padding:6px max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left))!important;overflow-x:auto!important;overflow-y:hidden!important;overscroll-behavior-x:contain!important;background:#050505!important;border:0!important;border-bottom:1px solid #262626!important;border-radius:0!important;box-shadow:none!important;scrollbar-width:none!important}
   body.auto-card-focus .card-options::-webkit-scrollbar{display:none!important}
-  body.auto-card-focus .card-options>label,body.auto-card-focus .card-options>.display-settings-btn{display:flex!important;flex-direction:column-reverse!important;align-items:center!important;justify-content:center!important;width:44px!important;min-width:44px!important;max-width:44px!important;height:44px!important;min-height:44px!important;margin:0!important;padding:3px 1px!important;gap:3px!important;border-radius:12px!important;background:#151515!important;border-color:#303030!important;color:#fff!important;font-size:.92rem!important;box-sizing:border-box!important}
-  body.auto-card-focus .card-options input{width:28px!important;height:17px!important;flex:0 0 17px!important}
-  body.auto-card-focus .card-options input::after{width:13px!important;height:13px!important}
-  body.auto-card-focus .card-options input:checked::after{transform:translateX(11px)!important}
-  body.auto-card-focus .panel.glass:has(#card){position:fixed!important;inset:calc(30px + var(--auto-controls-height)) 0 0!important;width:100vw!important;height:auto!important;min-height:0!important;margin:0!important;padding:8px 12px calc(12px + env(safe-area-inset-bottom,0px))!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:stretch!important;overflow:hidden!important;border-radius:0!important;background:#000!important}
-  body.auto-card-focus .panel.glass:has(#card)>.card-options{display:grid!important}
+  body.auto-card-focus .card-options>label,body.auto-card-focus .card-options>.display-settings-btn{display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;width:auto!important;min-width:0!important;max-width:none!important;height:36px!important;min-height:36px!important;margin:0!important;padding:0 10px!important;gap:6px!important;border-radius:999px!important;background:#151515!important;border:1px solid #303030!important;color:#fff!important;font-size:.82rem!important;box-sizing:border-box!important}
+  body.auto-card-focus .card-options>label.display-option-hidden,
+  body.auto-card-focus .card-options>label:has(#readingInput),
+  body.auto-card-focus .card-options>label:has(#hideKanjiInput){display:none!important}
+  body.auto-card-focus .card-options>label:has(#autoInput){order:-10!important}
+  body.auto-card-focus .card-options>label:has(#shuffleInput){order:-9!important}
+  body.auto-card-focus .card-options>label:has(#loopInput){order:-8!important}
+  body.auto-card-focus .card-options>label:has(#mixInput){order:-7!important}
+  body.auto-card-focus .card-options>label:has(#reverseInput){order:-6!important}
+  body.auto-card-focus .card-options>.display-settings-btn{order:-5!important;width:36px!important;padding:0!important}
+  body.auto-card-focus .card-options input{width:30px!important;height:18px!important;flex:0 0 18px!important}
+  body.auto-card-focus .card-options input::after{width:14px!important;height:14px!important}
+  body.auto-card-focus .card-options input:checked::after{transform:translateX(12px)!important}
+  body.auto-card-focus .panel.glass:has(#card){position:fixed!important;inset:calc(30px + var(--auto-controls-height)) 0 0!important;width:100vw!important;height:auto!important;min-height:0!important;margin:0!important;padding:8px 12px calc(70px + env(safe-area-inset-bottom))!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:stretch!important;overflow:hidden!important;border-radius:0!important;background:#000!important}
+  body.auto-card-focus .panel.glass:has(#card)>.card-options{display:flex!important}
   body.auto-card-focus .progress{flex:0 0 auto!important;width:100%!important;margin:0 0 6px!important}
   body.auto-card-focus #card{flex:1 1 auto!important;min-height:0!important;width:100%!important;margin:0!important;display:grid!important;place-items:center!important;overflow:hidden!important}
   body.auto-card-focus #card .card-inner{width:100%!important;max-height:100%!important;overflow:auto!important;overscroll-behavior:contain!important;padding:8px 4px!important;box-sizing:border-box!important}
   body.auto-card-focus #cardHint{flex:0 0 auto!important;min-height:22px!important;margin:4px 0 0!important;padding:0 4px!important}
-  body.auto-card-focus.display-settings-open .card-options,body.auto-card-focus.system-settings-open .card-options,body.auto-card-focus.display-settings-open .topbar,body.auto-card-focus.system-settings-open .topbar{opacity:0!important;pointer-events:none!important}
+  body.auto-card-focus.display-settings-open .card-options,body.auto-card-focus.system-settings-open .card-options{opacity:0!important;pointer-events:none!important}
 }
-@media(max-width:520px){#autoStudyBanner{font-size:.76rem!important;padding-inline:8px!important}#autoStudyBanner.is-auto::before{font-size:.76rem!important}}
+@media(max-width:520px){#autoStudyBanner{font-size:.76rem!important;padding-inline:8px!important}#autoLessonMenuBtn{min-width:108px;height:42px;font-size:.78rem}}
