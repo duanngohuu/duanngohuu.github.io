@@ -5,6 +5,12 @@
     const LOOP_KEY = 'fc_vocab_loop_v1';
     const logSafe = msg => { try { if (typeof log === 'function') log(msg); } catch (_) {} };
 
+    function transitionCardChange(change) {
+      if (typeof window.smoothCardTransition === 'function') return window.smoothCardTransition(change);
+      change();
+      return false;
+    }
+
     function ensureLoopToggle() {
       let input = document.querySelector('#loopInput');
       if (!input) {
@@ -94,10 +100,10 @@
       return st.session[st.i] || null;
     }
 
-    function cardInReviewMode(c) {
-      if (!c || !st.reviewMode) return true;
-      if (st.reviewMode === 'known') return st.known.has(c.id);
-      if (st.reviewMode === 'again') return st.again.has(c.id);
+    function cardInReviewMode(card) {
+      if (!card || !st.reviewMode) return true;
+      if (st.reviewMode === 'known') return st.known.has(card.id);
+      if (st.reviewMode === 'again') return st.again.has(card.id);
       return true;
     }
 
@@ -117,12 +123,12 @@
 
     function updateButtons() {
       const has = !!st.session?.length && !st.done;
-      const c = currentCard();
+      const current = currentCard();
       const atLast = has && st.i >= st.session.length - 1;
       if (e.prev) e.prev.disabled = !has || st.i <= 0;
       if (e.next) e.next.disabled = !has || (atLast && !st.loop);
-      if (e.ok) e.ok.disabled = !has || !c || st.known.has(c.id);
-      if (e.bad) e.bad.disabled = !has || !c || st.again.has(c.id);
+      if (e.ok) e.ok.disabled = !has || !current || st.known.has(current.id);
+      if (e.bad) e.bad.disabled = !has || !current || st.again.has(current.id);
     }
 
     function paintComplete() {
@@ -146,7 +152,7 @@
       }
     }
 
-    function moveNext() {
+    function moveNextNow() {
       if (!st.session?.length || st.done) return;
       if (st.i >= st.session.length - 1) {
         if (!st.loop) return;
@@ -159,27 +165,36 @@
       updateButtons();
     }
 
+    function moveNext() {
+      if (!st.session?.length || st.done) return;
+      transitionCardChange(moveNextNow);
+    }
+
     function markAndMove(type) {
       if (!st.session?.length || st.done) return;
-      const c = st.session[st.i];
-      if (!c) return;
-      if (type === 'known' && st.known.has(c.id)) return;
-      if (type === 'again' && st.again.has(c.id)) return;
-      const oldIndex = st.i;
-      if (type === 'known') {
-        st.known.add(c.id);
-        st.again.delete(c.id);
-      } else {
-        st.again.add(c.id);
-        st.known.delete(c.id);
-      }
-      try { if (typeof saveProgress === 'function') saveProgress(); } catch (_) {}
-      if (filterCurrentReviewSession(oldIndex)) return;
-      if (st.i >= st.session.length - 1 && !st.loop) paintComplete();
-      else moveNext();
+      const current = st.session[st.i];
+      if (!current) return;
+      if (type === 'known' && st.known.has(current.id)) return;
+      if (type === 'again' && st.again.has(current.id)) return;
+
+      transitionCardChange(() => {
+        const oldIndex = st.i;
+        if (type === 'known') {
+          st.known.add(current.id);
+          st.again.delete(current.id);
+        } else {
+          st.again.add(current.id);
+          st.known.delete(current.id);
+        }
+        try { if (typeof saveProgress === 'function') saveProgress(); } catch (_) {}
+        if (filterCurrentReviewSession(oldIndex)) return;
+        if (st.i >= st.session.length - 1 && !st.loop) paintComplete();
+        else moveNextNow();
+      });
     }
 
     function startCards(cards, label, mode = null) {
+      window.cancelSmoothCardTransition?.();
       hideModal();
       st.reviewMode = mode;
       st.session = cards || [];
@@ -195,8 +210,8 @@
     function startSubset(mode) {
       const base = st.cards?.length ? st.cards : st.session;
       const cards = mode === 'known'
-        ? base.filter(c => st.known.has(c.id))
-        : base.filter(c => st.again.has(c.id));
+        ? base.filter(card => st.known.has(card.id))
+        : base.filter(card => st.again.has(card.id));
       startCards(cards, mode === 'known' ? 'Học thẻ đã nhớ' : 'Học thẻ chưa nhớ', mode);
     }
 
@@ -207,6 +222,7 @@
 
     const oldStart = window.start;
     window.start = function patchedStart() {
+      window.cancelSmoothCardTransition?.();
       st.done = false;
       st.finishShown = false;
       st.reviewMode = null;
@@ -234,8 +250,10 @@
     if (e.bad) e.bad.onclick = () => markAndMove('again');
     if (e.prev) e.prev.onclick = () => {
       if (!st.session?.length || st.i <= 0 || st.done) return;
-      if (typeof prev === 'function') prev();
-      updateButtons();
+      transitionCardChange(() => {
+        if (typeof prev === 'function') prev();
+        updateButtons();
+      });
     };
     ensureLoopToggle();
     ensureModal();
