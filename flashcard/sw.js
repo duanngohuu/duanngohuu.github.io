@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'flashcard-shell-20260704-v17';
-const RUNTIME_CACHE = 'flashcard-runtime-20260704-v17';
+const SHELL_CACHE = 'flashcard-shell-20260704-v18';
+const RUNTIME_CACHE = 'flashcard-runtime-20260704-v18';
 const SCOPE = self.registration.scope;
 
 const SHELL_FILES = [
@@ -20,6 +20,7 @@ const SHELL_FILES = [
   './action-flow.css',
   './gradient-motion.css',
   './card-3d.css',
+  './no-card-motion.css',
   './card-display-options.css',
   './focus-lock.css',
   './auto-focus.css',
