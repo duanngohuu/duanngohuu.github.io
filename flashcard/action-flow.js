@@ -4,6 +4,7 @@
     if (!window.st || !window.e) return;
     const $ = s => document.querySelector(s);
     let forcedWait = false;
+    let unlockTimer = 0;
     function loopOn() {
       return !!(st.loop || $('#loopInput')?.checked);
     }
@@ -32,16 +33,20 @@
     }
     function showBackThen(callback) {
       if (forcedWait || !st.session?.length || st.done) return;
+      clearTimeout(unlockTimer);
       lockButtons(true);
-      st.face = 1;
-      if (typeof render === 'function') render();
-      try { e.card?.scrollIntoView({behavior:'smooth',block:'center'}); } catch (_) {}
+      if (st.face !== 1) {
+        st.face = 1;
+        if (typeof render === 'function') render();
+      }
       if (e.hint) e.hint.textContent = 'Cưỡng chế xem mặt sau 5 giây. Tập trung nhớ lại trước khi qua thẻ tiếp theo.';
       setTimeout(() => {
-        lockButtons(false);
+        // Change card while the layout is still locked, then release after the content transition finishes.
         callback();
-        requestAnimationFrame(polishActions);
-        setTimeout(polishActions, 80);
+        unlockTimer = setTimeout(() => {
+          lockButtons(false);
+          requestAnimationFrame(polishActions);
+        }, 280);
       }, 5000);
     }
     function moveForwardWithLoop() {
@@ -146,7 +151,6 @@
       }
       if (ev.target.closest('#knownBtn,#againBtn,#flipBtn,#prevBtn,#loopInput,#finishKnownBtn,#finishAgainBtn,#knownText,#againText,#reviewBtn')) {
         requestAnimationFrame(polishActions);
-        setTimeout(polishActions, 80);
       }
     }, true);
     document.addEventListener('change', ev => {
