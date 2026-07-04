@@ -1,0 +1,5 @@
+/* Disable every flashcard transition and keep the hint row height stable. */
+#card,#card .card-inner,#card .front,#card .sub,#cardHint,#cardMeta{animation:none!important;transition:none!important;transform:none!important;filter:none!important}
+#card,#card .card-inner{opacity:1!important}
+#card.fc-card-leaving .card-inner,#card.fc-card-entering .card-inner,#card.fc-card-transitioning .card-inner,#card.fc-pop .card-inner,#card.fc-flip .card-inner,#card.fc-next .card-inner,#card.fc-prev .card-inner,#card.fc-tap .card-inner,#card.fc-pulse .card-inner{opacity:1!important;animation:none!important;transition:none!important;transform:none!important;filter:none!important}
+.study-active #cardHint{height:22px!important;min-height:22px!important;line-height:22px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin-block:4px!important}
