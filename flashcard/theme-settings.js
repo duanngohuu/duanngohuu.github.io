@@ -102,6 +102,22 @@
       }
     }
 
+    function loadBatchProgress() {
+      const version = '20260704-batch1';
+      let script = document.querySelector('script[data-batch-progress-script]');
+      if (script && script.dataset.batchProgressVersion !== version) {
+        script.remove();
+        script = null;
+      }
+      if (!script) {
+        script = document.createElement('script');
+        script.src = `./batch-progress.js?v=${version}`;
+        script.dataset.batchProgressScript = '1';
+        script.dataset.batchProgressVersion = version;
+        document.body.appendChild(script);
+      }
+    }
+
     const bodyObserver = new MutationObserver(() => {
       if (build()) bodyObserver.disconnect();
     });
@@ -116,6 +132,7 @@
 
     loadSystemSettings();
     loadDownloadStatus();
+    loadBatchProgress();
     sync();
   } catch (error) {
     try { console.warn('[theme-settings disabled]', error); } catch (_) {}
