@@ -1,11 +1,12 @@
 // Draggable study-support bubble for touch, pointer and mouse devices.
 (() => {
   try {
-    const KEY = 'fc_study_support_position_v2';
+    const KEY = 'fc_study_support_position_v3';
     const MOVE_THRESHOLD = 7;
     const EDGE_GAP = 8;
     let active = null;
     let restoreTimer = 0;
+    let globalBound = false;
 
     function viewportBox() {
       const viewport = window.visualViewport;
@@ -99,7 +100,7 @@
       const point = pointFromEvent(event);
       if (!point || (kind === 'mouse' && event.button !== 0)) return;
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       const rect = element.getBoundingClientRect();
       active = {
         element,
@@ -131,7 +132,7 @@
       if (!active.moved) return;
 
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       applyPosition(active.element, point.clientX - active.offsetX, point.clientY - active.offsetY, false);
     }
 
@@ -141,7 +142,7 @@
       const current = active;
       active = null;
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       current.element.classList.remove('is-dragging');
       if (current.kind === 'pointer') {
         try { current.element.releasePointerCapture?.(current.pointerId); } catch (_) {}
@@ -150,39 +151,43 @@
       if (current.moved && !cancelled) {
         const rect = current.element.getBoundingClientRect();
         applyPosition(current.element, rect.left, rect.top, true);
-      } else if (!cancelled) {
-        window.studySupportMenu?.open?.();
+        return;
+      }
+      if (!cancelled) {
+        requestAnimationFrame(() => window.studySupportMenu?.open?.());
       }
     }
 
-    function bindTrigger(original) {
-      if (!original || original.dataset.dragBound === '1') return original;
-
-      // Replace the original node to remove the old pointerdown handler that opened the menu before dragging.
-      const element = original.cloneNode(true);
-      element.dataset.dragBound = '1';
-      element.style.cssText = original.style.cssText;
-      original.replaceWith(element);
-
-      element.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
-      }, true);
-
+    function bindGlobalEvents() {
+      if (globalBound) return;
+      globalBound = true;
       if (window.PointerEvent) {
-        element.addEventListener('pointerdown', event => startDrag(element, event, 'pointer'), { passive: false });
         window.addEventListener('pointermove', moveDrag, { passive: false, capture: true });
         window.addEventListener('pointerup', event => endDrag(event, false), { passive: false, capture: true });
         window.addEventListener('pointercancel', event => endDrag(event, true), { passive: false, capture: true });
       } else {
-        element.addEventListener('touchstart', event => startDrag(element, event, 'touch'), { passive: false });
         window.addEventListener('touchmove', moveDrag, { passive: false, capture: true });
         window.addEventListener('touchend', event => endDrag(event, false), { passive: false, capture: true });
         window.addEventListener('touchcancel', event => endDrag(event, true), { passive: false, capture: true });
-        element.addEventListener('mousedown', event => startDrag(element, event, 'mouse'));
         window.addEventListener('mousemove', moveDrag, true);
         window.addEventListener('mouseup', event => endDrag(event, false), true);
       }
+    }
+
+    function bindTrigger(element) {
+      if (!element || element.dataset.dragBound === '1') return element;
+      element.dataset.dragBound = '1';
+      element.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }, true);
+      if (window.PointerEvent) {
+        element.addEventListener('pointerdown', event => startDrag(element, event, 'pointer'), { passive: false, capture: true });
+      } else {
+        element.addEventListener('touchstart', event => startDrag(element, event, 'touch'), { passive: false, capture: true });
+        element.addEventListener('mousedown', event => startDrag(element, event, 'mouse'), true);
+      }
+      bindGlobalEvents();
       return element;
     }
 
