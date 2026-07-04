@@ -1,5 +1,5 @@
 {
-  "version": "2026.07.05-vocab-820",
+  "version": "2026.07.05-vocab-920",
   "title": "Thư viện từ vựng N2",
   "lessonSize": 50,
   "courses": [
@@ -32,13 +32,15 @@
     {
       "id": "vu-quang-dung-jlpt",
       "title": "Vũ Quang Dũng JLPT",
-      "description": "227 từ vựng từ các bảng Unit 8, Unit 12 và phần ảnh bổ sung STT 34-110.",
+      "description": "327 từ vựng từ Unit 8, Unit 12, phần bổ sung và bộ đọc hiểu N2 tháng 07/2024.",
       "lessons": [
         { "id": "vqd-unit-08-001-050", "title": "Unit 8 · STT 1-50", "description": "50 từ vựng Unit 8", "path": "./data/vqd-unit-08-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "vocabulary", "vqd", "unit-8"] },
         { "id": "vqd-unit-12-001-050", "title": "Unit 12 · STT 1-50", "description": "50 từ đầu của Unit 12", "path": "./data/vqd-unit-12-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "vocabulary", "vqd", "unit-12"] },
         { "id": "vqd-unit-12-051-100", "title": "Unit 12 · STT 51-100", "description": "50 từ tiếp theo của Unit 12", "path": "./data/vqd-unit-12-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "tags": ["n2", "vocabulary", "vqd", "unit-12"] },
         { "id": "vqd-supplement-034-083", "title": "Bổ sung · STT 34-83", "description": "Ảnh nguồn không hiển thị tên Unit", "path": "./data/vqd-supplement-034-083.tsv", "count": 50, "startNo": 34, "endNo": 83, "tags": ["n2", "vocabulary", "vqd", "supplement"] },
-        { "id": "vqd-supplement-084-110", "title": "Bổ sung · STT 84-110", "description": "Ảnh nguồn không hiển thị tên Unit", "path": "./data/vqd-supplement-084-110.tsv", "count": 27, "startNo": 84, "endNo": 110, "tags": ["n2", "vocabulary", "vqd", "supplement"] }
+        { "id": "vqd-supplement-084-110", "title": "Bổ sung · STT 84-110", "description": "Ảnh nguồn không hiển thị tên Unit", "path": "./data/vqd-supplement-084-110.tsv", "count": 27, "startNo": 84, "endNo": 110, "tags": ["n2", "vocabulary", "vqd", "supplement"] },
+        { "id": "vqd-n2-reading-2024-001-050", "title": "Đọc hiểu N2 07/2024 · STT 1-50", "description": "Từ khó kèm cách dùng và cụm từ đi kèm", "path": "./data/vqd-n2-reading-2024-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "faces": 4, "tags": ["n2", "vocabulary", "vqd", "reading", "2024-07"] },
+        { "id": "vqd-n2-reading-2024-051-100", "title": "Đọc hiểu N2 07/2024 · STT 51-100", "description": "Từ khó kèm cách dùng và cụm từ đi kèm", "path": "./data/vqd-n2-reading-2024-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "faces": 4, "tags": ["n2", "vocabulary", "vqd", "reading", "2024-07"] }
       ]
     }
   ]
