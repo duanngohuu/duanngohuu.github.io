@@ -21,12 +21,14 @@
       try {
         const { card, faces, face } = data;
         const long = face.text.length > 90 || face.text.split('\n').length > 3;
-        e.card?.classList.add('fc-multiface');
+        e.card?.classList.add('fc-multiface', 'fc-face-label-hidden');
         e.card?.classList.toggle('fc-long-face', long);
         e.card?.classList.remove('fc-meaning-side', 'fc-word-side');
 
-        const expectedFront = long ? (face.label || `Mặt ${st.face + 1}`) : face.text;
-        const expectedSub = long ? face.text : (face.label || '');
+        // The face label already appears in the "Mặt x/y" hint below the card.
+        // Keep only the actual study content inside the flashcard.
+        const expectedFront = long ? '' : face.text;
+        const expectedSub = long ? face.text : '';
         const expectedHint = `Mặt ${st.face + 1}/${faces.length} · ${face.label || 'Nội dung'}`;
         const shownCourse = st.lesson?.courseTitle || String(card.sourceSheet || '').replace(/^OK@(TV|NP|BUN)\s*/i, '');
         const expectedMeta = `Mặt ${st.face + 1}/${faces.length} · ${shownCourse}`;
