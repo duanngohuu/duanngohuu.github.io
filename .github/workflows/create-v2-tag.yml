@@ -1,0 +1,33 @@
+name: Create v2 tag
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/create-v2-tag.yml
+
+permissions:
+  contents: write
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create annotated v2 tag
+        env:
+          TARGET_SHA: e37b5c9ce0d8c7f1bd48d458ee7037037624314a
+        run: |
+          if git ls-remote --exit-code --tags origin refs/tags/v2 >/dev/null 2>&1; then
+            echo "Tag v2 already exists."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a v2 "$TARGET_SHA" -m "Flashcard v2"
+          git push origin refs/tags/v2
