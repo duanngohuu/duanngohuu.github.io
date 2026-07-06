@@ -1,8 +1,11 @@
 // Add dynamic faces for local TSV lessons that contain extra study columns.
 (() => {
   try {
+    if (window.__flashcardLocalMultifaceLoaded) return;
+    window.__flashcardLocalMultifaceLoaded = true;
+
     function loadBookLibrary() {
-      const version = '20260706-books2';
+      const version = '20260706-books3';
       let link = document.querySelector('link[data-book-library-style]');
       if (!link) {
         link = document.createElement('link');
@@ -13,11 +16,12 @@
       if (!link.href.includes(version)) link.href = `./book-library.css?v=${version}`;
 
       const scripts = [
-        ['./book-library-state-fix.js', 'bookLibraryStateFix'],
-        ['./book-library.js', 'bookLibraryScript']
+        { src: './book-library-state-fix.js', attr: 'data-book-library-state-fix' },
+        { src: './book-library.js', attr: 'data-book-library-script' },
+        { src: './book-study-enrichment.js', attr: 'data-book-study-enrichment' }
       ];
-      scripts.forEach(([src, key]) => {
-        let script = document.querySelector(`script[data-${key}]`);
+      scripts.forEach(({ src, attr }) => {
+        let script = document.querySelector(`script[${attr}]`);
         if (script && script.dataset.version !== version) {
           script.remove();
           script = null;
@@ -26,7 +30,7 @@
           script = document.createElement('script');
           script.async = false;
           script.src = `${src}?v=${version}`;
-          script.dataset[key] = '1';
+          script.setAttribute(attr, '1');
           script.dataset.version = version;
           document.body.appendChild(script);
         }
