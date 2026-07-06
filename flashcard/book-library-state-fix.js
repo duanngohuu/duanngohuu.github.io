@@ -4,13 +4,22 @@
     const originalJson = Response.prototype.json;
     if (!originalJson.__bookCompactWrapped) {
       const wrappedJson = async function bookCompactJson() {
-        const data = await originalJson.call(this);
+        const backup = this.clone();
+        let data;
+        try {
+          data = await originalJson.call(this);
+        } catch (parseError) {
+          if (!this.url.includes('/data/books/soumatome-n2-kanji-week-')) throw parseError;
+          const encoded = (await backup.text()).trim();
+          const bytes = Uint8Array.from(atob(encoded), character => character.charCodeAt(0));
+          data = JSON.parse(new TextDecoder().decode(bytes));
+        }
         if (!this.url.includes('/data/books/soumatome-n2-kanji-week-') || !Array.isArray(data?.lessons)) return data;
         if (data.partial === true && !this.url.includes('-b.json')) {
           const partUrl = this.url.replace(/\.json(?:\?.*)?$/, '-b.json');
           const partResponse = await fetch(partUrl, { cache: 'no-store' });
           if (partResponse.ok) {
-            const extra = await originalJson.call(partResponse);
+            const extra = await partResponse.json();
             if (Array.isArray(extra?.lessons)) data.lessons.push(...extra.lessons);
           }
         }
