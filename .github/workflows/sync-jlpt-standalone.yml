@@ -1,0 +1,41 @@
+name: Sync JLPT standalone
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-jlpt-standalone.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download public JLPT app
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://drive.usercontent.google.com/download?id=13YODojxX3szSZ5mdE5T40PrLumXl-sGo&export=download&confirm=t'
+          curl --fail --location --retry 4 --retry-delay 3 "$URL" --output /tmp/jlpt-standalone.html
+          BYTES=$(wc -c < /tmp/jlpt-standalone.html)
+          test "$BYTES" -gt 3000000
+          grep -q '<!doctype html>' /tmp/jlpt-standalone.html
+          grep -q 'const EMBEDDED_DATA=' /tmp/jlpt-standalone.html
+          python - <<'PY'
+          from pathlib import Path
+          src = Path('/tmp/jlpt-standalone.html').read_text(encoding='utf-8')
+          tag = '<script src="./debug-overlay.js?v=20260707-2"></script>'
+          if tag not in src:
+              src = src.replace('</head>', tag + '\n</head>', 1)
+          Path('jlpt/index.html').write_text(src, encoding='utf-8')
+          PY
+      - name: Create sync pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/sync-jlpt-standalone
+          delete-branch: true
+          commit-message: 'Sync JLPT standalone app from Drive'
+          title: 'Sync JLPT standalone app'
+          body: 'Automated sync of the public standalone JLPT app. Includes 57 valid exam sessions and 1,057 mondai units.'
+          labels: automated
