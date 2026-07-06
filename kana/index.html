@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#7058e8">
+<title>Kana Lab · Học Hiragana và Katakana</title>
+<link rel="stylesheet" href="./kana.css?v=20260706-1">
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+<a class="brand" href="/"><span class="brand-mark">あ</span><span><strong>Kana Lab</strong><small>Học Hiragana và Katakana từ số 0</small></span></a>
+<div class="top-actions"><a class="nav-btn primary" href="/">⌂ Trang chính</a><a class="nav-btn kaiwa-link" href="/kaiwa/">Luyện hội thoại</a></div>
+</header>
+<section class="hero">
+<div><p class="eyebrow">Dành cho người mới bắt đầu</p><h1>Học bảng chữ cái Nhật<br>từng bước, không học vẹt.</h1><p>Nhìn chữ, nghe âm, nối cặp và tự tay viết lại. Mỗi phần đều giải thích bằng tiếng Việt và lưu tiến độ ngay trên thiết bị.</p></div>
+<div class="hero-badge"><div><strong>あ ア</strong><span>Hiragana · Katakana</span></div></div>
+</section>
+<div class="shell">
+<aside class="sidebar">
+<div class="mode-list">
+<button class="mode-btn active" data-view="table"><span>▦ Học theo bảng</span><small>46 chữ cơ bản, biến âm và âm ghép</small></button>
+<button class="mode-btn" data-view="cards"><span>◈ Luyện từng chữ</span><small>Nhìn chữ, nghe âm và tự kiểm tra</small></button>
+<button class="mode-btn" data-view="game"><span>⌁ Game nối cặp</span><small>Hiragana, Katakana, romaji và âm Việt</small></button>
+<button class="mode-btn" data-view="write"><span>✎ Luyện viết</span><small>Viết trên canvas và chấm độ bám nét</small></button>
+<button class="mode-btn" data-view="guide"><span>ⓘ Hướng dẫn nhập môn</span><small>Cách học, phát âm và lỗi thường gặp</small></button>
+</div>
+<div class="progress-card"><h3>Tiến độ học chữ cơ bản</h3><p>Đánh dấu “Đã nhớ” sau khi bạn nhận ra chữ và đọc được âm mà không cần nhìn đáp án.</p><div class="progress-track"><div id="overallProgress"></div></div><div class="progress-line"><span id="progressLabel">0/92 chữ</span><span id="progressPercent">0%</span></div></div>
+</aside>
+<main class="content">
+<section id="view-table" class="view active">
+<div class="panel">
+<div class="panel-head"><div><p class="eyebrow">Bảng chữ cái</p><h2>Nhìn chữ, nghe âm và xem cách ghi nhớ</h2><p>Chạm vào một ô để mở phần giải thích. Nút loa đọc đúng âm của chữ đang chọn.</p></div><div class="chip-row" id="scriptChips"><button class="chip active" data-script="hiragana">Hiragana</button><button class="chip" data-script="katakana">Katakana</button><button class="chip" data-script="both">Hiện cả hai</button></div></div>
+<div class="toolbar"><label class="tool">Nhóm chữ <select id="groupSelect"><option value="basic">46 chữ cơ bản</option><option value="voiced">Âm đục và bán đục</option><option value="combo">Âm ghép ゃゅょ</option></select></label><button id="playRowBtn" class="tool primary">▶ Đọc lần lượt</button><button id="resetLearnedBtn" class="tool warn">Xóa dấu đã nhớ</button></div>
+<div class="learn-layout"><div class="kana-table-wrap"><table class="kana-table"><thead id="kanaHead"></thead><tbody id="kanaBody"></tbody></table></div>
+<aside class="detail-card"><div class="detail-main"><div id="detailChar" class="detail-char">あ</div><div class="detail-info"><p class="eyebrow">Chữ đang chọn</p><h3 id="detailRoma">a</h3><p id="detailPair">Hiragana あ · Katakana ア</p></div></div><div class="detail-actions"><button id="detailSpeak" class="dark-btn primary">🔊 Nghe âm</button><button id="detailLearned" class="dark-btn">✓ Đánh dấu đã nhớ</button></div><div id="detailTip" class="tip-box"></div><div id="detailExamples" class="mini-list"></div></aside></div>
+</div>
+</section>
+<section id="view-cards" class="view">
+<div class="panel"><div class="panel-head"><div><p class="eyebrow">Luyện nhận mặt chữ</p><h2>Mỗi lần chỉ tập trung vào một chữ</h2><p>Đọc thầm trước, sau đó bấm “Hiện đáp án”. Bạn có thể nghe lại bao nhiêu lần tùy ý.</p></div></div>
+<div class="toolbar"><label class="tool">Bảng chữ <select id="cardScript"><option value="hiragana">Hiragana</option><option value="katakana">Katakana</option><option value="mixed">Trộn cả hai</option></select></label><label class="tool">Phạm vi <select id="cardGroup"><option value="basic">46 chữ cơ bản</option><option value="all">Tất cả chữ đã học</option></select></label><button id="shuffleCardBtn" class="tool">Xáo trộn</button></div>
+<div class="study-card"><div><div id="studyChar" class="study-char">あ</div><div id="studyAnswer" class="study-answer" hidden><strong>a</strong><p>Gợi âm tiếng Việt: a</p></div><div class="study-actions"><button id="studySpeak" class="big-btn">🔊 Nghe âm</button><button id="revealAnswer" class="big-btn primary">Hiện đáp án</button><button id="nextStudy" class="big-btn good">Chữ tiếp theo →</button></div></div></div>
+</div>
+</section>
+<section id="view-game" class="view">
+<div class="panel"><div class="panel-head"><div><p class="eyebrow">Game nối cặp</p><h2>Ghép đúng hai thẻ có cùng âm</h2><p>Chọn một thẻ bên trái rồi chọn thẻ tương ứng bên phải. Chế độ “Nghe âm” yêu cầu nghe trước rồi mới chọn chữ.</p></div></div>
+<div class="game-setup"><div class="setup-card"><label>Kiểu nối</label><select id="gameMode"><option value="hira-kata">Hiragana ↔ Katakana</option><option value="kana-romaji">Kana ↔ Romaji</option><option value="kana-vi">Kana ↔ Gợi âm tiếng Việt</option><option value="sound-kana">Nghe âm ↔ Kana</option></select></div><div class="setup-card"><label>Bảng chữ hiển thị</label><select id="gameScript"><option value="hiragana">Hiragana</option><option value="katakana">Katakana</option><option value="mixed">Trộn ngẫu nhiên</option></select></div><div class="setup-card"><label>Số cặp</label><select id="pairCount"><option value="4">4 cặp</option><option value="6" selected>6 cặp</option><option value="8">8 cặp</option></select></div><div class="setup-card"><label>Phạm vi</label><select id="gameGroup"><option value="basic">46 chữ cơ bản</option><option value="voiced">Có thêm âm đục</option><option value="all">Tất cả</option></select></div></div>
+<div class="game-status"><div class="stat"><strong id="gameScore">0</strong><span>Điểm</span></div><div class="stat"><strong id="gameCorrect">0</strong><span>Cặp đúng</span></div><div class="stat"><strong id="gameMistakes">0</strong><span>Lần sai</span></div><div class="stat"><strong id="gameStreak">0</strong><span>Chuỗi đúng</span></div></div>
+<div class="toolbar"><button id="newGameBtn" class="tool primary">Bắt đầu ván mới</button><button id="replayGameBtn" class="tool">🔊 Nghe lại âm vừa chọn</button></div><div class="match-board"><div id="leftBoard" class="match-column"></div><div id="rightBoard" class="match-column"></div></div><div id="gameMessage" class="game-message">Chọn “Bắt đầu ván mới” để luyện.</div>
+</div>
+</section>
+<section id="view-write" class="view">
+<div class="panel"><div class="panel-head"><div><p class="eyebrow">Luyện viết trên canvas</p><h2>Viết đè theo chữ mẫu rồi chấm điểm</h2><p>Điểm phản ánh mức độ bám theo hình chữ và độ phủ nét. Đây là chấm hình dạng, chưa phải chấm thứ tự nét viết.</p></div></div>
+<div class="toolbar"><label class="tool">Bảng chữ <select id="writeScript"><option value="hiragana">Hiragana</option><option value="katakana">Katakana</option></select></label><label class="tool">Chọn chữ <select id="writeCharSelect"></select></label><button id="prevWrite" class="tool">← Chữ trước</button><button id="nextWrite" class="tool">Chữ sau →</button></div>
+<div class="write-layout"><div class="canvas-card"><div id="canvasWrap" class="canvas-wrap"><div class="canvas-grid"></div><div id="guideChar" class="guide-char">あ</div><canvas id="drawCanvas" class="draw-canvas"></canvas></div><div class="canvas-tools"><button id="undoStroke" class="tool">↶ Hoàn tác nét</button><button id="clearCanvas" class="tool">Xóa hết</button><button id="toggleGuide" class="tool">Ẩn chữ mẫu</button><button id="scoreWriting" class="tool good">Chấm điểm bài viết</button></div></div>
+<div class="write-side"><div class="write-target"><div id="writeTargetChar" class="char">あ</div><h3 id="writeTargetRoma">a</h3><p id="writeTargetHint">Gợi âm: a</p><button id="writeSpeak" class="dark-btn primary" style="width:100%;margin-top:10px">🔊 Nghe âm</button></div><div class="score-box"><div id="scoreRing" class="score-ring"><span id="writeScore" class="score-value">--</span></div><h3 id="scoreTitle">Chưa chấm điểm</h3><p id="scoreFeedback">Viết chữ theo mẫu, cố gắng đi giữa nét mờ và phủ đủ toàn bộ hình chữ.</p></div><div class="guide-box"><strong>Cách luyện hiệu quả</strong>1. Quan sát toàn bộ hình chữ.<br>2. Viết chậm theo nét mờ.<br>3. Xóa mẫu và viết lại từ trí nhớ.<br>4. Mục tiêu ban đầu là 70 điểm trở lên.</div></div></div>
+</div>
+</section>
+<section id="view-guide" class="view">
+<div class="panel"><div class="panel-head"><div><p class="eyebrow">Hướng dẫn nhập môn</p><h2>Hiểu đúng trước khi bắt đầu học</h2><p>Hiragana và Katakana ghi cùng hệ thống âm, nhưng được dùng trong những tình huống khác nhau.</p></div></div><div class="reference-grid"><article class="reference-card"><h3>Hiragana dùng khi nào?</h3><p>Dùng cho từ thuần Nhật, đuôi chia động từ, trợ từ và phần đọc của kanji. Người mới nên học Hiragana trước.</p></article><article class="reference-card"><h3>Katakana dùng khi nào?</h3><p>Dùng nhiều cho từ mượn nước ngoài, tên nước ngoài, âm thanh mô phỏng và từ cần nhấn mạnh.</p></article><article class="reference-card"><h3>Romaji chỉ là cầu nối</h3><p>Romaji giúp bắt đầu nhanh nhưng không nên phụ thuộc lâu. Mục tiêu là nhìn か và đọc ngay “ka”, không cần dịch qua chữ Latin.</p></article><article class="reference-card"><h3>Âm tiếng Việt chỉ gần đúng</h3><p>Cột “gợi âm Việt” chỉ hỗ trợ nhớ ban đầu. Hãy ưu tiên nghe âm Nhật, đặc biệt với し, ち, つ, ふ và hàng ら.</p></article><article class="reference-card"><h3>Âm đục và bán đục</h3><p>Thêm ゛ tạo g, z, d, b. Thêm ゜ vào hàng h tạo p. Ví dụ か → が, は → ば / ぱ.</p></article><article class="reference-card"><h3>Âm ghép nhỏ ゃゅょ</h3><p>Ghép chữ hàng i với ゃ, ゅ, ょ nhỏ: きゃ kya, しゅ shu, ちょ cho. Không đọc tách thành hai nhịp.</p></article><article class="reference-card"><h3>っ nhỏ và kéo dài âm</h3><p>っ nhỏ tạo ngắt trước phụ âm tiếp theo. Katakana thường dùng ー để kéo dài nguyên âm, ví dụ コーヒー.</p></article><article class="reference-card"><h3>Lộ trình 14 ngày</h3><p>Ngày 1–5 học Hiragana cơ bản; ngày 6–7 ôn và viết; ngày 8–12 học Katakana; ngày 13–14 luyện game trộn hai bảng.</p></article><article class="reference-card"><h3>Tiêu chuẩn “đã nhớ”</h3><p>Bạn nhìn chữ trong khoảng 1 giây, đọc đúng âm và phân biệt được với các chữ dễ nhầm như さ/き, シ/ツ, ソ/ン.</p></article></div></div>
+</section>
+</main>
+</div>
+</div>
+<div id="toast" class="toast"></div>
+<script src="./kana.js?v=20260706-1"></script>
+</body>
+</html>
