@@ -1,6 +1,37 @@
 // Add dynamic faces for local TSV lessons that contain extra study columns.
 (() => {
   try {
+    function loadBookLibrary() {
+      const version = '20260706-books1';
+      let link = document.querySelector('link[data-book-library-style]');
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.dataset.bookLibraryStyle = '1';
+        document.head.appendChild(link);
+      }
+      if (!link.href.includes(version)) link.href = `./book-library.css?v=${version}`;
+
+      const scripts = [
+        ['./book-library.js', 'bookLibraryScript'],
+        ['./book-library-state-fix.js', 'bookLibraryStateFix']
+      ];
+      scripts.forEach(([src, key]) => {
+        let script = document.querySelector(`script[data-${key}]`);
+        if (script && script.dataset.version !== version) {
+          script.remove();
+          script = null;
+        }
+        if (!script) {
+          script = document.createElement('script');
+          script.src = `${src}?v=${version}`;
+          script.dataset[key] = '1';
+          script.dataset.version = version;
+          document.body.appendChild(script);
+        }
+      });
+    }
+
     function loadMenuSessionState() {
       const version = '20260705-menustate1';
       let script = document.querySelector('script[data-menu-session-state]');
@@ -78,6 +109,7 @@
       return true;
     }
 
+    loadBookLibrary();
     loadMenuSessionState();
     if (!install()) {
       let attempts = 0;
