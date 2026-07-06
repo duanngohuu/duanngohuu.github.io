@@ -6,6 +6,14 @@
       const wrappedJson = async function bookCompactJson() {
         const data = await originalJson.call(this);
         if (!this.url.includes('/data/books/soumatome-n2-kanji-week-') || !Array.isArray(data?.lessons)) return data;
+        if (data.partial === true && !this.url.includes('-b.json')) {
+          const partUrl = this.url.replace(/\.json(?:\?.*)?$/, '-b.json');
+          const partResponse = await fetch(partUrl, { cache: 'no-store' });
+          if (partResponse.ok) {
+            const extra = await originalJson.call(partResponse);
+            if (Array.isArray(extra?.lessons)) data.lessons.push(...extra.lessons);
+          }
+        }
         data.lessons.forEach(lesson => {
           lesson.cards = (lesson.cards || []).map((raw, index) => {
             if (!Array.isArray(raw)) return raw;
@@ -16,16 +24,7 @@
               vocabulary && { label: 'Từ vựng', text: vocabulary },
               meaning && { label: 'Nghĩa', text: meaning }
             ].filter(Boolean);
-            return {
-              id: `${lesson.id}-${String(index + 1).padStart(3, '0')}`,
-              no: index + 1,
-              front,
-              reading,
-              vocabulary,
-              meaning_en: meaning,
-              meaning_vi: '',
-              faces
-            };
+            return { id: `${lesson.id}-${String(index + 1).padStart(3, '0')}`, no: index + 1, front, reading, vocabulary, meaning_en: meaning, meaning_vi: '', faces };
           });
         });
         return data;
@@ -36,16 +35,13 @@
 
     let wasOpen = document.body.classList.contains('library-open');
     let repaintTimer = 0;
-
     function repaintBooks() {
       const books = window.flashcardBookLibrary;
       if (!books?.state?.active || typeof books.show !== 'function') return;
       clearTimeout(repaintTimer);
-      repaintTimer = setTimeout(() => {
-        books.show().catch(error => {
-          try { window.err?.(error); } catch (_) {}
-        });
-      }, 0);
+      repaintTimer = setTimeout(() => books.show().catch(error => {
+        try { window.err?.(error); } catch (_) {}
+      }), 0);
     }
 
     new MutationObserver(() => {
