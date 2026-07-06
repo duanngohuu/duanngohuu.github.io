@@ -1,6 +1,8 @@
 // Hierarchical textbook library: Book -> Level -> Subject -> Lessons.
 (() => {
   try {
+    if (window.__flashcardBookLibraryLoaded) return;
+    window.__flashcardBookLibraryLoaded = true;
     if (!window.st || !window.e) return;
     const $ = selector => document.querySelector(selector);
     const MANIFEST_PATH = './data/books-manifest.json';
@@ -72,6 +74,20 @@
       const active = st.lesson?.id === lesson.id;
       return `<button class="lesson-btn lesson-btn-grid book-lesson${active ? ' active' : ''}" type="button" data-book-lesson-id="${escapeHtml(lesson.id)}"><strong>${escapeHtml(lesson.title)}</strong><span class="lesson-progress-line"><span>${Number(lesson.count || 0)} thẻ</span><span>Tuần ${Number(lesson.week || 0)}</span><span>Ngày ${Number(lesson.day || 0)}</span></span></button>`;
     }
+    function bindNodeToggles(list) {
+      list.querySelectorAll('.book-node-toggle').forEach(button => button.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const key = button.dataset.bookKey;
+        const open = !state.openKeys.has(key);
+        if (open) state.openKeys.add(key); else state.openKeys.delete(key);
+        button.setAttribute('aria-expanded', String(open));
+        const children = button.nextElementSibling;
+        if (children) children.hidden = !open;
+        state.scrollTop = $('.library-panel')?.scrollTop || 0;
+        window.flashcardMenuSession?.capture?.();
+      }));
+    }
     function renderBooks() {
       const list = $('#lessonList');
       if (!list || !state.manifest) return;
@@ -79,8 +95,8 @@
       list.className = 'lesson-list book-library-list';
       list.innerHTML = '';
       const summary = $('.library-summary');
-      if (summary) summary.textContent = 'Giáo trình → cấp độ → môn → bài học. Bản đầu được trích xuất từ PDF scan.';
-      if (e.meta) e.meta.textContent = `${subjectEntries(state.manifest).reduce((sum, entry) => sum + (entry.subject.lessons?.length || 0), 0)} bài · OCR beta`;
+      if (summary) summary.textContent = 'Giáo trình → cấp độ → môn → bài học.';
+      if (e.meta) e.meta.textContent = `${subjectEntries(state.manifest).reduce((sum, entry) => sum + (entry.subject.lessons?.length || 0), 0)} bài`;
       const empty = $('.empty-tab');
       if (empty) empty.style.display = 'none';
       (state.manifest.libraries || []).forEach(library => {
@@ -109,13 +125,13 @@
             const lessons = document.createElement('div');
             lessons.className = 'book-tree-lessons';
             lessons.hidden = !state.openKeys.has(subjectKey);
-            lessons.innerHTML = `<div class="book-quality-note"><strong>OCR beta</strong><span>${escapeHtml(subject.description || 'Dữ liệu trích xuất từ PDF scan.')}</span></div>`;
+            lessons.innerHTML = `<div class="book-quality-note"><strong>Soumatome N2</strong><span>Chọn JP–VI hoặc JP–EN trong màn hình học.</span></div>`;
             (subject.lessons || []).forEach(lesson => {
               const holder = document.createElement('div');
               holder.innerHTML = lessonHtml(lesson);
-              const button = holder.firstElementChild;
-              button.addEventListener('click', () => selectBookLesson(enrichLesson(entry, lesson)).catch(reportError));
-              lessons.appendChild(button);
+              const lessonButton = holder.firstElementChild;
+              lessonButton.addEventListener('click', () => selectBookLesson(enrichLesson(entry, lesson)).catch(reportError));
+              lessons.appendChild(lessonButton);
             });
             subjectWrap.appendChild(lessons);
             levelChildren.appendChild(subjectWrap);
@@ -126,12 +142,7 @@
         libraryWrap.appendChild(libraryChildren);
         list.appendChild(libraryWrap);
       });
-      list.querySelectorAll('.book-node-toggle').forEach(button => button.addEventListener('click', () => {
-        const key = button.dataset.bookKey;
-        if (state.openKeys.has(key)) state.openKeys.delete(key); else state.openKeys.add(key);
-        state.scrollTop = $('.library-panel')?.scrollTop || 0;
-        renderBooks();
-      }));
+      bindNodeToggles(list);
       const panel = $('.library-panel');
       if (panel) { panel.scrollTop = savedTop; requestAnimationFrame(() => { panel.scrollTop = savedTop; }); }
       window.flashcardMenuSession?.capture?.();
@@ -174,6 +185,7 @@
       if (e.to) e.to.value = st.cards.length;
       if (e.meta) e.meta.textContent = `${st.lesson.title} · ${st.cards.length} thẻ`;
       document.querySelectorAll('.lesson-btn').forEach(button => { const id = button.dataset.bookLessonId || button.dataset.lessonId; button.classList.toggle('active', id === lesson.id); });
+      try { await window.flashcardBookStudy?.enrichLesson?.(st.cards, st.lesson); } catch (_) {}
       try { window.loadProgress?.(); } catch (_) {}
       try { window.saveLast?.(); } catch (_) {}
       try { window.render?.(); } catch (_) {}
@@ -192,7 +204,7 @@
         if ($('.library-tabs') && $('#lessonList')) {
           ensureTab();
           loadManifest().catch(() => {});
-          window.flashcardBookLibrary = { show: showBooks, selectLesson: selectBookLesson, state, loadManifest };
+          window.flashcardBookLibrary = { version: 3, show: showBooks, selectLesson: selectBookLesson, state, loadManifest };
           return;
         }
         await wait(25);
