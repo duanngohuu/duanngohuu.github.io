@@ -7,6 +7,7 @@
     const $ = selector => document.querySelector(selector);
     const MANIFEST_PATH = './data/books-manifest.json';
     const BOOK_TAB = 'books';
+    const PROGRESS_KEY = 'fc_vocab_progress_v2';
     const state = { manifest: null, dataByPath: new Map(), active: false, openKeys: new Set(['library:soumatome']), scrollTop: 0 };
     let manifestPromise = null;
     const originalSelectLesson = window.selectLesson;
@@ -29,6 +30,20 @@
     }
     function flatCourses(manifest) {
       return subjectEntries(manifest).map(entry => ({ id: `${entry.library.id}-${entry.level.id}-${entry.subject.id}`, title: `${entry.library.title} · ${entry.level.title} · ${entry.subject.title}`, displayTitle: `${entry.library.title} · ${entry.level.title} · ${entry.subject.title}`, description: entry.subject.description || '', source: 'book-json', lessons: (entry.subject.lessons || []).map(lesson => enrichLesson(entry, lesson)) }));
+    }
+    function readProgress() {
+      try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}') || {}; } catch (_) { return {}; }
+    }
+    function progressFor(lesson, all = readProgress()) {
+      const saved = all[lesson.id] || {};
+      const known = new Set(Array.isArray(saved.known) ? saved.known : []);
+      const again = new Set(Array.isArray(saved.again) ? saved.again : []);
+      const studied = new Set([...known, ...again]);
+      const total = Math.max(0, Number(lesson.count || 0));
+      const done = Math.min(total || studied.size, studied.size);
+      const remembered = Math.min(done, known.size);
+      const percent = total ? Math.min(100, Math.round(done / total * 100)) : 0;
+      return { total, done, remembered, percent, complete: total > 0 && done >= total };
     }
     async function loadManifest() {
       if (!manifestPromise) manifestPromise = fetchJson(MANIFEST_PATH).then(manifest => { state.manifest = manifest; return manifest; }).catch(error => { manifestPromise = null; throw error; });
@@ -70,9 +85,32 @@
       const open = state.openKeys.has(key);
       return `<button class="book-node-toggle book-depth-${depth}" type="button" data-book-key="${escapeHtml(key)}" aria-expanded="${String(open)}"><span><small>${escapeHtml(eyebrow)}</small><strong>${escapeHtml(title)}</strong></span><em>${escapeHtml(meta)}</em><i aria-hidden="true">⌄</i></button>`;
     }
-    function lessonHtml(lesson) {
+    function progressMarkup(lesson, allProgress) {
+      const progress = progressFor(lesson, allProgress);
+      const status = progress.complete ? 'Hoàn thành' : progress.done ? `Đang học ${progress.percent}%` : 'Chưa học';
+      const detail = progress.done ? `Đã học ${progress.done}/${progress.total} · Nhớ ${progress.remembered}` : `0/${progress.total} thẻ`;
+      return `<span class="book-lesson-study ${progress.complete ? 'complete' : progress.done ? 'started' : 'empty'}" data-book-progress><span class="book-lesson-study-row"><span>${escapeHtml(detail)}</span><b>${escapeHtml(status)}</b></span><span class="book-lesson-study-track" aria-hidden="true"><i style="width:${progress.percent}%"></i></span></span>`;
+    }
+    function lessonHtml(lesson, allProgress) {
       const active = st.lesson?.id === lesson.id;
-      return `<button class="lesson-btn lesson-btn-grid book-lesson${active ? ' active' : ''}" type="button" data-book-lesson-id="${escapeHtml(lesson.id)}"><strong>${escapeHtml(lesson.title)}</strong><span class="lesson-progress-line"><span>${Number(lesson.count || 0)} thẻ</span><span>Tuần ${Number(lesson.week || 0)}</span><span>Ngày ${Number(lesson.day || 0)}</span></span></button>`;
+      const progress = progressFor(lesson, allProgress);
+      return `<button class="lesson-btn lesson-btn-grid book-lesson${active ? ' active' : ''}${progress.complete ? ' book-lesson-complete' : progress.done ? ' book-lesson-started' : ''}" type="button" data-book-lesson-id="${escapeHtml(lesson.id)}" data-book-total="${Number(lesson.count || 0)}"><strong>${escapeHtml(lesson.title)}</strong><span class="lesson-progress-line"><span>${Number(lesson.count || 0)} thẻ</span><span>Tuần ${Number(lesson.week || 0)}</span><span>Ngày ${Number(lesson.day || 0)}</span></span>${progressMarkup(lesson, allProgress)}</button>`;
+    }
+    function refreshVisibleProgress() {
+      if (!state.manifest) return;
+      const all = readProgress();
+      document.querySelectorAll('.book-lesson[data-book-lesson-id]').forEach(button => {
+        const found = findBookLesson(button.dataset.bookLessonId);
+        if (!found) return;
+        const lesson = found.lesson;
+        const progress = progressFor(lesson, all);
+        button.classList.toggle('book-lesson-complete', progress.complete);
+        button.classList.toggle('book-lesson-started', !progress.complete && progress.done > 0);
+        const old = button.querySelector('[data-book-progress]');
+        const holder = document.createElement('div');
+        holder.innerHTML = progressMarkup(lesson, all);
+        if (old) old.replaceWith(holder.firstElementChild); else button.appendChild(holder.firstElementChild);
+      });
     }
     function bindNodeToggles(list) {
       list.querySelectorAll('.book-node-toggle').forEach(button => button.addEventListener('click', event => {
@@ -92,6 +130,7 @@
       const list = $('#lessonList');
       if (!list || !state.manifest) return;
       const savedTop = state.scrollTop;
+      const allProgress = readProgress();
       list.className = 'lesson-list book-library-list';
       list.innerHTML = '';
       const summary = $('.library-summary');
@@ -125,10 +164,10 @@
             const lessons = document.createElement('div');
             lessons.className = 'book-tree-lessons';
             lessons.hidden = !state.openKeys.has(subjectKey);
-            lessons.innerHTML = `<div class="book-quality-note"><strong>Soumatome N2</strong><span>Chọn JP–VI hoặc JP–EN trong màn hình học.</span></div>`;
+            lessons.innerHTML = `<div class="book-quality-note"><strong>Soumatome N2</strong><span>Đổi JP–VI / JP–EN trong nút cài đặt ⚙.</span></div>`;
             (subject.lessons || []).forEach(lesson => {
               const holder = document.createElement('div');
-              holder.innerHTML = lessonHtml(lesson);
+              holder.innerHTML = lessonHtml(lesson, allProgress);
               const lessonButton = holder.firstElementChild;
               lessonButton.addEventListener('click', () => selectBookLesson(enrichLesson(entry, lesson)).catch(reportError));
               lessons.appendChild(lessonButton);
@@ -196,7 +235,11 @@
     window.switchFlashcardCategory = async function switchCategoryWithBooks(tab) { if (tab === BOOK_TAB) return showBooks(); deactivateBooks(); return originalSwitchCategory?.(tab); };
     window.getFlashcardCategoryState = function categoryStateWithBooks() { const original = originalGetCategoryState?.() || {}; return { ...original, books: { loaded: !!state.manifest, courses: state.manifest ? flatCourses(state.manifest) : [], summary: 'Kho giáo trình theo Sách → Cấp độ → Môn → Bài.' } }; };
     window.selectLesson = async function selectLessonWithBooks(id) { await loadManifest().catch(() => null); if (findBookLesson(id)) return selectBookLesson(id); return originalSelectLesson?.(id); };
-    document.addEventListener('click', event => { if (event.target.closest('.library-tab')) deactivateBooks(); }, true);
+    document.addEventListener('click', event => {
+      if (event.target.closest('.library-tab')) deactivateBooks();
+      if (event.target.closest('#knownBtn,#againBtn,#resetBtn,#finishKnownBtn,#finishAgainBtn,#finishRestartBtn')) setTimeout(refreshVisibleProgress, 80);
+    }, true);
+    window.addEventListener('storage', event => { if (event.key === PROGRESS_KEY) refreshVisibleProgress(); });
     const panel = $('.library-panel');
     panel?.addEventListener('scroll', () => { if (state.active) state.scrollTop = panel.scrollTop; }, { passive: true });
     async function boot() {
@@ -204,7 +247,7 @@
         if ($('.library-tabs') && $('#lessonList')) {
           ensureTab();
           loadManifest().catch(() => {});
-          window.flashcardBookLibrary = { version: 3, show: showBooks, selectLesson: selectBookLesson, state, loadManifest };
+          window.flashcardBookLibrary = { version: 4, show: showBooks, selectLesson: selectBookLesson, state, loadManifest, refreshProgress: refreshVisibleProgress };
           return;
         }
         await wait(25);
