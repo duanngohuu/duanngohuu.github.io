@@ -123,3 +123,20 @@
   window.addEventListener('orientationchange',()=>setTimeout(keepInsideViewport,180));
   applySavedPosition();
 })();
+
+(()=>{
+  if(!document.querySelector('link[data-beginner-helper]')){
+    const css=document.createElement('link');
+    css.rel='stylesheet';
+    css.href='./beginner-helper.css?v=8c0173e';
+    css.dataset.beginnerHelper='true';
+    document.head.appendChild(css);
+  }
+  if(!document.querySelector('script[data-beginner-helper]')){
+    const script=document.createElement('script');
+    script.src='./beginner-helper.js?v=ad57f50';
+    script.defer=true;
+    script.dataset.beginnerHelper='true';
+    document.body.appendChild(script);
+  }
+})();
