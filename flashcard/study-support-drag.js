@@ -1,12 +1,18 @@
-// Draggable study-support bubble for touch, pointer and mouse devices.
+// Smooth draggable study-support bubble using one transform update per animation frame.
 (() => {
   try {
-    const KEY = 'fc_study_support_position_v3';
-    const MOVE_THRESHOLD = 7;
+    if (window.__studySupportDragLoaded) return;
+    window.__studySupportDragLoaded = true;
+
+    const KEY = 'fc_study_support_position_v4';
+    const LEGACY_KEYS = ['fc_study_support_position_v3', 'fc_study_support_position_v2'];
+    const MOVE_THRESHOLD = 6;
     const EDGE_GAP = 8;
     let active = null;
+    let frame = 0;
     let restoreTimer = 0;
     let globalBound = false;
+    let triggerObserver = null;
 
     function viewportBox() {
       const viewport = window.visualViewport;
@@ -22,48 +28,61 @@
       return document.querySelector('#studySupportTrigger');
     }
 
-    function clamp(left, top, element) {
+    function geometry(element) {
       const viewport = viewportBox();
-      const width = element.offsetWidth || element.getBoundingClientRect().width || 1;
-      const height = element.offsetHeight || element.getBoundingClientRect().height || 1;
+      const rect = element.getBoundingClientRect();
+      const width = rect.width || element.offsetWidth || 1;
+      const height = rect.height || element.offsetHeight || 1;
       const minLeft = viewport.left + EDGE_GAP;
       const minTop = viewport.top + EDGE_GAP;
-      const maxLeft = Math.max(minLeft, viewport.left + viewport.width - width - EDGE_GAP);
-      const maxTop = Math.max(minTop, viewport.top + viewport.height - height - EDGE_GAP);
       return {
-        left: Math.min(maxLeft, Math.max(minLeft, left)),
-        top: Math.min(maxTop, Math.max(minTop, top)),
         viewport,
         width,
-        height
+        height,
+        minLeft,
+        minTop,
+        maxLeft: Math.max(minLeft, viewport.left + viewport.width - width - EDGE_GAP),
+        maxTop: Math.max(minTop, viewport.top + viewport.height - height - EDGE_GAP)
       };
     }
 
-    function applyPosition(element, left, top, persist = false) {
-      if (!element || element.classList.contains('hidden')) return;
-      const position = clamp(left, top, element);
-      element.style.setProperty('left', `${Math.round(position.left)}px`, 'important');
-      element.style.setProperty('top', `${Math.round(position.top)}px`, 'important');
-      element.style.setProperty('right', 'auto', 'important');
-      element.style.setProperty('bottom', 'auto', 'important');
-      element.dataset.dragPositioned = '1';
+    function clampWithBox(left, top, box) {
+      return {
+        left: Math.min(box.maxLeft, Math.max(box.minLeft, left)),
+        top: Math.min(box.maxTop, Math.max(box.minTop, top))
+      };
+    }
 
-      if (!persist) return;
-      const horizontalSpace = Math.max(1, position.viewport.width - position.width - EDGE_GAP * 2);
-      const verticalSpace = Math.max(1, position.viewport.height - position.height - EDGE_GAP * 2);
+    function persistPosition(left, top, box) {
+      const horizontalSpace = Math.max(1, box.viewport.width - box.width - EDGE_GAP * 2);
+      const verticalSpace = Math.max(1, box.viewport.height - box.height - EDGE_GAP * 2);
       try {
         localStorage.setItem(KEY, JSON.stringify({
-          x: Math.min(1, Math.max(0, (position.left - position.viewport.left - EDGE_GAP) / horizontalSpace)),
-          y: Math.min(1, Math.max(0, (position.top - position.viewport.top - EDGE_GAP) / verticalSpace))
+          x: Math.min(1, Math.max(0, (left - box.viewport.left - EDGE_GAP) / horizontalSpace)),
+          y: Math.min(1, Math.max(0, (top - box.viewport.top - EDGE_GAP) / verticalSpace))
         }));
       } catch (_) {}
     }
 
+    function commitPosition(element, left, top, persist = false, box = geometry(element)) {
+      if (!element || element.classList.contains('hidden')) return;
+      const next = clampWithBox(left, top, box);
+      element.style.setProperty('left', `${Math.round(next.left)}px`, 'important');
+      element.style.setProperty('top', `${Math.round(next.top)}px`, 'important');
+      element.style.setProperty('right', 'auto', 'important');
+      element.style.setProperty('bottom', 'auto', 'important');
+      element.style.setProperty('transform', 'translate3d(0,0,0)', 'important');
+      element.dataset.dragPositioned = '1';
+      if (persist) persistPosition(next.left, next.top, box);
+    }
+
     function savedPosition() {
-      try {
-        const value = JSON.parse(localStorage.getItem(KEY) || 'null');
-        if (Number.isFinite(value?.x) && Number.isFinite(value?.y)) return value;
-      } catch (_) {}
+      for (const key of [KEY, ...LEGACY_KEYS]) {
+        try {
+          const value = JSON.parse(localStorage.getItem(key) || 'null');
+          if (Number.isFinite(value?.x) && Number.isFinite(value?.y)) return value;
+        } catch (_) {}
+      }
       return null;
     }
 
@@ -71,22 +90,21 @@
       clearTimeout(restoreTimer);
       const element = trigger();
       if (!element || element.classList.contains('hidden') || !element.offsetWidth) {
-        restoreTimer = setTimeout(restorePosition, 120);
+        restoreTimer = setTimeout(restorePosition, 100);
         return;
       }
       bindTrigger(element);
       const saved = savedPosition();
       if (!saved) return;
-      const viewport = viewportBox();
-      const width = element.offsetWidth || 1;
-      const height = element.offsetHeight || 1;
-      const horizontalSpace = Math.max(1, viewport.width - width - EDGE_GAP * 2);
-      const verticalSpace = Math.max(1, viewport.height - height - EDGE_GAP * 2);
-      applyPosition(
+      const box = geometry(element);
+      const horizontalSpace = Math.max(1, box.viewport.width - box.width - EDGE_GAP * 2);
+      const verticalSpace = Math.max(1, box.viewport.height - box.height - EDGE_GAP * 2);
+      commitPosition(
         element,
-        viewport.left + EDGE_GAP + horizontalSpace * saved.x,
-        viewport.top + EDGE_GAP + verticalSpace * saved.y,
-        false
+        box.viewport.left + EDGE_GAP + horizontalSpace * saved.x,
+        box.viewport.top + EDGE_GAP + verticalSpace * saved.y,
+        false,
+        box
       );
     }
 
@@ -96,12 +114,27 @@
       return event;
     }
 
+    function schedulePaint() {
+      if (!active || frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        if (!active || !active.moved) return;
+        const next = clampWithBox(active.targetLeft, active.targetTop, active.box);
+        active.finalLeft = next.left;
+        active.finalTop = next.top;
+        const dx = next.left - active.startLeft;
+        const dy = next.top - active.startTop;
+        active.element.style.setProperty('transform', `translate3d(${dx}px,${dy}px,0)`, 'important');
+      });
+    }
+
     function startDrag(element, event, kind) {
       const point = pointFromEvent(event);
       if (!point || (kind === 'mouse' && event.button !== 0)) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       const rect = element.getBoundingClientRect();
+      const box = geometry(element);
       active = {
         element,
         kind,
@@ -109,11 +142,19 @@
         touchId: point.identifier,
         startX: point.clientX,
         startY: point.clientY,
+        startLeft: rect.left,
+        startTop: rect.top,
         offsetX: point.clientX - rect.left,
         offsetY: point.clientY - rect.top,
-        moved: false
+        targetLeft: rect.left,
+        targetTop: rect.top,
+        finalLeft: rect.left,
+        finalTop: rect.top,
+        moved: false,
+        box
       };
       element.classList.add('is-dragging');
+      element.style.setProperty('will-change', 'transform', 'important');
       if (kind === 'pointer') {
         try { element.setPointerCapture?.(event.pointerId); } catch (_) {}
       }
@@ -133,7 +174,9 @@
 
       event.preventDefault();
       event.stopImmediatePropagation();
-      applyPosition(active.element, point.clientX - active.offsetX, point.clientY - active.offsetY, false);
+      active.targetLeft = point.clientX - active.offsetX;
+      active.targetTop = point.clientY - active.offsetY;
+      schedulePaint();
     }
 
     function endDrag(event, cancelled = false) {
@@ -141,21 +184,23 @@
       if (active.kind === 'pointer' && event.pointerId !== active.pointerId) return;
       const current = active;
       active = null;
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
       event.preventDefault();
       event.stopImmediatePropagation();
       current.element.classList.remove('is-dragging');
+      current.element.style.removeProperty('will-change');
       if (current.kind === 'pointer') {
         try { current.element.releasePointerCapture?.(current.pointerId); } catch (_) {}
       }
 
       if (current.moved && !cancelled) {
-        const rect = current.element.getBoundingClientRect();
-        applyPosition(current.element, rect.left, rect.top, true);
+        const next = clampWithBox(current.targetLeft, current.targetTop, current.box);
+        commitPosition(current.element, next.left, next.top, true, current.box);
         return;
       }
-      if (!cancelled) {
-        requestAnimationFrame(() => window.studySupportMenu?.open?.());
-      }
+      current.element.style.setProperty('transform', 'translate3d(0,0,0)', 'important');
+      if (!cancelled) requestAnimationFrame(() => window.studySupportMenu?.open?.());
     }
 
     function bindGlobalEvents() {
@@ -174,19 +219,30 @@
       }
     }
 
+    function watchTrigger(element) {
+      triggerObserver?.disconnect();
+      triggerObserver = new MutationObserver(() => {
+        if (!element.classList.contains('hidden')) requestAnimationFrame(restorePosition);
+      });
+      triggerObserver.observe(element, { attributes: true, attributeFilter: ['class'] });
+    }
+
     function bindTrigger(element) {
-      if (!element || element.dataset.dragBound === '1') return element;
-      element.dataset.dragBound = '1';
-      element.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }, true);
-      if (window.PointerEvent) {
-        element.addEventListener('pointerdown', event => startDrag(element, event, 'pointer'), { passive: false, capture: true });
-      } else {
-        element.addEventListener('touchstart', event => startDrag(element, event, 'touch'), { passive: false, capture: true });
-        element.addEventListener('mousedown', event => startDrag(element, event, 'mouse'), true);
+      if (!element) return element;
+      if (element.dataset.dragBound !== '1') {
+        element.dataset.dragBound = '1';
+        element.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }, true);
+        if (window.PointerEvent) {
+          element.addEventListener('pointerdown', event => startDrag(element, event, 'pointer'), { passive: false, capture: true });
+        } else {
+          element.addEventListener('touchstart', event => startDrag(element, event, 'touch'), { passive: false, capture: true });
+          element.addEventListener('mousedown', event => startDrag(element, event, 'mouse'), true);
+        }
       }
+      watchTrigger(element);
       bindGlobalEvents();
       return element;
     }
@@ -195,21 +251,21 @@
       const element = trigger();
       if (!element || element.classList.contains('hidden') || element.dataset.dragPositioned !== '1') return;
       const rect = element.getBoundingClientRect();
-      applyPosition(element, rect.left, rect.top, true);
+      commitPosition(element, rect.left, rect.top, true);
     }
 
-    const observer = new MutationObserver(() => {
+    const treeObserver = new MutationObserver(() => {
       const element = trigger();
-      if (!element) return;
+      if (!element || element.dataset.dragBound === '1') return;
       bindTrigger(element);
-      if (!element.classList.contains('hidden')) restorePosition();
+      restorePosition();
     });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    treeObserver.observe(document.body, { childList: true, subtree: true });
 
-    window.addEventListener('resize', keepInsideViewport);
-    window.addEventListener('orientationchange', () => setTimeout(restorePosition, 180));
-    window.visualViewport?.addEventListener('resize', keepInsideViewport);
-    window.addEventListener('pageshow', () => setTimeout(restorePosition, 80));
+    window.addEventListener('resize', keepInsideViewport, { passive: true });
+    window.addEventListener('orientationchange', () => setTimeout(restorePosition, 160), { passive: true });
+    window.visualViewport?.addEventListener('resize', keepInsideViewport, { passive: true });
+    window.addEventListener('pageshow', () => setTimeout(restorePosition, 60));
 
     window.studySupportDrag = { restore: restorePosition };
     const initial = trigger();
