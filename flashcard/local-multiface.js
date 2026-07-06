@@ -2,7 +2,7 @@
 (() => {
   try {
     function loadBookLibrary() {
-      const version = '20260706-books1';
+      const version = '20260706-books2';
       let link = document.querySelector('link[data-book-library-style]');
       if (!link) {
         link = document.createElement('link');
@@ -13,8 +13,8 @@
       if (!link.href.includes(version)) link.href = `./book-library.css?v=${version}`;
 
       const scripts = [
-        ['./book-library.js', 'bookLibraryScript'],
-        ['./book-library-state-fix.js', 'bookLibraryStateFix']
+        ['./book-library-state-fix.js', 'bookLibraryStateFix'],
+        ['./book-library.js', 'bookLibraryScript']
       ];
       scripts.forEach(([src, key]) => {
         let script = document.querySelector(`script[data-${key}]`);
@@ -24,6 +24,7 @@
         }
         if (!script) {
           script = document.createElement('script');
+          script.async = false;
           script.src = `${src}?v=${version}`;
           script.dataset[key] = '1';
           script.dataset.version = version;
