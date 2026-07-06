@@ -1,0 +1,107 @@
+/* Kana Lab mobile overflow hardening */
+html,body,.app,.topbar,.hero,.shell,.sidebar,.content,.view,.panel,.learn-layout,.write-layout,.canvas-card,.write-side,.match-board,.match-column,.game-setup,.game-status,.panel-head,.toolbar,.chip-row,.mode-list{max-width:100%;min-width:0}
+body{width:100%;overflow-x:clip}
+.app{width:100%;overflow-x:clip}
+img,svg,canvas{max-width:100%}
+.topbar,.hero,.shell{width:100%}
+.brand{min-width:0;overflow:hidden}
+.brand>span:last-child{min-width:0;overflow:hidden}
+.top-actions{min-width:0;flex:0 0 auto}
+.content,.view,.panel{width:100%;overflow:visible}
+.kana-table-wrap{width:100%;max-width:100%;min-width:0;overflow-x:hidden}
+.kana-table{width:100%;min-width:0;max-width:100%;table-layout:fixed}
+.kana-table th,.kana-table td{min-width:0;overflow:hidden}
+.kana-table th:first-child,.kana-table td:first-child{width:62px}
+.kana-cell{min-width:0;width:100%;overflow:hidden}
+.kana-cell .char,.kana-cell .roma,.kana-cell .hint{overflow:hidden;text-overflow:ellipsis}
+.mode-list,.toolbar,.chip-row{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.tool,.chip,.mode-btn,.nav-btn{max-width:100%}
+.tool select,.setup-card select{min-width:0;max-width:100%}
+.detail-main,.detail-info,.mini-item,.sound-card{min-width:0}
+.detail-info p,.mini-item span,.mini-item strong,.game-message,.reference-card p,.guide-box,.score-box p{overflow-wrap:anywhere;word-break:break-word}
+.canvas-wrap{max-width:100%;width:100%}
+.draw-canvas{max-width:100%}
+@media(max-width:680px){
+  .app{padding-left:6px;padding-right:6px}
+  .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:7px 8px}
+  .brand-mark{width:36px;height:36px;flex-basis:36px;border-radius:11px;font-size:18px}
+  .brand strong{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand small{display:none}
+  .top-actions{gap:5px}
+  .nav-btn{min-height:35px;padding:0 8px;font-size:10px}
+  .top-actions .kaiwa-link{display:none}
+  .hero{margin-top:7px;padding:14px 13px;border-radius:17px}
+  .hero h1{font-size:26px;line-height:1.08;margin:6px 0 8px;overflow-wrap:anywhere}
+  .hero h1 br{display:none}
+  .hero p{font-size:12px;line-height:1.55}
+  .shell{margin-top:7px;gap:7px}
+  .sidebar{padding:7px;overflow:hidden}
+  .mode-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow:visible}
+  .mode-btn{width:100%;min-width:0;min-height:68px;padding:8px;border-radius:12px}
+  .mode-btn span{font-size:10px;line-height:1.25;align-items:flex-start;overflow-wrap:anywhere}
+  .mode-btn small{margin:4px 0 0;font-size:8px;line-height:1.3;overflow-wrap:anywhere}
+  .panel{padding:9px;border-radius:15px;overflow:hidden}
+  .panel-head{display:block;margin-bottom:9px}
+  .panel-head h2{font-size:17px;line-height:1.25;overflow-wrap:anywhere}
+  .panel-head p{font-size:10px;line-height:1.45}
+  .chip-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:8px;overflow:visible}
+  .chip{width:100%;padding:7px 5px;font-size:9px;white-space:normal;line-height:1.2}
+  .toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow:visible;margin-bottom:9px}
+  .tool{width:100%;min-width:0;min-height:38px;padding:6px 8px;justify-content:center;font-size:9px;white-space:normal;text-align:center;line-height:1.2}
+  .tool select{width:100%;font-size:9px}
+  .learn-layout{display:block}
+  .kana-table-wrap{border-radius:12px;overflow:hidden}
+  .kana-table{font-size:9px}
+  .kana-table th{padding:6px 2px;font-size:8px;position:static}
+  .kana-table th:first-child,.kana-table td:first-child{width:48px;position:static}
+  .kana-table td{padding:2px}
+  .kana-cell{min-height:58px;padding:4px 1px;border-radius:8px}
+  .kana-cell .char{font-size:22px;line-height:1.05;white-space:nowrap}
+  .kana-cell .roma{font-size:8px;margin-top:3px}
+  .kana-cell .hint{display:none}
+  .empty-cell{min-height:58px;border-radius:8px}
+  .detail-card{position:static;min-height:0;margin-top:8px;padding:11px;border-radius:14px}
+  .detail-main{grid-template-columns:76px minmax(0,1fr);gap:9px}
+  .detail-char{height:76px;border-radius:14px;font-size:46px}
+  .detail-info h3{font-size:20px}
+  .detail-info p{font-size:9px}
+  .detail-actions{grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+  .dark-btn{min-height:38px;font-size:9px;padding:5px}
+  .tip-box{margin-top:9px;padding:9px;font-size:9px}
+  .mini-item{font-size:8px;padding:6px;align-items:flex-start}
+  .study-card{min-height:350px;padding:12px;border-radius:17px}
+  .study-char{font-size:112px}
+  .study-actions{display:grid;grid-template-columns:1fr;gap:6px}
+  .big-btn{width:100%;min-height:42px}
+  .game-setup{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .setup-card{min-width:0;padding:8px;border-radius:11px;overflow:hidden}
+  .setup-card label{font-size:8px}
+  .setup-card select{font-size:9px}
+  .game-status{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}
+  .stat{padding:8px}
+  .match-board{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
+  .match-card{min-width:0;min-height:55px;padding:6px 4px;border-radius:11px;overflow:hidden}
+  .match-card .large{font-size:23px}
+  .match-card .small{font-size:9px;overflow-wrap:anywhere}
+  .sound-card{display:grid;grid-template-columns:28px minmax(0,1fr);gap:5px;width:100%}
+  .sound-icon{width:28px;height:28px}
+  .game-message{font-size:9px;padding:8px}
+  .write-layout{display:block}
+  .canvas-card{padding:8px;border-radius:14px;overflow:hidden}
+  .canvas-wrap{width:100%;max-width:100%;border-radius:14px}
+  .guide-char{font-size:min(72vw,300px)}
+  .canvas-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .canvas-tools .tool{width:100%}
+  .write-side{margin-top:8px}
+  .reference-grid{grid-template-columns:1fr}
+  .reference-card{padding:10px}
+}
+@media(max-width:380px){
+  .mode-list{grid-template-columns:1fr}
+  .toolbar{grid-template-columns:1fr}
+  .game-setup{grid-template-columns:1fr}
+  .kana-table th:first-child,.kana-table td:first-child{width:42px}
+  .kana-cell .char{font-size:20px}
+  .kana-cell .roma{font-size:7px}
+  .detail-actions{grid-template-columns:1fr}
+}
