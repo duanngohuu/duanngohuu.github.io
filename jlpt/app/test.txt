@@ -1,1 +1,0 @@
-JLPT app split deployment test
