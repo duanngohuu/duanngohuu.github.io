@@ -5,7 +5,7 @@
     window.__flashcardLocalMultifaceLoaded = true;
 
     function loadBookLibrary() {
-      const version = '20260706-books4';
+      const version = '20260706-books5';
       let link = document.querySelector('link[data-book-library-style]');
       if (!link) {
         link = document.createElement('link');
@@ -19,7 +19,8 @@
         { src: './book-library-state-fix.js', attr: 'data-book-library-state-fix' },
         { src: './book-library.js', attr: 'data-book-library-script' },
         { src: './book-study-enrichment.js', attr: 'data-book-study-enrichment' },
-        { src: './book-correction-hotfix.js', attr: 'data-book-correction-hotfix' }
+        { src: './book-correction-hotfix.js', attr: 'data-book-correction-hotfix' },
+        { src: './book-language-settings.js', attr: 'data-book-language-settings' }
       ];
       scripts.forEach(({ src, attr }) => {
         let script = document.querySelector(`script[${attr}]`);
