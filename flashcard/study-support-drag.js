@@ -87,6 +87,7 @@
     }
 
     function restorePosition() {
+      if (active) return;
       clearTimeout(restoreTimer);
       const element = trigger();
       if (!element || element.classList.contains('hidden') || !element.offsetWidth) {
@@ -221,8 +222,11 @@
 
     function watchTrigger(element) {
       triggerObserver?.disconnect();
+      let wasHidden = element.classList.contains('hidden');
       triggerObserver = new MutationObserver(() => {
-        if (!element.classList.contains('hidden')) requestAnimationFrame(restorePosition);
+        const hidden = element.classList.contains('hidden');
+        if (wasHidden && !hidden && !active) requestAnimationFrame(restorePosition);
+        wasHidden = hidden;
       });
       triggerObserver.observe(element, { attributes: true, attributeFilter: ['class'] });
     }
@@ -248,6 +252,7 @@
     }
 
     function keepInsideViewport() {
+      if (active) return;
       const element = trigger();
       if (!element || element.classList.contains('hidden') || element.dataset.dragPositioned !== '1') return;
       const rect = element.getBoundingClientRect();
