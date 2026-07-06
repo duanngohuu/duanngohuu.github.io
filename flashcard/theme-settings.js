@@ -164,7 +164,7 @@
     }
 
     function loadLocalMultiface() {
-      const version = '20260705-localfaces1';
+      const version = '20260706-localfaces2';
       let script = document.querySelector('script[data-local-multiface-script]');
       if (script && script.dataset.localMultifaceVersion !== version) {
         script.remove();
