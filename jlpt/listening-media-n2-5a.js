@@ -1,0 +1,1 @@
+const m=window.JLPT_LISTENING_MEDIA||(window.JLPT_LISTENING_MEDIA={});m['N2-2024-12']={audio:'1IhL0-'+'WkiNXQ9QwHob2k0dja8d1h7K4Uj',script:'1vlrQ4C57-'+'s9HqzDoF_XXTJGWk0t8gtwW',mime:'audio/mpeg'};
