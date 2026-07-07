@@ -5,7 +5,7 @@
     window.__flashcardLocalMultifaceLoaded = true;
 
     function loadBookLibrary() {
-      const version = '20260706-books5';
+      const version = '20260707-books6';
       let link = document.querySelector('link[data-book-library-style]');
       if (!link) {
         link = document.createElement('link');
