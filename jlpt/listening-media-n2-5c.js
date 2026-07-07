@@ -1,0 +1,1 @@
+const m=window.JLPT_LISTENING_MEDIA||(window.JLPT_LISTENING_MEDIA={});m['N2-2025-12']={audio:atob('MTBsbDlMWDFNTDN4S1dIRU5zUUVMRGJfa0JmOHJvaVpj'),script:atob('MTlyTGdUSXUtZDY2R0VXeGhiZDVLYnJkeWpkVjhDS3lf'),mime:'audio/mpeg'};
