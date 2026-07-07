@@ -11,20 +11,21 @@
 <body>
 <div class="app">
 <header class="topbar">
-<a class="brand" href="/"><span class="brand-mark">BJT</span><span><strong>BJT Learning Hub</strong><small>Học trực tiếp theo giáo trình trong Google Drive</small></span></a>
+<a class="brand" href="/"><span class="brand-mark">BJT</span><span><strong>BJT Learning Hub</strong><small>Học trực tiếp từ dữ liệu đã chuyển đổi trên Google Sheet</small></span></a>
 <div class="top-actions"><a class="nav-btn primary" href="/">⌂ Trang chính</a><a class="nav-btn sheet-link" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/edit">Dữ liệu</a></div>
 </header>
-<section class="hero"><div><p class="eyebrow">7 giáo trình thật · dữ liệu nằm trên Google Drive</p><h1>Chọn sách, chọn bài,<br>mở đúng trang và học.</h1><p>Toàn bộ sách đã được chia theo mục lục thật. Bài scan giữ nguyên trang PDF để tránh sai nội dung; sách đề mẫu có thêm câu hỏi, script, lựa chọn và 正答.</p></div><div class="hero-stats"><div class="hero-stat"><strong id="bookCount">–</strong><span>giáo trình</span></div><div class="hero-stat"><strong id="lessonCount">–</strong><span>bài / section</span></div><div class="hero-stat"><strong id="doneCount">0</strong><span>đã hoàn thành</span></div></div></section>
+<section class="hero"><div><p class="eyebrow">PDF → OCR thô → dữ liệu chuẩn hóa → web</p><h1>Chọn sách, chọn bài,<br>học ngay trên web.</h1><p>Nội dung đã chuyển đổi được đọc từ tab CONTENT của Google Sheet. PDF chỉ còn là nguồn đối chiếu, không phải giao diện học chính.</p></div><div class="hero-stats"><div class="hero-stat"><strong id="bookCount">–</strong><span>giáo trình</span></div><div class="hero-stat"><strong id="lessonCount">–</strong><span>bài / section</span></div><div class="hero-stat"><strong id="doneCount">0</strong><span>đã hoàn thành</span></div></div></section>
 <div class="layout">
-<aside class="sidebar"><label class="search">⌕ <input id="searchInput" placeholder="Tìm sách hoặc bài học"></label><div class="data-status"><span id="statusDot" class="status-dot"></span><strong id="statusTitle">Đang kết nối Google Sheet…</strong><br><span id="statusText">Đọc BOOKS, LESSONS và QUESTIONS.</span><details class="debug"><summary>Debug nguồn dữ liệu</summary><pre id="debugLog">Khởi tạo…</pre></details></div><div id="bookList" class="book-list"></div></aside>
+<aside class="sidebar"><label class="search">⌕ <input id="searchInput" placeholder="Tìm sách hoặc bài học"></label><div class="data-status"><span id="statusDot" class="status-dot"></span><strong id="statusTitle">Đang kết nối Google Sheet…</strong><br><span id="statusText">Đọc BOOKS, LESSONS, QUESTIONS và CONTENT.</span><details class="debug"><summary>Debug nguồn dữ liệu</summary><pre id="debugLog">Khởi tạo…</pre></details></div><div id="bookList" class="book-list"></div></aside>
 <main class="main"><section class="panel"><div class="panel-head"><div><p class="eyebrow">Menu bài học</p><h2 id="bookTitle">Đang tải dữ liệu…</h2><p id="bookInfo"></p></div><span id="bookBadge" class="pill">Google Drive</span></div><div id="lessonGroups" class="lesson-groups"><div class="empty">Đang tải menu từ Google Sheet…</div></div></section>
 <section class="panel"><div class="panel-head"><div><p class="eyebrow">Bài đang chọn</p><h2>Tiếp tục học</h2></div><span id="lessonStatus" class="pill">Chưa chọn</span></div><div id="lessonDetail" class="empty">Chọn một bài trong menu phía trên.</div></section></main>
 </div></div><div id="toast" class="toast"></div>
-<script src="./data.js?v=e24faac"></script>
+<script src="./data.js?v=d21e7ab"></script>
 <script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=BOOKS&amp;tqx=responseHandler:BJT_BOOKS_CB" onerror="BJT.feedError('BOOKS')"></script>
 <script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=LESSONS&amp;tqx=responseHandler:BJT_LESSONS_CB" onerror="BJT.feedError('LESSONS')"></script>
 <script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=QUESTIONS&amp;tqx=responseHandler:BJT_QUESTIONS_CB" onerror="BJT.feedError('QUESTIONS')"></script>
-<script src="./ui.js?v=d729537"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=CONTENT&amp;tqx=responseHandler:BJT_CONTENT_CB" onerror="BJT.feedError('CONTENT')"></script>
+<script src="./ui.js?v=7330010"></script>
 <script src="./start.js?v=44c861c"></script>
 </body>
 </html>
