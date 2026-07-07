@@ -1,0 +1,1 @@
+window.JLPT_LISTENING_RESOURCES={version:'2026.07.07-listening.1'};
