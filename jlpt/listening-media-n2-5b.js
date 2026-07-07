@@ -1,0 +1,1 @@
+const m=window.JLPT_LISTENING_MEDIA||(window.JLPT_LISTENING_MEDIA={});m['N2-2025-07']={audio:'132FvODh'+'nS2YbHvsMDKQEHwj2PNXyCjme',script:'16xrU1Dt'+'gBqzOU3sYo_CCCslEr2WLiA0K',mime:'audio/mpeg'};
