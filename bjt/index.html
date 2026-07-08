@@ -8,7 +8,8 @@
 <link rel="stylesheet" href="./bjt.css?v=de96ada">
 <link rel="stylesheet" href="./study.css?v=90a3538">
 <link rel="stylesheet" href="./workspace.css?v=feee773">
-<link rel="stylesheet" href="./mobile-ux.css?v=a3a96bb">
+<link rel="stylesheet" href="./audio-controller.css?v=c35dff1">
+<link rel="stylesheet" href="./mobile-ux.css?v=6a21031">
 <link rel="stylesheet" href="./pdf-state.css?v=9dab0e7">
 </head>
 <body>
@@ -17,20 +18,21 @@
 <a class="brand" href="/"><span class="brand-mark">BJT</span><span><strong>BJT Learning Hub</strong><small>Audio, PDF và memo trong cùng một màn hình</small></span></a>
 <div class="top-actions"><a class="nav-btn primary" href="/">⌂ Trang chính</a><a class="nav-btn sheet-link" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/edit">Dữ liệu</a></div>
 </header>
-<section class="hero"><div><p class="eyebrow">Không đổi tab · không rời trang học</p><h1>Nghe, xem PDF,<br>ghi chú cùng lúc.</h1><p>Chọn session hoặc bài sẽ đưa PDF tới trang bắt đầu tương ứng. Trang PDF đã chọn được ghi nhớ riêng cho từng bài.</p></div><div class="hero-stats"><div class="hero-stat"><strong id="bookCount">–</strong><span>giáo trình</span></div><div class="hero-stat"><strong id="lessonCount">–</strong><span>bài / section</span></div><div class="hero-stat"><strong id="doneCount">0</strong><span>đã hoàn thành</span></div></div></section>
+<section class="hero"><div><p class="eyebrow">Không đổi tab · không rời trang học</p><h1>Chọn câu, nghe đúng track,<br>làm bài ngay tại chỗ.</h1><p>Audio có chế độ theo câu hoặc phát liên tục toàn bài. Khi cuộn, một thanh điều khiển nổi thực sự xuất hiện ở đầu màn hình; menu gốc không bị lặp lại.</p></div><div class="hero-stats"><div class="hero-stat"><strong id="bookCount">–</strong><span>giáo trình</span></div><div class="hero-stat"><strong id="lessonCount">–</strong><span>bài / section</span></div><div class="hero-stat"><strong id="doneCount">0</strong><span>đã hoàn thành</span></div></div></section>
 <div class="layout">
 <aside class="sidebar"><label class="search">⌕ <input id="searchInput" placeholder="Tìm sách hoặc bài học"></label><div class="data-status"><span id="statusDot" class="status-dot"></span><strong id="statusTitle">Đang kết nối Google Sheet…</strong><br><span id="statusText">Đọc BOOKS, LESSONS, QUESTIONS, CONTENT và MEDIA.</span><details class="debug"><summary>Debug nguồn dữ liệu</summary><pre id="debugLog">Khởi tạo…</pre></details></div><div id="bookList" class="book-list"></div></aside>
 <main class="main"><section class="panel"><div class="panel-head"><div><p class="eyebrow">Menu bài học</p><h2 id="bookTitle">Đang tải dữ liệu…</h2><p id="bookInfo"></p></div><span id="bookBadge" class="pill">Google Drive</span></div><div id="lessonGroups" class="lesson-groups"><div class="empty">Đang tải menu từ Google Sheet…</div></div></section>
 <section class="panel"><div class="panel-head"><div><p class="eyebrow">Không gian luyện tập</p><h2>Audio · Nội dung · PDF · Memo</h2></div><span id="lessonStatus" class="pill">Chưa chọn</span></div><div id="lessonDetail" class="empty">Chọn một bài trong menu phía trên.</div></section></main>
 </div></div><div id="toast" class="toast"></div>
 <script src="./data.js?v=ae0a49c"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=BOOKS&amp;tqx=responseHandler:BJT_BOOKS_CB" onerror="BJT.feedError('BOOKS')"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=LESSONS&amp;tqx=responseHandler:BJT_LESSONS_CB" onerror="BJT.feedError('LESSONS')"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=QUESTIONS&amp;tqx=responseHandler:BJT_QUESTIONS_CB" onerror="BJT.feedError('QUESTIONS')"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=CONTENT&amp;tqx=responseHandler:BJT_CONTENT_CB" onerror="BJT.feedError('CONTENT')"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=MEDIA&amp;tqx=responseHandler:BJT_MEDIA_CB" onerror="BJT.feedError('MEDIA')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=BOOKS&amp;tqx=responseHandler:BJT_BOOKS_CB&amp;v=20260709b" onerror="BJT.feedError('BOOKS')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=LESSONS&amp;tqx=responseHandler:BJT_LESSONS_CB&amp;v=20260709b" onerror="BJT.feedError('LESSONS')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=QUESTIONS&amp;tqx=responseHandler:BJT_QUESTIONS_CB&amp;v=20260709b" onerror="BJT.feedError('QUESTIONS')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=CONTENT&amp;tqx=responseHandler:BJT_CONTENT_CB&amp;v=20260709b" onerror="BJT.feedError('CONTENT')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=MEDIA&amp;tqx=responseHandler:BJT_MEDIA_CB&amp;v=20260709b" onerror="BJT.feedError('MEDIA')"></script>
 <script src="./ui.js?v=27954a6"></script>
-<script src="./mobile-ux.js?v=2e471f8"></script>
+<script src="./audio-controller.js?v=568f143"></script>
+<script src="./mobile-ux.js?v=4bf319a"></script>
 <script src="./pdf-state.js?v=d9c9665"></script>
 <script src="./start.js?v=d5d2893"></script>
 </body>
