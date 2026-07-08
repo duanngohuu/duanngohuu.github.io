@@ -2,27 +2,47 @@
   const {state}=BJT;
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lessonSort=(a,b)=>(+a.sort_order||0)-(+b.sort_order||0);
-  let dock,observer,timer,removeScroll=()=>{};
+  let dock,sheet,observer,timer,removeScroll=()=>{};
 
   function jumpTo(id){
     const target=document.getElementById(id);if(!target)return;
-    const offset=(dock?.getBoundingClientRect().height||0)+10;
+    const offset=(dock?.classList.contains('visible')?dock.getBoundingClientRect().height:0)+8;
     window.scrollTo({top:Math.max(0,target.getBoundingClientRect().top+window.scrollY-offset),behavior:'smooth'});
   }
   function changeLesson(id){
     if(!id||id===state.lessonId)return;
-    state.lessonId=id;state.questionId='';localStorage.setItem('bjtLastLesson',id);BJT_UI.render();
+    state.lessonId=id;state.questionId='';localStorage.setItem('bjtLastLesson',id);closeSheet();BJT_UI.render();
     requestAnimationFrame(()=>requestAnimationFrame(()=>jumpTo('contentPane')));
   }
   function ensureDock(){
     if(dock&&document.body.contains(dock))return dock;
-    dock=document.createElement('nav');dock.id='mobileFloatingDock';dock.className='mobile-floating-dock';dock.setAttribute('aria-label','Điều khiển nổi khi học BJT');document.body.appendChild(dock);return dock;
+    dock=document.createElement('nav');dock.id='mobileFloatingDock';dock.className='mobile-floating-dock';dock.setAttribute('aria-label','Điều khiển nhanh BJT');document.body.appendChild(dock);return dock;
   }
-  function audioLabel(media,index,total){
-    if(!media)return'Chọn audio';
-    const no=String(media.track_label||media.file_name||'').match(/(\d{1,3})(?=\D*$)/)?.[1];
-    return `${no?String(+no).padStart(3,'0'):String(index+1).padStart(3,'0')} · ${index+1}/${total}`;
+  function trackNo(media,index){
+    const n=String(media?.track_label||media?.file_name||'').match(/(\d{1,3})(?=\D*$)/)?.[1];
+    return n?String(+n).padStart(3,'0'):String(index+1).padStart(3,'0');
   }
+  function ensureSheet(){
+    if(sheet&&document.body.contains(sheet))return sheet;
+    sheet=document.createElement('div');sheet.id='mobileQuickSheet';sheet.className='mobile-quick-overlay';sheet.hidden=true;
+    sheet.innerHTML='<section class="mobile-quick-sheet" role="dialog" aria-modal="true"><header><div><strong>Chọn nhanh</strong><small id="quickCurrent"></small></div><button id="quickClose" type="button">×</button></header><div class="quick-field"><span>Session</span><select id="quickSession"></select></div><div class="quick-field"><span>Bài</span><select id="quickLesson"></select></div><div class="quick-actions"><button data-go="studyAudioBar">Audio</button><button data-go="contentPane">Bài học</button><button data-go="pdfPane">PDF</button><button data-go="memoPanel">Memo</button><button data-go="lessonGroups">Mục lục</button></div></section>';
+    document.body.appendChild(sheet);
+    sheet.onclick=e=>{if(e.target===sheet)closeSheet();};sheet.querySelector('#quickClose').onclick=closeSheet;
+    sheet.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{closeSheet();jumpTo(b.dataset.go);});
+    return sheet;
+  }
+  function openSheet(){
+    const s=ensureSheet(),all=state.lessons.filter(x=>x.book_id===state.bookId).sort(lessonSort),current=all.find(x=>x.lesson_id===state.lessonId);if(!current)return;
+    const sessions=[...new Set(all.map(x=>x.part_title||'Toàn bộ'))],session=current.part_title||'Toàn bộ';
+    const sessionSelect=s.querySelector('#quickSession'),lessonSelect=s.querySelector('#quickLesson');
+    sessionSelect.innerHTML=sessions.map(x=>`<option value="${esc(x)}" ${x===session?'selected':''}>${esc(x)}</option>`).join('');
+    const fillLessons=value=>{const list=all.filter(x=>(x.part_title||'Toàn bộ')===value);lessonSelect.innerHTML=list.map((x,i)=>`<option value="${esc(x.lesson_id)}" ${x.lesson_id===state.lessonId?'selected':''}>${String(i+1).padStart(2,'0')} · ${esc(x.section_title)}</option>`).join('');return list;};
+    fillLessons(session);s.querySelector('#quickCurrent').textContent=current.section_title||'';
+    sessionSelect.onchange=()=>{const list=fillLessons(sessionSelect.value);if(list[0])changeLesson(list[0].lesson_id);};
+    lessonSelect.onchange=()=>changeLesson(lessonSelect.value);
+    s.hidden=false;document.body.classList.add('mobile-sheet-open');
+  }
+  function closeSheet(){if(!sheet)return;sheet.hidden=true;document.body.classList.remove('mobile-sheet-open');}
 
   function renderDock(){
     removeScroll();
@@ -31,38 +51,27 @@
     const lesson=state.lessons.find(x=>x.lesson_id===state.lessonId);
     if(!audioBar||!content||!pdf||!memo||!lesson){if(dock)dock.classList.remove('visible');return;}
     memo.id='memoPanel';[content,pdf,memo].forEach(x=>x.classList.add('study-anchor'));
-    const d=ensureDock(),all=state.lessons.filter(x=>x.book_id===state.bookId).sort(lessonSort);
-    const sessions=[...new Set(all.map(x=>x.part_title||'Toàn bộ'))],session=lesson.part_title||'Toàn bộ';
-    const lessonList=all.filter(x=>(x.part_title||'Toàn bộ')===session);
-    const media=window.BJT_AUDIO?.getList?.()||[],currentMedia=window.BJT_AUDIO?.getCurrent?.(),audioIndex=window.BJT_AUDIO?.getIndex?.()||0;
-    const pdfPage=window.BJT_PDF?.getPage?.()||+(lesson.pdf_page_start||lesson.page_start||1);
-    const hasMemo=Boolean(localStorage.getItem(`bjtMemoCurrent:${lesson.lesson_id}`)?.trim());
-    d.innerHTML=`<div class="float-audio-row"><button id="floatAudioJump" class="float-play" type="button" aria-label="Tới audio">♫</button><button id="floatTrackPicker" class="float-track-picker" type="button"><b>${esc(audioLabel(currentMedia,audioIndex,media.length))}</b><small>${esc(currentMedia?.track_label||currentMedia?.file_name||'Mở danh sách track')}</small></button><button class="float-step" data-step="-1" type="button">‹</button><button class="float-step" data-step="1" type="button">›</button></div><div class="float-select-row"><select id="floatSession" aria-label="Chọn session">${sessions.map(s=>`<option value="${esc(s)}" ${s===session?'selected':''}>${esc(s)}</option>`).join('')}</select><select id="floatLesson" aria-label="Chọn bài">${lessonList.map((l,i)=>`<option value="${esc(l.lesson_id)}" ${l.lesson_id===lesson.lesson_id?'selected':''}>${String(i+1).padStart(2,'0')} · ${esc(l.section_title)}</option>`).join('')}</select></div><div class="float-jump-row"><button data-jump="contentPane" class="active">Bài</button><button data-jump="pdfPane">PDF</button><button id="floatPagePicker" type="button">Tr.${pdfPage}</button><button data-jump="memoPanel" class="${hasMemo?'has-note':''}">Memo</button><button data-jump="lessonGroups">Mục lục</button></div>`;
+    const d=ensureDock(),media=window.BJT_AUDIO?.getList?.()||[],currentMedia=window.BJT_AUDIO?.getCurrent?.(),audioIndex=window.BJT_AUDIO?.getIndex?.()||0;
+    const pdfPage=window.BJT_PDF?.getPage?.()||+(lesson.pdf_page_start||lesson.page_start||1),hasMemo=Boolean(localStorage.getItem(`bjtMemoCurrent:${lesson.lesson_id}`)?.trim());
+    d.innerHTML=`<button id="floatAudioJump" class="dock-icon" type="button" aria-label="Audio">♫</button><button id="floatTrackPicker" class="dock-track" type="button"><b>${esc(trackNo(currentMedia,audioIndex))}</b><small>${media.length?`${audioIndex+1}/${media.length}`:'—'}</small></button><button data-jump="contentPane" class="dock-nav active" type="button">Bài</button><button data-jump="pdfPane" class="dock-nav" type="button">PDF</button><button id="floatPagePicker" class="dock-page" type="button">${pdfPage}</button><button data-jump="memoPanel" class="dock-nav ${hasMemo?'has-note':''}" type="button">Memo</button><button id="floatMenu" class="dock-icon" type="button" aria-label="Chọn session và bài">☰</button>`;
     d.querySelector('#floatAudioJump').onclick=()=>jumpTo('studyAudioBar');
     d.querySelector('#floatTrackPicker').onclick=()=>window.BJT_AUDIO?.openPicker?.();
-    d.querySelectorAll('.float-step').forEach(b=>b.onclick=()=>window.BJT_AUDIO?.step?.(+b.dataset.step));
     d.querySelector('#floatPagePicker').onclick=()=>window.BJT_PDF?.openPicker?.();
-    d.querySelector('#floatSession').onchange=e=>{const next=all.find(x=>(x.part_title||'Toàn bộ')===e.target.value);if(next)changeLesson(next.lesson_id);};
-    d.querySelector('#floatLesson').onchange=e=>changeLesson(e.target.value);
+    d.querySelector('#floatMenu').onclick=openSheet;
     d.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
-
     const update=()=>{
       if(!matchMedia('(max-width:900px)').matches){d.classList.remove('visible');return;}
       const a=audioBar.getBoundingClientRect(),workspace=document.querySelector('.study-workspace')?.getBoundingClientRect();
-      const show=a.bottom<8&&workspace&&workspace.bottom>100;d.classList.toggle('visible',Boolean(show));
-      const line=(show?d.getBoundingClientRect().height:0)+14;let active='contentPane';
+      const show=a.bottom<4&&workspace&&workspace.bottom>90;d.classList.toggle('visible',Boolean(show));
+      const line=(show?d.getBoundingClientRect().height:0)+12;let active='contentPane';
       for(const el of [content,pdf,memo])if(el.getBoundingClientRect().top<=line)active=el.id;
       d.querySelectorAll('[data-jump]').forEach(b=>b.classList.toggle('active',b.dataset.jump===active));
     };
     window.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update,{passive:true});
     removeScroll=()=>{window.removeEventListener('scroll',update);window.removeEventListener('resize',update);};update();
   }
-
-  window.addEventListener('bjt-audio-state',e=>{
-    if(!dock)return;
-    const button=dock.querySelector('#floatTrackPicker');if(button&&e.detail.media){const b=button.querySelector('b'),s=button.querySelector('small');if(b)b.textContent=audioLabel(e.detail.media,e.detail.index,e.detail.total);if(s)s.textContent=e.detail.media.track_label||e.detail.media.file_name;}
-  });
-  window.addEventListener('bjt-pdf-state',e=>{const b=dock?.querySelector('#floatPagePicker');if(b)b.textContent=`Tr.${e.detail.page}`;});
+  window.addEventListener('bjt-audio-state',e=>{if(!dock)return;const b=dock.querySelector('#floatTrackPicker');if(b&&e.detail.media){b.querySelector('b').textContent=trackNo(e.detail.media,e.detail.index);b.querySelector('small').textContent=`${e.detail.index+1}/${e.detail.total}`;}});
+  window.addEventListener('bjt-pdf-state',e=>{const b=dock?.querySelector('#floatPagePicker');if(b)b.textContent=e.detail.page;});
   window.addEventListener('DOMContentLoaded',()=>{const root=document.getElementById('lessonDetail');if(root){observer=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(renderDock,50);});observer.observe(root,{childList:true,subtree:true});}});
   window.addEventListener('load',renderDock);
 })();
