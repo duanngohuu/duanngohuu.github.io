@@ -10,7 +10,7 @@
   init().then(()=>{
     $('statusDot').className='status-dot ok';
     $('statusTitle').textContent='Đã kết nối Google Sheet';
-    $('statusText').textContent=`BOOKS ${state.books.length} · LESSONS ${state.lessons.length} · QUESTIONS ${state.questions.length} · CONTENT ${state.content.length}`;
+    $('statusText').textContent=`BOOKS ${state.books.length} · LESSONS ${state.lessons.length} · QUESTIONS ${state.questions.length} · CONTENT ${state.content.length} · MEDIA ${state.media.length}`;
     $('bookCount').textContent=state.books.length;
     $('lessonCount').textContent=state.lessons.length;
     BJT_UI.render();
