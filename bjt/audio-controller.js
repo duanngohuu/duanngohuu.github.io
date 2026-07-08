@@ -30,7 +30,7 @@
     window.dispatchEvent(new CustomEvent('bjt-audio-state',{detail:{lessonId:currentLessonId,index:currentIndex,total:mediaList.length,media:m,playing:!player()?.paused,mode:localStorage.getItem(modeKey(currentLessonId))||'question'}}));
   }
   function setStatus(text){const e=document.getElementById('audioStatus');if(e)e.textContent=text;}
-  function trackNo(m,i){const n=String(m?.file_name||m?.track_label||'').match(/(\d{1,3})(?=\D*$)/)?.[1];return n?String(+n).padStart(3,'0'):String(i+1).padStart(3,'0');}
+  function trackNo(m,i){const n=String(m?.track_label||m?.file_name||'').match(/(\d{1,3})(?=\D*$)/)?.[1];return n?String(+n).padStart(3,'0'):String(i+1).padStart(3,'0');}
   function groupName(m){return String(m?.track_label||m?.file_name||'Audio').match(/CD\s*\d+/i)?.[0]?.toUpperCase()||'TRACK';}
 
   function renderMedia(index,{autoplay=false}={}){
