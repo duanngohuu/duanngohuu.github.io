@@ -1,6 +1,6 @@
 (()=>{
   const {state}=BJT;
-  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lessonSort=(a,b)=>(+a.sort_order||0)-(+b.sort_order||0);
   let dock,observer,timer,removeScroll=()=>{};
 
@@ -20,7 +20,7 @@
   }
   function audioLabel(media,index,total){
     if(!media)return'Chọn audio';
-    const no=String(media.file_name||media.track_label||'').match(/(\d{1,3})(?=\D*$)/)?.[1];
+    const no=String(media.track_label||media.file_name||'').match(/(\d{1,3})(?=\D*$)/)?.[1];
     return `${no?String(+no).padStart(3,'0'):String(index+1).padStart(3,'0')} · ${index+1}/${total}`;
   }
 
