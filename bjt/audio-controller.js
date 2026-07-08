@@ -24,7 +24,6 @@
   }
   function isMp3(m){return /audio\/mpeg/i.test(m?.mime_type)||/\.mp3$/i.test(m?.file_name||'');}
   function player(){return document.getElementById('bjtAudioPlayer');}
-  function frame(){return document.getElementById('bjtAudioFrame');}
   function emit(){
     const m=mediaList[currentIndex];
     window.dispatchEvent(new CustomEvent('bjt-audio-state',{detail:{lessonId:currentLessonId,index:currentIndex,total:mediaList.length,media:m,playing:!player()?.paused,mode:localStorage.getItem(modeKey(currentLessonId))||'question'}}));
@@ -58,7 +57,15 @@
   function selectMedia(id,{autoplay=false}={}){const i=mediaList.findIndex(m=>m.media_id===id);if(i>=0)renderMedia(i,{autoplay});}
   function toggle(){const p=player();if(p){p.paused?p.play().catch(()=>{}):p.pause();}else document.getElementById('studyAudioBar')?.scrollIntoView({behavior:'smooth',block:'start'});}
   function step(delta){if(!mediaList.length)return;renderMedia((currentIndex+delta+mediaList.length)%mediaList.length,{autoplay:!player()?.paused});}
-  function setMode(mode){if(!currentLessonId)return;localStorage.setItem(modeKey(currentLessonId),mode);document.querySelectorAll('[data-audio-mode]').forEach(b=>b.classList.toggle('active',b.dataset.audioMode===mode));if(mode==='question'){const l=lesson(),i=requestedIndex(mediaList,l);renderMedia(i,{autoplay:false});}emit();}
+  function setMode(mode){
+    if(!currentLessonId)return;
+    localStorage.setItem(modeKey(currentLessonId),mode);
+    document.querySelectorAll('[data-audio-mode]').forEach(b=>b.classList.toggle('active',b.dataset.audioMode===mode));
+    const l=lesson();
+    if(mode==='question')renderMedia(requestedIndex(mediaList,l),{autoplay:false});
+    if(mode==='full')renderMedia(0,{autoplay:true});
+    emit();
+  }
 
   function enhance(){
     clearTimeout(enhanceTimer);
