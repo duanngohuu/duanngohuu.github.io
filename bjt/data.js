@@ -1,6 +1,6 @@
 (()=>{
 const SID='1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8';
-const state={books:[],lessons:[],questions:[],content:[],bookId:localStorage.getItem('bjtLastBook')||'',lessonId:localStorage.getItem('bjtLastLesson')||'',query:''};
+const state={books:[],lessons:[],questions:[],content:[],media:[],bookId:localStorage.getItem('bjtLastBook')||'',lessonId:localStorage.getItem('bjtLastLesson')||'',query:''};
 const done=new Set(JSON.parse(localStorage.getItem('bjtDoneLessons')||'[]'));
 const logs=[],$=id=>document.getElementById(id),received=new Set();
 function log(text){logs.push(new Date().toLocaleTimeString()+' '+text);const el=$('debugLog');if(el)el.textContent=logs.join('\n')}
@@ -10,7 +10,8 @@ window.BJT_BOOKS_CB=resp=>accept('BOOKS',resp);
 window.BJT_LESSONS_CB=resp=>accept('LESSONS',resp);
 window.BJT_QUESTIONS_CB=resp=>accept('QUESTIONS',resp);
 window.BJT_CONTENT_CB=resp=>accept('CONTENT',resp);
+window.BJT_MEDIA_CB=resp=>accept('MEDIA',resp);
 function feedError(name){log(`${name}: không tải được JSONP`)}
-async function init(){log('Sheet ID: '+SID);const started=Date.now();while(Date.now()-started<10000){if(received.has('BOOKS')&&received.has('LESSONS')&&received.has('QUESTIONS')&&received.has('CONTENT'))break;await new Promise(r=>setTimeout(r,80))}if(!state.books.length||!state.lessons.length)throw Error('Không đọc được BOOKS hoặc LESSONS');if(!state.books.some(b=>b.book_id===state.bookId))state.bookId=state.books[0].book_id;return state}
+async function init(){log('Sheet ID: '+SID);const started=Date.now();while(Date.now()-started<10000){if(received.has('BOOKS')&&received.has('LESSONS')&&received.has('QUESTIONS')&&received.has('CONTENT')&&received.has('MEDIA'))break;await new Promise(r=>setTimeout(r,80))}if(!state.books.length||!state.lessons.length)throw Error('Không đọc được BOOKS hoặc LESSONS');if(!state.books.some(b=>b.book_id===state.bookId))state.bookId=state.books[0].book_id;return state}
 window.BJT={SID,state,done,$,log,init,feedError,sheetUrl:`https://docs.google.com/spreadsheets/d/${SID}/edit`};
 })();
