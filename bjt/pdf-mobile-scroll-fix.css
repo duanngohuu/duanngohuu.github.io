@@ -1,0 +1,17 @@
+@media(max-width:900px){
+  .pdf-pane{display:flex!important;flex-direction:column!important;height:calc(100dvh - 104px)!important;min-height:0!important;overflow:hidden!important}
+  .pdf-pane .study-pane-head{flex:0 0 auto!important}
+  .pdf-pane .pdf-zoom-viewport{position:relative!important;flex:1 1 auto!important;width:100%!important;height:auto!important;min-height:0!important;overflow:hidden!important;-webkit-overflow-scrolling:auto!important;overscroll-behavior:auto!important;touch-action:auto!important}
+  .pdf-pane .pdf-zoom-stage{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;transform:none!important;transform-origin:initial!important}
+  .pdf-pane .pdf-zoom-stage iframe{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;min-height:0!important;border:0!important;touch-action:auto!important;pointer-events:auto!important}
+  #pdfZoomOut,#pdfZoomLabel,#pdfZoomIn{display:none!important}
+  .pdf-page-tools{grid-template-columns:44px 44px minmax(58px,1fr)!important}
+  .pdf-page-tools #pdfReload{grid-column:1}
+  .pdf-page-tools #pdfFullscreen{grid-column:2}
+  .pdf-page-tools #pdfCapture{grid-column:3}
+}
+@media(max-width:600px){
+  .pdf-pane{height:calc(100dvh - 96px)!important}
+  .pdf-pane .pdf-zoom-viewport{height:auto!important;min-height:0!important}
+  .pdf-pane .pdf-zoom-stage iframe{height:100%!important;min-height:0!important}
+}
