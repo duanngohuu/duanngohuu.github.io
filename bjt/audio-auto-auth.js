@@ -20,6 +20,7 @@
       const token=await window.BJT_AUDIO.authorizeGoogle();
       const bookId=window.BJT?.state?.bookId||'';
       if(bookId&&!preparedBooks.has(bookId)){
+        if(bookId==='BUSINESS-BLUE')window.BJT_AUDIO_FOLDER?.clearCache?.(bookId);
         await window.BJT_AUDIO_FOLDER?.ensureCurrentLesson?.(token);
         preparedBooks.add(bookId);
       }
