@@ -1,4 +1,5 @@
 (()=>{
+  const preparedBooks=new Set();
   const setStatus=text=>{const el=document.getElementById('audioStatus');if(el&&el.textContent!==text)el.textContent=text;};
   const hideAuthRow=()=>{
     document.querySelectorAll('.audio-auth-row').forEach(el=>{if(el.style.display!=='none')el.style.display='none';});
@@ -17,7 +18,11 @@
     setStatus('Đang dùng tài khoản Google hiện tại để đọc kho audio…');
     try{
       const token=await window.BJT_AUDIO.authorizeGoogle();
-      await window.BJT_AUDIO_FOLDER?.ensureCurrentLesson?.(token);
+      const bookId=window.BJT?.state?.bookId||'';
+      if(bookId&&!preparedBooks.has(bookId)){
+        await window.BJT_AUDIO_FOLDER?.ensureCurrentLesson?.(token);
+        preparedBooks.add(bookId);
+      }
       await action();
     }catch(error){
       setStatus(error?.message||'Không kết nối được Google Drive.');
