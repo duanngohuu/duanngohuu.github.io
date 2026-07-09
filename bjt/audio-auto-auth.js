@@ -1,18 +1,20 @@
 (()=>{
-  const setStatus=text=>{const el=document.getElementById('audioStatus');if(el)el.textContent=text;};
+  const setStatus=text=>{const el=document.getElementById('audioStatus');if(el&&el.textContent!==text)el.textContent=text;};
   const hideAuthRow=()=>{
-    document.querySelectorAll('.audio-auth-row').forEach(el=>el.style.display='none');
-    document.querySelectorAll('.audio-auth-badge').forEach(el=>{if(!el.classList.contains('connected'))el.textContent='Google session';});
+    document.querySelectorAll('.audio-auth-row').forEach(el=>{if(el.style.display!=='none')el.style.display='none';});
+    document.querySelectorAll('.audio-auth-badge').forEach(el=>{
+      if(!el.classList.contains('connected')&&el.textContent!=='Google session')el.textContent='Google session';
+    });
   };
   const busy=(button,on)=>{
     if(!button)return;
     button.disabled=on;
-    if(on)button.dataset.originalText=button.textContent;
-    button.textContent=on?'Đang kết nối…':(button.dataset.originalText||button.textContent);
+    if(on&&!button.dataset.originalText)button.dataset.originalText=button.textContent;
+    button.textContent=on?'Đang kết nối…':(button.dataset.originalText||'▶');
   };
   const authorizeThen=async(button,action)=>{
     busy(button,true);
-    setStatus('Đang dùng tài khoản Google đã đăng nhập để xin quyền đọc Drive…');
+    setStatus('Đang dùng tài khoản Google hiện tại để xin quyền đọc Drive…');
     try{
       await window.BJT_AUDIO.authorizeGoogle();
       await action();
@@ -45,6 +47,7 @@
     }
   },true);
 
-  new MutationObserver(hideAuthRow).observe(document.documentElement,{childList:true,subtree:true});
+  window.addEventListener('bjt-audio-state',hideAuthRow);
+  window.addEventListener('DOMContentLoaded',hideAuthRow);
   window.addEventListener('load',hideAuthRow);
 })();
