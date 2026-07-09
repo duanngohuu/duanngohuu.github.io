@@ -27,6 +27,12 @@
     if(pane)jumpToElement(pane,options);
   }
 
+  function closeLegacyQuickSheet(){
+    const sheet=document.getElementById('mobileQuickSheet');
+    if(sheet)sheet.hidden=true;
+    document.body.classList.remove('mobile-sheet-open');
+  }
+
   function ensureBackdrop(){
     if(backdrop&&document.body.contains(backdrop))return backdrop;
     backdrop=document.createElement('button');
@@ -57,6 +63,7 @@
 
   function openDrawer(){
     if(!mobile())return;
+    closeLegacyQuickSheet();
     const side=sidebar();if(!side)return;
     ensureBackdrop();ensureToggle();
     side.classList.add('study-drawer-open');
@@ -109,6 +116,7 @@
   }
   function openMemo(){
     closeDrawer();
+    closeLegacyQuickSheet();
     const action=window.BJT_MEMO?.open;
     if(typeof action==='function')action();else openMemoFallback();
     setTimeout(()=>jumpPdf({behavior:'auto'}),40);
@@ -134,7 +142,7 @@
     const target=event.target instanceof Element?event.target:null;
     if(!target)return;
 
-    const drawerButton=target.closest('#openStudyDrawer');
+    const drawerButton=target.closest('#openStudyDrawer,#floatMenu');
     if(drawerButton){
       event.preventDefault();event.stopImmediatePropagation();
       sidebar()?.classList.contains('study-drawer-open')?closeDrawer():openDrawer();
@@ -155,7 +163,7 @@
       event.preventDefault();event.stopImmediatePropagation();openMemo();return;
     }
     if(target.closest('#floatPdf,[data-go="pdfPane"]')){
-      event.preventDefault();event.stopImmediatePropagation();closeDrawer();jumpPdf();return;
+      event.preventDefault();event.stopImmediatePropagation();closeDrawer();closeLegacyQuickSheet();jumpPdf();return;
     }
   },true);
 
