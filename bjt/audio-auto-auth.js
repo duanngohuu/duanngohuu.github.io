@@ -9,11 +9,14 @@
     return value==='true'||value==='1'||value==='yes'||(+book?.audio_track_count||0)>0;
   };
   const hideAuthRow=()=>{
+    const connected=window.BJT_GOOGLE_SESSION?.hasValidToken?.();
     document.querySelectorAll('.audio-auth-row').forEach(el=>{if(el.style.display!=='none')el.style.display='none';});
     document.querySelectorAll('.audio-auth-badge').forEach(el=>{
-      const connected=window.BJT_GOOGLE_SESSION?.hasValidToken?.();
       el.classList.toggle('connected',Boolean(connected));
       el.textContent=connected?'Google đã nhớ':'Google session';
+    });
+    document.querySelectorAll('.audio-session-note').forEach(el=>{
+      el.textContent=connected?'Quyền Drive đang được nhớ trên thiết bị bằng access token ngắn hạn. Không lưu mật khẩu hay cookie Google.':'Bấm Play để dùng tài khoản Google hiện tại. Sau khi cấp quyền, phiên ngắn hạn sẽ được nhớ trên thiết bị.';
     });
   };
   const busy=(button,on)=>{
