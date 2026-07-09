@@ -1,0 +1,106 @@
+.hero{display:none!important}
+.layout{grid-template-columns:320px minmax(0,1fr)!important;align-items:stretch!important}
+.sidebar{position:sticky!important;top:8px!important;height:calc(100dvh - 16px);display:flex;flex-direction:column;overflow:hidden;padding:9px!important}
+.book-list{max-height:190px;overflow:auto;scrollbar-width:thin}
+.side-lessons{min-height:0;display:flex;flex:1;flex-direction:column;margin-top:8px;border-top:1px solid rgba(255,255,255,.09);padding-top:8px}
+.side-lessons-head{display:flex;align-items:flex-start;justify-content:space-between;gap:7px;padding:2px 2px 7px}
+.side-lessons-head h2{margin:3px 0 0;font-size:11px;line-height:1.35}
+.side-lessons-head p{margin:3px 0 0;color:#929bb5;font-size:7.5px;line-height:1.4}
+.side-lessons-head .pill{flex:0 0 auto}
+#toggleLessonNav{display:none}
+.lesson-groups{min-height:0;overflow:auto;display:grid!important;gap:6px!important;padding-right:2px;scrollbar-width:thin}
+.lesson-group{border-radius:10px!important}
+.group-head{position:sticky;top:0;z-index:2;padding:7px 8px!important;background:#20243d!important}
+.lesson-list{grid-template-columns:1fr!important;padding:4px!important;gap:4px!important}
+.lesson-card{padding:7px 8px!important;border-radius:9px!important}
+.lesson-card strong{font-size:9px!important}
+.lesson-card small,.lesson-card .top{font-size:7px!important}
+.main{display:block!important}
+.workspace-panel{padding:8px!important}
+.workspace-panel>.panel-head{align-items:center;margin-bottom:7px!important}
+.workspace-panel>.panel-head h2{font-size:14px!important}
+.study-workspace{display:grid;gap:7px}
+.study-audio-bar{position:sticky;top:8px;z-index:40;grid-template-columns:minmax(0,1fr) auto!important;border-radius:12px!important;padding:8px!important}
+.audio-controller-row,.audio-auth-row,.audio-action-row,.audio-player-host,.audio-link-editor,.audio-question-nav{grid-column:1/-1}
+.audio-question-nav{display:flex;align-items:center;gap:5px;overflow-x:auto;padding:5px 1px 1px;scrollbar-width:none}
+.audio-question-nav::-webkit-scrollbar{display:none}
+.audio-question-nav>span{flex:0 0 auto;color:#929bb5;font-size:7px;font-weight:900}
+.audio-question-nav .question-chip{flex:0 0 34px;min-height:30px;border-radius:8px}
+.study-pane{border-radius:12px!important}
+.pdf-pane{height:calc(100dvh - 112px);min-height:620px}
+.pdf-pane .study-pane-head{min-height:50px;flex-wrap:wrap;padding:6px 8px!important}
+.pdf-title{min-width:150px;flex:1}
+.pdf-title strong{font-size:10px!important}
+.pdf-primary-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pdf-primary-actions .done{border-color:rgba(83,212,155,.35);background:rgba(83,212,155,.14);color:#9aefc9}
+.memo-open-btn{border-color:rgba(121,101,238,.45)!important;background:rgba(121,101,238,.18)!important}
+.pdf-pane iframe,.pdf-pane .pdf-zoom-viewport{height:calc(100% - 50px)!important;min-height:0!important}
+.memo-fab{position:fixed;right:18px;bottom:18px;z-index:880;display:flex;align-items:center;gap:6px;height:44px;padding:0 15px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:#6753dc;color:#fff;font-size:15px;font-weight:950;box-shadow:0 12px 34px rgba(0,0,0,.42)}
+.memo-fab span{font-size:9px}
+.memo-fab.has-note::after{content:'•';color:#8ef0c6;font-size:18px;line-height:1}
+.memo-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(to bottom,rgba(0,0,0,.05) 0 47%,rgba(0,0,0,.34) 48% 100%);opacity:0;pointer-events:none;transition:opacity .18s ease}
+.memo-overlay[hidden]{display:none}
+.memo-overlay.open{opacity:1;pointer-events:auto}
+.memo-sheet{width:min(980px,100%);height:50dvh;display:flex;flex-direction:column;padding:8px 12px max(10px,env(safe-area-inset-bottom));border:1px solid rgba(255,255,255,.16);border-bottom:0;border-radius:18px 18px 0 0;background:rgba(16,19,34,.985);box-shadow:0 -18px 55px rgba(0,0,0,.55);transform:translateY(18px);transition:height .18s ease,transform .18s ease}
+.memo-overlay.open .memo-sheet{transform:translateY(0)}
+.memo-sheet.expanded{height:82dvh}
+.memo-handle{width:44px;height:4px;margin:0 auto 7px;border-radius:99px;background:rgba(255,255,255,.22)}
+.memo-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 7px!important}
+.memo-head>div:first-child{min-width:0}
+.memo-head strong,.memo-head span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.memo-head strong{font-size:11px!important}
+.memo-head span{margin-top:2px;color:#7edfaf;font-size:7.5px}
+.memo-head>div:last-child{display:flex;align-items:center;gap:5px}
+.memo-close{width:34px;height:34px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-size:20px}
+.memo-quick{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.memo-quick::-webkit-scrollbar{display:none}
+.memo-quick button{flex:0 0 auto;height:30px;padding:0 9px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.05);color:#cfd5e7;font-size:7.5px;font-weight:900}
+.memo-sheet textarea{flex:1;min-height:0;width:100%;resize:none;padding:11px;border:1px solid rgba(255,255,255,.12);border-radius:11px;background:#090c17;color:#fff;font:11px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;outline:0}
+.memo-sheet textarea:focus{border-color:#7965ee;box-shadow:0 0 0 3px rgba(121,101,238,.12)}
+.memo-footer{display:grid;grid-template-columns:auto minmax(190px,1fr) auto;align-items:center;gap:7px;padding-top:7px}
+.memo-footer>span{color:#858fa9;font-size:7px}
+.memo-history,.memo-actions{display:flex;align-items:center;gap:5px}
+.memo-history select{min-width:0;flex:1;height:34px;padding:0 8px;border:1px solid rgba(255,255,255,.11);border-radius:9px;background:#0e1220;color:#fff;font-size:7.5px}
+.mini-btn.danger{color:#ff9aa2}
+body.memo-open{overflow:hidden}
+body.memo-open .memo-fab,body.memo-open .mobile-floating-dock,body.memo-open .audio-floating-player{opacity:0!important;pointer-events:none!important}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr!important}
+  .sidebar{position:static!important;height:auto;max-height:none;overflow:visible}
+  .data-status{padding:7px!important}
+  .book-list{display:flex!important;max-height:none;overflow-x:auto;overflow-y:hidden}
+  .book-btn{flex:0 0 210px!important}
+  .side-lessons{display:block;flex:none;max-height:0;overflow:hidden;margin-top:7px;padding-top:0;border-top:0;transition:max-height .2s ease,padding .2s ease}
+  .side-lessons.open{max-height:58dvh;padding-top:8px;border-top:1px solid rgba(255,255,255,.09)}
+  .side-lessons-head{position:sticky;top:0;z-index:4;background:#191c30}
+  #toggleLessonNav{display:block;flex:0 0 auto}
+  .lesson-groups{max-height:48dvh}
+  .workspace-panel>.panel-head{position:sticky;top:0;z-index:30;padding:6px;border-radius:10px;background:rgba(25,28,48,.96);backdrop-filter:blur(14px)}
+  .pdf-pane{height:calc(100dvh - 112px);min-height:560px}
+  .memo-fab{display:none}
+  .mobile-floating-dock{top:auto!important;bottom:calc(5px + env(safe-area-inset-bottom));left:5px;right:5px;height:52px;grid-template-columns:36px 36px minmax(64px,1fr) 52px 56px!important;transform:translateY(calc(100% + 16px))!important}
+  .mobile-floating-dock.no-audio{grid-template-columns:42px 1fr 1fr!important}
+  .mobile-floating-dock.visible{transform:translateY(0)!important}
+  .audio-floating-player{bottom:calc(64px + env(safe-area-inset-bottom))!important}
+  .app{padding-bottom:calc(72px + env(safe-area-inset-bottom))!important}
+  .memo-sheet{width:100%;height:52dvh;padding-left:8px;padding-right:8px}
+  .memo-sheet.expanded{height:86dvh}
+  .memo-footer{grid-template-columns:auto 1fr}
+  .memo-actions{grid-column:1/-1;justify-content:flex-end}
+}
+@media(max-width:600px){
+  .topbar{position:sticky;top:0;z-index:80}
+  .workspace-panel{padding:5px!important}
+  .workspace-panel>.panel-head .eyebrow{display:none}
+  .workspace-panel>.panel-head h2{font-size:12px!important}
+  .pdf-pane{height:calc(100dvh - 104px);min-height:500px}
+  .pdf-pane .study-pane-head{padding:5px 6px!important}
+  .pdf-primary-actions .mini-btn{min-height:32px;padding:0 6px}
+  .memo-overlay{background:linear-gradient(to bottom,rgba(0,0,0,.03) 0 46%,rgba(0,0,0,.36) 47% 100%)}
+  .memo-sheet{height:54dvh;border-radius:15px 15px 0 0}
+  .memo-footer{grid-template-columns:1fr}
+  .memo-footer>span{display:none}
+  .memo-history,.memo-actions{width:100%}
+  .memo-actions .mini-btn{flex:1}
+}
