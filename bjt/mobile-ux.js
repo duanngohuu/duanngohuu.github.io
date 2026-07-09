@@ -53,8 +53,8 @@
     memo.id='memoPanel';[content,pdf,memo].forEach(x=>x.classList.add('study-anchor'));
     const d=ensureDock(),media=window.BJT_AUDIO?.getList?.()||[],currentMedia=window.BJT_AUDIO?.getCurrent?.(),audioIndex=window.BJT_AUDIO?.getIndex?.()||0;
     const pdfPage=window.BJT_PDF?.getPage?.()||+(lesson.pdf_page_start||lesson.page_start||1),hasMemo=Boolean(localStorage.getItem(`bjtMemoCurrent:${lesson.lesson_id}`)?.trim());
-    d.innerHTML=`<button id="floatAudioJump" class="dock-icon" type="button" aria-label="Audio">♫</button><button id="floatTrackPicker" class="dock-track" type="button"><b>${esc(trackNo(currentMedia,audioIndex))}</b><small>${media.length?`${audioIndex+1}/${media.length}`:'—'}</small></button><button data-jump="contentPane" class="dock-nav active" type="button">Bài</button><button data-jump="pdfPane" class="dock-nav" type="button">PDF</button><button id="floatPagePicker" class="dock-page" type="button">${pdfPage}</button><button data-jump="memoPanel" class="dock-nav ${hasMemo?'has-note':''}" type="button">Memo</button><button id="floatMenu" class="dock-icon" type="button" aria-label="Chọn session và bài">☰</button>`;
-    d.querySelector('#floatAudioJump').onclick=()=>jumpTo('studyAudioBar');
+    d.innerHTML=`<button id="floatAudioJump" class="dock-icon" type="button" aria-label="Phát hoặc dừng audio">♫</button><button id="floatTrackPicker" class="dock-track" type="button"><b>${esc(trackNo(currentMedia,audioIndex))}</b><small>${media.length?`${audioIndex+1}/${media.length}`:'—'}</small></button><button data-jump="contentPane" class="dock-nav active" type="button">Bài</button><button data-jump="pdfPane" class="dock-nav" type="button">PDF</button><button id="floatPagePicker" class="dock-page" type="button">${pdfPage}</button><button data-jump="memoPanel" class="dock-nav ${hasMemo?'has-note':''}" type="button">Memo</button><button id="floatMenu" class="dock-icon" type="button" aria-label="Chọn session và bài">☰</button>`;
+    d.querySelector('#floatAudioJump').onclick=()=>window.BJT_AUDIO?.toggle?.();
     d.querySelector('#floatTrackPicker').onclick=()=>window.BJT_AUDIO?.openPicker?.();
     d.querySelector('#floatPagePicker').onclick=()=>window.BJT_PDF?.openPicker?.();
     d.querySelector('#floatMenu').onclick=openSheet;
@@ -70,7 +70,7 @@
     window.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update,{passive:true});
     removeScroll=()=>{window.removeEventListener('scroll',update);window.removeEventListener('resize',update);};update();
   }
-  window.addEventListener('bjt-audio-state',e=>{if(!dock)return;const b=dock.querySelector('#floatTrackPicker');if(b&&e.detail.media){b.querySelector('b').textContent=trackNo(e.detail.media,e.detail.index);b.querySelector('small').textContent=`${e.detail.index+1}/${e.detail.total}`;}});
+  window.addEventListener('bjt-audio-state',e=>{if(!dock)return;const play=dock.querySelector('#floatAudioJump');if(play)play.textContent=e.detail.playing?'❚❚':'♫';const b=dock.querySelector('#floatTrackPicker');if(b&&e.detail.media){b.querySelector('b').textContent=trackNo(e.detail.media,e.detail.index);b.querySelector('small').textContent=`${e.detail.index+1}/${e.detail.total}`;}});
   window.addEventListener('bjt-pdf-state',e=>{const b=dock?.querySelector('#floatPagePicker');if(b)b.textContent=e.detail.page;});
   window.addEventListener('DOMContentLoaded',()=>{const root=document.getElementById('lessonDetail');if(root){observer=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(renderDock,50);});observer.observe(root,{childList:true,subtree:true});}});
   window.addEventListener('load',renderDock);
