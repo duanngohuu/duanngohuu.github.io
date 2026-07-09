@@ -2,23 +2,25 @@
   const {state}=BJT;
   const cache=new Map();
   const loading=new Map();
-  const CACHE_PREFIX='bjtDriveFolderCacheV4:';
-  const CACHE_TTL=30*60*1000;
+  const CACHE_PREFIX='bjtDriveFolderCacheV6:';
+  const CACHE_TTL=6*60*60*1000;
+  const FOLDER_MIME='application/vnd.google-apps.folder';
   const folderId=url=>String(url||'').match(/\/folders\/([^/?#]+)/)?.[1]||'';
   const pad2=n=>String(+n||0).padStart(2,'0');
   const status=text=>{const el=document.getElementById('audioStatus');if(el)el.textContent=text;};
   const natural=(a,b)=>String(a.name||'').localeCompare(String(b.name||''),undefined,{numeric:true,sensitivity:'base'});
   const isAudio=f=>/^audio\//i.test(f.mimeType||'')||/\.(?:mp3|m4a|aac|wav|ogg|wma)$/i.test(f.name||'');
   const isMp3=f=>/audio\/mpeg/i.test(f.mimeType||'')||/\.mp3$/i.test(f.name||'');
+  const lessonsForBook=id=>state.lessons.filter(l=>l.book_id===id).sort((a,b)=>(+a.sort_order||0)-(+b.sort_order||0));
   const lessonById=id=>state.lessons.find(l=>l.lesson_id===id);
-  const lessonsForBook=id=>state.lessons.filter(l=>l.book_id===id);
 
   function cacheRead(bookId){
     if(cache.has(bookId))return cache.get(bookId);
     try{
       const saved=JSON.parse(localStorage.getItem(CACHE_PREFIX+bookId)||'null');
       if(saved&&Date.now()-saved.time<CACHE_TTL&&Array.isArray(saved.files)){
-        cache.set(bookId,saved.files);return saved.files;
+        cache.set(bookId,saved.files);
+        return saved.files;
       }
     }catch{}
     return null;
@@ -28,11 +30,12 @@
     try{localStorage.setItem(CACHE_PREFIX+bookId,JSON.stringify({time:Date.now(),files}));}catch{}
   }
 
-  async function listFolder(token,id){
-    const files=[];let pageToken='';
+  async function listChildren(token,parentId){
+    const files=[];
+    let pageToken='';
     do{
       const params=new URLSearchParams({
-        q:`'${id}' in parents and trashed = false`,
+        q:`'${parentId}' in parents and trashed = false`,
         pageSize:'1000',
         fields:'nextPageToken,files(id,name,mimeType,size)',
         orderBy:'name',
@@ -42,46 +45,70 @@
       if(pageToken)params.set('pageToken',pageToken);
       const res=await fetch(`https://www.googleapis.com/drive/v3/files?${params}`,{headers:{Authorization:`Bearer ${token}`}});
       if(!res.ok){
-        let message='';try{message=(await res.json())?.error?.message||'';}catch{}
+        let message='';
+        try{message=(await res.json())?.error?.message||'';}catch{}
         throw new Error(message||`Không đọc được thư mục audio (${res.status}).`);
       }
-      const data=await res.json();files.push(...(data.files||[]));pageToken=data.nextPageToken||'';
+      const data=await res.json();
+      files.push(...(data.files||[]));
+      pageToken=data.nextPageToken||'';
     }while(pageToken);
-    return files.filter(isAudio).sort(natural);
+    return files;
+  }
+
+  async function listFolderTree(token,rootId){
+    const queue=[rootId],seen=new Set(),audio=[];
+    while(queue.length){
+      const id=queue.shift();
+      if(!id||seen.has(id))continue;
+      seen.add(id);
+      const children=await listChildren(token,id);
+      for(const file of children){
+        if(file.mimeType===FOLDER_MIME)queue.push(file.id);
+        else if(isAudio(file))audio.push(file);
+      }
+    }
+    return audio.sort(natural);
   }
 
   function dedupe(files){
     const groups=new Map();
     for(const file of files){
-      const key=String(file.name||'').replace(/\.(?:mp3|wma|m4a|aac|wav|ogg)$/i,'').toLowerCase();
+      const key=String(file.name||'').replace(/\.(?:mp3|wma|m4a|aac|wav|ogg)$/i,'').replace(/\s+/g,' ').trim().toLowerCase();
       const previous=groups.get(key);
       if(!previous||(!isMp3(previous)&&isMp3(file)))groups.set(key,file);
     }
     return [...groups.values()].sort(natural);
   }
-  function yellowInfo(name){const m=String(name).match(/CD\s*(\d+)\D+(\d+)\.(?:mp3|m4a|aac|wav|ogg)$/i);return m?{disc:+m[1],track:+m[2]}:null;}
-  function rangeInfo(value){const m=String(value||'').match(/CD\s*(\d+)\D+(\d+)/i);return m?{disc:+m[1],track:+m[2]}:null;}
-  function plainTrack(name){const m=String(name||'').match(/(?:^|\D)(\d{1,3})(?=\D*(?:\.(?:mp3|wma|m4a|aac|wav|ogg))?$)/i)||String(name||'').match(/Track\s*0*(\d+)/i);return m?+m[1]:0;}
-  const inRange=(n,a,b)=>n>=a&&n<=b;
-  const lessonList=ids=>ids.map(lessonById).filter(Boolean);
 
-  function targetsFor(book,file){
-    const id=book.book_id,ls=lessonsForBook(id),n=plainTrack(file.name);
-    if(id==='BJT-MOCK'){
-      const ranges={
-        'BJT-MOCK-P1S1':[1,13],
-        'BJT-MOCK-P1S2':[14,25],
-        'BJT-MOCK-P1S3':[26,43],
-        'BJT-MOCK-P2S1':[44,59],
-        'BJT-MOCK-P2S2':[60,79]
-      };
-      return ls.filter(l=>ranges[l.lesson_id]&&inRange(n,...ranges[l.lesson_id]));
-    }
-    if(id==='BJT-YELLOW'){
-      const info=yellowInfo(file.name);if(!info)return[];
-      return ls.filter(l=>{const s=rangeInfo(l.audio_track_start),e=rangeInfo(l.audio_track_end);return s&&e&&info.disc===s.disc&&info.disc===e.disc&&info.track>=s.track&&info.track<=e.track;});
-    }
-    if(id==='BJT-RED'){
+  function fileInfo(name){
+    const value=String(name||'');
+    const cd=value.match(/CD\s*0*(\d+)\D+0*(\d+)(?=\D*\.(?:mp3|wma|m4a|aac|wav|ogg)$)/i);
+    if(cd)return{disc:+cd[1],track:+cd[2]};
+    const track=value.match(/Track\s*0*(\d+)/i)||value.match(/(?:^|\D)0*(\d{1,3})(?=\D*\.(?:mp3|wma|m4a|aac|wav|ogg)$)/i);
+    return{disc:0,track:track?+track[1]:0};
+  }
+  function rangeInfo(value){
+    const text=String(value||'');
+    const cd=text.match(/CD\s*0*(\d+)\D+0*(\d+)/i);
+    if(cd)return{disc:+cd[1],track:+cd[2]};
+    const track=text.match(/(?:Track\s*)?0*(\d{1,3})/i);
+    return track?{disc:0,track:+track[1]}:null;
+  }
+  const inRange=(n,a,b)=>n>=a&&n<=b;
+
+  function explicitTargets(book,file){
+    const lessons=lessonsForBook(book.book_id),info=fileInfo(file.name),n=info.track;
+    const byLessonRange=lessons.filter(lesson=>{
+      const start=rangeInfo(lesson.audio_track_start),end=rangeInfo(lesson.audio_track_end);
+      if(!start||!end)return false;
+      if(start.disc&&info.disc!==start.disc)return false;
+      if(end.disc&&info.disc!==end.disc)return false;
+      return inRange(n,start.track,end.track);
+    });
+    if(byLessonRange.length)return byLessonRange;
+
+    if(book.book_id==='BJT-RED'){
       const ranges={
         'BJT-RED-P1S1':[1,13],
         'BJT-RED-P1S2':[14,25],
@@ -89,92 +116,97 @@
         'BJT-RED-P2S1':[44,59],
         'BJT-RED-P2S2':[60,76]
       };
-      return ls.filter(l=>ranges[l.lesson_id]&&inRange(n,...ranges[l.lesson_id]));
+      return lessons.filter(l=>ranges[l.lesson_id]&&inRange(n,...ranges[l.lesson_id]));
     }
-    if(id==='BUSINESS-BLUE'){
-      if(n>=1&&n<=45){const l=lessonById(`BUSINESS-BLUE-U${pad2(n)}`);return l?[l]:[];}
-      if(n>=46&&n<=51){
+    if(book.book_id==='BUSINESS-BLUE'){
+      if(inRange(n,1,45))return [lessonById(`BUSINESS-BLUE-U${pad2(n)}`)].filter(Boolean);
+      if(inRange(n,46,51)){
         const pair=n-45;
-        return lessonList([`BUSINESS-BLUE-R${pad2(pair*2-1)}`,`BUSINESS-BLUE-R${pad2(pair*2)}`]);
+        return [lessonById(`BUSINESS-BLUE-R${pad2(pair*2-1)}`),lessonById(`BUSINESS-BLUE-R${pad2(pair*2)}`)].filter(Boolean);
       }
-      return[];
     }
-    if(id==='BUSINESS-30H'){
-      const ranges={
-        'BUSINESS-30H-C01':[1,7],
-        'BUSINESS-30H-C02':[8,14],
-        'BUSINESS-30H-C03':[15,21],
-        'BUSINESS-30H-C04':[22,28],
-        'BUSINESS-30H-C05':[29,35],
-        'BUSINESS-30H-C06':[36,42],
-        'BUSINESS-30H-C07':[43,49],
-        'BUSINESS-30H-C08':[50,57]
-      };
-      return ls.filter(l=>ranges[l.lesson_id]&&inRange(n,...ranges[l.lesson_id]));
+    if(book.book_id==='BUSINESS-30H'){
+      const chapter=Math.min(8,Math.max(1,Math.ceil(n/7)));
+      return [lessonById(`BUSINESS-30H-C${pad2(chapter)}`)].filter(Boolean);
     }
-    return[];
+    return [];
   }
 
   function labelFor(book,file){
-    const n=plainTrack(file.name);
-    if(book.book_id==='BJT-MOCK')return n<=43?`CD1-Track${pad2(n)}`:`CD2-Track${pad2(n-43)}`;
-    if(book.book_id==='BJT-YELLOW'){
-      const x=yellowInfo(file.name);if(x)return`CD${x.disc}-${pad2(x.track)}`;
-    }
-    return n?`Track ${pad2(n)}`:file.name;
+    const info=fileInfo(file.name);
+    if(info.disc)return`CD${info.disc}-${pad2(info.track)}`;
+    if(book.book_id==='BJT-MOCK'&&info.track)return info.track<=43?`CD1-Track${pad2(info.track)}`:`CD2-Track${pad2(info.track-43)}`;
+    return info.track?`Track ${pad2(info.track)}`:file.name;
   }
-  function inject(book,files){
-    const rows=[];
-    for(const file of dedupe(files)){
-      const targets=targetsFor(book,file);
-      for(const lesson of targets){
-        const n=plainTrack(file.name);
-        rows.push({
-          media_id:`${book.book_id}-DRIVE-${lesson.lesson_id}-${file.id}`,
-          book_id:book.book_id,
-          lesson_id:lesson.lesson_id,
-          media_type:'audio',
-          track_label:labelFor(book,file),
-          file_name:file.name,
-          mime_type:file.mimeType||(/\.wma$/i.test(file.name)?'audio/x-ms-wma':'audio/mpeg'),
-          drive_file_id:file.id,
-          file_url:`https://drive.google.com/file/d/${file.id}/view`,
-          sort_order:n||rows.length+1,
-          verification_status:'runtime_drive_folder',
-          notes:'Loaded from restricted Drive folder at runtime',
-          runtime_folder:true
-        });
+  function rowFor(book,lesson,file,index,fallback=false){
+    const info=fileInfo(file.name);
+    return{
+      media_id:`${book.book_id}-DRIVE-${lesson.lesson_id}-${file.id}${fallback?'-LIB':''}`,
+      book_id:book.book_id,
+      lesson_id:lesson.lesson_id,
+      media_type:'audio',
+      track_label:labelFor(book,file),
+      file_name:file.name,
+      mime_type:file.mimeType||(/\.wma$/i.test(file.name)?'audio/x-ms-wma':'audio/mpeg'),
+      drive_file_id:file.id,
+      file_url:`https://drive.google.com/file/d/${file.id}/view`,
+      sort_order:(info.disc||0)*1000+(info.track||index+1),
+      verification_status:fallback?'runtime_book_library':'runtime_drive_folder',
+      notes:fallback?'Toàn bộ audio của sách được mở tại mục này':'Mapped from restricted Drive folder',
+      runtime_folder:true
+    };
+  }
+
+  function inject(book,rawFiles){
+    const files=dedupe(rawFiles),lessons=lessonsForBook(book.book_id),rows=[];
+    const counts=new Map(lessons.map(l=>[l.lesson_id,0]));
+    files.forEach((file,index)=>{
+      for(const lesson of explicitTargets(book,file)){
+        rows.push(rowFor(book,lesson,file,index,false));
+        counts.set(lesson.lesson_id,(counts.get(lesson.lesson_id)||0)+1);
       }
+    });
+    for(const lesson of lessons){
+      if((counts.get(lesson.lesson_id)||0)>0)continue;
+      files.forEach((file,index)=>rows.push(rowFor(book,lesson,file,index,true)));
     }
-    state.media=state.media.filter(m=>m.book_id!==book.book_id);
+    state.media=state.media.filter(m=>!(m.book_id===book.book_id&&m.media_type==='audio'));
     state.media.push(...rows);
-    return rows;
+    return{rows,files};
   }
+
   function refresh(){
     const bar=document.querySelector('.study-audio-bar');
     if(bar)delete bar.dataset.audioEnhanced;
     window.BJT_AUDIO?.enhance?.();
+    window.BJT_AUDIO_REPLAY?.sync?.();
   }
 
-  async function ensureCurrentLesson(token){
+  async function ensureCurrentLesson(token,{force=false}={}){
     const book=state.books.find(b=>b.book_id===state.bookId);
     if(!book)return{loaded:false,count:0};
     const id=folderId(book.source_folder_url);
     if(!id)return{loaded:false,count:0};
     if(loading.has(book.book_id))return loading.get(book.book_id);
     const job=(async()=>{
-      status(`Đang đọc toàn bộ audio của ${book.book_title}…`);
-      let files=cacheRead(book.book_id);
-      if(!files){files=await listFolder(token,id);cacheWrite(book.book_id,files);}
+      status(`Đang nạp kho audio của ${book.book_title}…`);
+      let files=force?null:cacheRead(book.book_id);
+      if(!files){files=await listFolderTree(token,id);cacheWrite(book.book_id,files);}
       if(!files.length)throw new Error('Không tìm thấy file audio trong thư mục của sách này.');
-      const rows=inject(book,files);refresh();
-      const unique=new Set(rows.map(r=>r.drive_file_id)).size;
-      const wma=dedupe(files).filter(f=>/\.wma$/i.test(f.name)||/x-ms-wma/i.test(f.mimeType||'')).length;
-      status(`${unique} track đã nạp${wma?` · còn ${wma} file WMA chưa có MP3`:''}`);
-      return{loaded:true,count:unique,wma};
+      const result=inject(book,files);
+      refresh();
+      const wma=result.files.filter(f=>/\.wma$/i.test(f.name)||/x-ms-wma/i.test(f.mimeType||'')).length;
+      status(`${result.files.length} track đã nạp cho toàn bộ sách${wma?` · ${wma} WMA chưa có MP3`:''}`);
+      window.dispatchEvent(new CustomEvent('bjt-audio-library-ready',{detail:{bookId:book.book_id,count:result.files.length,wma}}));
+      return{loaded:true,count:result.files.length,wma};
     })().finally(()=>loading.delete(book.book_id));
-    loading.set(book.book_id,job);return job;
+    loading.set(book.book_id,job);
+    return job;
   }
 
-  window.BJT_AUDIO_FOLDER={ensureCurrentLesson,clearCache:bookId=>{cache.delete(bookId);try{localStorage.removeItem(CACHE_PREFIX+bookId);}catch{}}};
+  window.BJT_AUDIO_FOLDER={
+    ensureCurrentLesson,
+    clearCache:bookId=>{cache.delete(bookId);try{localStorage.removeItem(CACHE_PREFIX+bookId);}catch{}},
+    hasCached:bookId=>Boolean(cacheRead(bookId))
+  };
 })();
