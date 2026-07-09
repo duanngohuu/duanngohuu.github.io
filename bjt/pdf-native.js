@@ -38,7 +38,7 @@
     const src=preview(fileId,page);if(frame.getAttribute('src')!==src)frame.setAttribute('src',src);emit('preview','Đang dùng Google Drive Preview');return true;
   }
   function setNativePage(page=1){
-    if(!objectUrl||objectFileId!==fileId||!detect())return false;
+    if(!detect()||!objectUrl||objectFileId!==fileId)return false;
     const src=nativeSrc(page);if(frame.getAttribute('src')!==src)frame.setAttribute('src',src);emit('ready','PDF native đã sẵn sàng');return true;
   }
   async function ensureNative({page=1,interactive=false,force=false}={}){
