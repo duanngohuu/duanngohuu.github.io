@@ -5,6 +5,12 @@
   const CONSENT_KEY='bjtGoogleDriveConsentGrantedV1';
   const SKEW=90*1000;
 
+  try{
+    if(localStorage.getItem('bjtGoogleDriveGrantedV1')==='1')localStorage.setItem(CONSENT_KEY,'1');
+    localStorage.removeItem('bjtGoogleDriveTokenV1');
+    localStorage.removeItem('bjtGoogleDriveGrantedV1');
+  }catch{}
+
   function clear(){
     try{sessionStorage.removeItem(TOKEN_KEY);sessionStorage.removeItem(EXPIRY_KEY);}catch{}
   }
