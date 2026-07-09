@@ -24,8 +24,7 @@
   }
   function jumpPdf(options){
     const pane=document.getElementById('pdfPane');
-    if(!pane)return;
-    jumpToElement(pane,options);
+    if(pane)jumpToElement(pane,options);
   }
 
   function ensureBackdrop(){
@@ -50,9 +49,9 @@
       toggle.className='study-drawer-toggle';
       toggle.innerHTML='▤ <span>Mục lục</span>';
       toggle.setAttribute('aria-label','Mở mục lục sách và bài học');
+      toggle.setAttribute('aria-expanded','false');
       head.insertBefore(toggle,head.firstChild);
     }
-    toggle.onclick=event=>{event.preventDefault();event.stopPropagation();openDrawer();};
     return toggle;
   }
 
@@ -72,6 +71,30 @@
     backdrop?.classList.remove('open');
     document.body.classList.remove('study-drawer-open');
     toggle?.setAttribute('aria-expanded','false');
+  }
+
+  function selectBook(id){
+    if(!id)return;
+    state.bookId=id;
+    state.lessonId='';
+    state.questionId='';
+    localStorage.setItem('bjtLastBook',id);
+    window.BJT_UI.render();
+    requestAnimationFrame(()=>{
+      const groups=document.getElementById('lessonGroups');
+      if(groups)groups.scrollTop=0;
+      sidebar()?.querySelector('.lesson-card.active')?.scrollIntoView({block:'nearest'});
+    });
+  }
+
+  function selectLesson(id){
+    if(!id)return;
+    state.lessonId=id;
+    state.questionId='';
+    localStorage.setItem('bjtLastLesson',id);
+    window.BJT_UI.render();
+    closeDrawer();
+    requestAnimationFrame(()=>setTimeout(()=>jumpPdf({behavior:'auto'}),30));
   }
 
   function openMemoFallback(){
@@ -111,23 +134,28 @@
     const target=event.target instanceof Element?event.target:null;
     if(!target)return;
 
-    if(target.closest('#openStudyDrawer')){
-      event.preventDefault();event.stopImmediatePropagation();openDrawer();return;
+    const drawerButton=target.closest('#openStudyDrawer');
+    if(drawerButton){
+      event.preventDefault();event.stopImmediatePropagation();
+      sidebar()?.classList.contains('study-drawer-open')?closeDrawer():openDrawer();
+      return;
     }
+
+    const book=target.closest('.book-btn[data-id]');
+    if(book){
+      event.preventDefault();event.stopImmediatePropagation();selectBook(book.dataset.id);return;
+    }
+
+    const lesson=target.closest('.lesson-card[data-id]');
+    if(lesson){
+      event.preventDefault();event.stopImmediatePropagation();selectLesson(lesson.dataset.id);return;
+    }
+
     if(target.closest('#openMemo,#memoFab,#floatMemo,[data-open-memo]')){
       event.preventDefault();event.stopImmediatePropagation();openMemo();return;
     }
     if(target.closest('#floatPdf,[data-go="pdfPane"]')){
       event.preventDefault();event.stopImmediatePropagation();closeDrawer();jumpPdf();return;
-    }
-    if(target.closest('.lesson-card')){
-      setTimeout(()=>{closeDrawer();jumpPdf({behavior:'auto'});},40);return;
-    }
-    if(target.closest('.book-btn')){
-      setTimeout(()=>{
-        const side=sidebar();
-        side?.querySelector('.lesson-card.active')?.scrollIntoView({block:'nearest'});
-      },60);
     }
   },true);
 
@@ -150,5 +178,5 @@
   });
   window.addEventListener('load',ensureUi);
 
-  window.BJT_NAV={openDrawer,closeDrawer,jumpPdf,openMemo,repairStaleLayers};
+  window.BJT_NAV={openDrawer,closeDrawer,selectBook,selectLesson,jumpPdf,openMemo,repairStaleLayers};
 })();
