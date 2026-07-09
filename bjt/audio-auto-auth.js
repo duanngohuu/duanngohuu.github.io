@@ -14,9 +14,10 @@
   };
   const authorizeThen=async(button,action)=>{
     busy(button,true);
-    setStatus('Đang dùng tài khoản Google hiện tại để xin quyền đọc Drive…');
+    setStatus('Đang dùng tài khoản Google hiện tại để đọc kho audio…');
     try{
-      await window.BJT_AUDIO.authorizeGoogle();
+      const token=await window.BJT_AUDIO.authorizeGoogle();
+      await window.BJT_AUDIO_FOLDER?.ensureCurrentLesson?.(token);
       await action();
     }catch(error){
       setStatus(error?.message||'Không kết nối được Google Drive.');
