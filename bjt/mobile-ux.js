@@ -1,6 +1,6 @@
 (()=>{
   const {state}=BJT;
-  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lessonSort=(a,b)=>(+a.sort_order||0)-(+b.sort_order||0);
   let dock,sheet,observer,timer;
 
@@ -52,6 +52,7 @@
 
   window.addEventListener('bjt-audio-state',e=>{if(!dock)return;const b=dock.querySelector('#floatTrackPicker');if(b&&e.detail.media){b.querySelector('b').textContent=trackNo(e.detail.media,e.detail.index);b.querySelector('small').textContent=`${e.detail.index+1}/${e.detail.total}`;}});
   window.addEventListener('resize',renderDock,{passive:true});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();window.BJT_MEMO?.close?.();}});
   window.addEventListener('DOMContentLoaded',()=>{const root=document.getElementById('lessonDetail');if(root){observer=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(renderDock,80);});observer.observe(root,{childList:true});}});
   window.addEventListener('load',renderDock);
 })();
