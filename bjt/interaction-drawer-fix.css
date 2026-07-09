@@ -1,0 +1,117 @@
+/* Mobile/tablet navigation drawer + interaction recovery */
+html{scroll-behavior:smooth}
+.study-drawer-toggle{display:none}
+.study-drawer-backdrop{display:none}
+
+@media(max-width:900px){
+  body.study-drawer-open{overflow:hidden!important;touch-action:none}
+  .sidebar{
+    position:fixed!important;
+    inset:0 auto 0 0!important;
+    z-index:2600!important;
+    width:min(88vw,380px)!important;
+    height:100dvh!important;
+    max-height:none!important;
+    overflow:hidden!important;
+    padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))!important;
+    border-radius:0 18px 18px 0!important;
+    background:#15182b!important;
+    box-shadow:18px 0 55px rgba(0,0,0,.58)!important;
+    transform:translateX(calc(-100% - 18px));
+    transition:transform .2s ease!important;
+    pointer-events:none;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+  .sidebar.study-drawer-open{
+    transform:translateX(0);
+    pointer-events:auto;
+  }
+  .study-drawer-backdrop{
+    position:fixed;
+    inset:0;
+    z-index:2550;
+    display:block;
+    border:0;
+    padding:0;
+    background:rgba(0,0,0,.58);
+    backdrop-filter:blur(3px);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+  }
+  .study-drawer-backdrop.open{
+    opacity:1;
+    pointer-events:auto;
+  }
+  .study-drawer-toggle{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    min-width:42px;
+    height:36px;
+    padding:0 10px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:10px;
+    background:rgba(102,82,212,.24);
+    color:#fff;
+    font-size:15px;
+    font-weight:950;
+    flex:0 0 auto;
+  }
+  .study-drawer-toggle span{font-size:8px}
+  .workspace-panel>.panel-head{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr) auto!important;
+    gap:7px!important;
+  }
+  .workspace-panel>.panel-head>div:first-of-type{min-width:0}
+  .sidebar .book-list{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    max-height:26dvh!important;
+    overflow:auto!important;
+    flex:0 0 auto!important;
+  }
+  .sidebar .book-btn{
+    width:100%!important;
+    min-width:0!important;
+    flex:none!important;
+  }
+  .sidebar .side-lessons{
+    display:flex!important;
+    flex:1 1 auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:hidden!important;
+    padding-top:8px!important;
+    border-top:1px solid rgba(255,255,255,.09)!important;
+  }
+  .sidebar .lesson-groups{
+    max-height:none!important;
+    flex:1 1 auto!important;
+    overflow:auto!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .sidebar .side-lessons-head{
+    position:static!important;
+    flex:0 0 auto!important;
+  }
+  #toggleLessonNav{display:none!important}
+  .study-anchor{scroll-margin-top:12px!important}
+  .pdf-pane{scroll-margin-top:12px!important}
+}
+
+/* A hidden overlay must never block the page */
+.memo-overlay[hidden],
+.mobile-quick-overlay[hidden],
+.audio-picker-overlay[hidden],
+.script-overlay[hidden],
+.audio-floating-player[hidden]{display:none!important;pointer-events:none!important}
+
+/* Make active controls reliably tappable on iOS */
+.book-btn,.lesson-card,.memo-open-btn,#memoFab,#floatMemo,#floatPdf,.study-drawer-toggle{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
