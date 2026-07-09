@@ -16,18 +16,17 @@
     if(!book||!lesson||lessonAudio(lesson.lesson_id).length)return false;
     const source=bookAudio(book.book_id);
     if(!source.length)return false;
-    const aliases=source.map((m,index)=>({
+    state.media.push(...source.map((m,index)=>({
       ...m,
       media_id:`${m.media_id||m.drive_file_id||index}-ALIAS-${lesson.lesson_id}`,
       lesson_id:lesson.lesson_id,
       runtime_audio_alias:true,
       notes:`Audio toàn sách dùng tại ${lesson.lesson_id}`
-    }));
-    state.media.push(...aliases);
+    })));
     return true;
   }
 
-  function ensureBar(book,lesson){
+  function ensureBar(book){
     let bar=document.querySelector('.study-audio-bar');
     if(!isAudioBook(book)){
       bar?.remove();
@@ -45,7 +44,6 @@
       bar.innerHTML='<div class="audio-info"><strong>♫ Audio luyện nghe</strong><small id="audioStatus">Đang chuẩn bị audio…</small></div>';
       pdf.parentNode.insertBefore(bar,pdf);
     }
-    addAliases(book,lesson);
     return bar;
   }
 
@@ -55,8 +53,7 @@
       try{audio.currentTime=0;await audio.play();}catch{}
       return;
     }
-    const play=document.querySelector('.study-audio-bar [data-audio-play]');
-    play?.click();
+    document.querySelector('.study-audio-bar [data-audio-play]')?.click();
   }
 
   function makeReplay(className){
@@ -93,22 +90,18 @@
     try{
       const {book,lesson}=current();
       if(!book||!lesson)return;
-      const bar=ensureBar(book,lesson);
-      if(bar){
-        const aliasAdded=addAliases(book,lesson);
-        if(aliasAdded||bar.dataset.audioEnhanced!==lesson.lesson_id){
-          delete bar.dataset.audioEnhanced;
-          window.BJT_AUDIO?.enhance?.();
-        }
-        ensureReplayButtons();
+      const bar=ensureBar(book);
+      if(!bar)return;
+      const aliasAdded=addAliases(book,lesson);
+      if(aliasAdded||bar.dataset.audioEnhanced!==lesson.lesson_id){
+        delete bar.dataset.audioEnhanced;
+        window.BJT_AUDIO?.enhance?.();
       }
+      ensureReplayButtons();
     }finally{busy=false;}
   }
 
-  document.addEventListener('click',event=>{
-    if(event.target.closest('[data-audio-replay]'))return;
-  },true);
-  window.addEventListener('bjt-audio-state',()=>{clearTimeout(timer);timer=setTimeout(()=>{ensureReplayButtons();sync();},20);});
+  window.addEventListener('bjt-audio-state',()=>{clearTimeout(timer);timer=setTimeout(ensureReplayButtons,25);});
   window.addEventListener('DOMContentLoaded',()=>{
     const root=document.getElementById('lessonDetail');
     if(root){observer=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(sync,35);});observer.observe(root,{childList:true,subtree:true});}
