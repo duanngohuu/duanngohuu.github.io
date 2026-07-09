@@ -12,6 +12,30 @@
   const bookAudio=bookId=>state.media.filter(m=>m.media_type==='audio'&&m.book_id===bookId&&!m.runtime_audio_alias);
   const lessonAudio=lessonId=>state.media.filter(m=>m.media_type==='audio'&&m.lesson_id===lessonId);
 
+  function markAudioBooks(){
+    for(const book of state.books){
+      const button=document.querySelector(`.book-btn[data-id="${CSS.escape(book.book_id)}"]`);
+      if(!button)continue;
+      const enabled=isAudioBook(book);
+      button.classList.toggle('has-audio-book',enabled);
+      button.querySelector('.book-audio-count')?.remove();
+      if(enabled){
+        const badge=document.createElement('span');
+        badge.className='book-audio-count';
+        badge.textContent=`♫ ${book.audio_track_count||'Audio'}`;
+        button.appendChild(badge);
+      }
+    }
+    const book=state.books.find(x=>x.book_id===state.bookId);
+    if(isAudioBook(book)){
+      document.querySelectorAll('.lesson-card').forEach(card=>{
+        card.classList.add('has-audio-lesson');
+        const label=card.querySelector('.top span:last-child');
+        if(label&&!label.textContent.trim().startsWith('♫'))label.textContent=`♫ ${label.textContent.trim()}`;
+      });
+    }
+  }
+
   function addAliases(book,lesson){
     if(!book||!lesson||lessonAudio(lesson.lesson_id).length)return false;
     const source=bookAudio(book.book_id);
@@ -88,6 +112,7 @@
     if(busy)return;
     busy=true;
     try{
+      markAudioBooks();
       const {book,lesson}=current();
       if(!book||!lesson)return;
       const bar=ensureBar(book);
@@ -101,7 +126,8 @@
     }finally{busy=false;}
   }
 
-  window.addEventListener('bjt-audio-state',()=>{clearTimeout(timer);timer=setTimeout(ensureReplayButtons,25);});
+  window.addEventListener('bjt-audio-state',()=>{clearTimeout(timer);timer=setTimeout(()=>{ensureReplayButtons();markAudioBooks();},25);});
+  window.addEventListener('bjt-audio-library-ready',()=>{clearTimeout(timer);timer=setTimeout(sync,25);});
   window.addEventListener('DOMContentLoaded',()=>{
     const root=document.getElementById('lessonDetail');
     if(root){observer=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(sync,35);});observer.observe(root,{childList:true,subtree:true});}
