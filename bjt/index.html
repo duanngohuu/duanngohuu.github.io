@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="./mobile-ux.css?v=2c8f006">
 <link rel="stylesheet" href="./pdf-state.css?v=8444461">
 <link rel="stylesheet" href="./ux-v2.css?v=6d6c98a">
-<link rel="stylesheet" href="./pdf-mobile-scroll-fix.css?v=ad4b782">
+<link rel="stylesheet" href="./pdf-mobile-fix.css?v=f1c230c">
 </head>
 <body>
 <div class="app">
@@ -22,7 +22,7 @@
 <a class="brand" href="/"><span class="brand-mark">BJT</span><span><strong>BJT Learning Hub</strong><small>PDF · Audio · Memo</small></span></a>
 <div class="top-actions"><a class="nav-btn primary" href="/">⌂ Trang chính</a><a class="nav-btn sheet-link" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/edit">Dữ liệu</a></div>
 </header>
-<section class="hero"><div><p class="eyebrow">BJT Learning</p><h1>Học trực tiếp với PDF.</h1><p>Audio chỉ ẩn ở sách thật sự không có âm thanh; ghi chú tự lưu theo từng bài.</p></div><div class="hero-stats"><div class="hero-stat"><strong id="bookCount">–</strong><span>giáo trình</span></div><div class="hero-stat"><strong id="lessonCount">–</strong><span>bài / section</span></div><div class="hero-stat"><strong id="doneCount">0</strong><span>đã hoàn thành</span></div></div></section>
+<section class="hero"><div><p class="eyebrow">BJT Learning</p><h1>Học trực tiếp với PDF.</h1><p>Năm giáo trình có audio đều dùng được; hai giáo trình đọc không có audio sẽ tự ẩn player.</p></div><div class="hero-stats"><div class="hero-stat"><strong id="bookCount">–</strong><span>giáo trình</span></div><div class="hero-stat"><strong id="lessonCount">–</strong><span>bài / section</span></div><div class="hero-stat"><strong id="doneCount">0</strong><span>đã hoàn thành</span></div></div></section>
 <div class="layout">
 <aside class="sidebar">
 <label class="search">⌕ <input id="searchInput" placeholder="Tìm sách hoặc bài học"></label>
@@ -36,23 +36,24 @@
 <main class="main"><section class="panel workspace-panel"><div class="panel-head"><div><p class="eyebrow">Không gian học</p><h2 id="workspaceTitle">PDF · Ghi chú</h2></div><span id="lessonStatus" class="pill">Chưa chọn</span></div><div id="lessonDetail" class="empty">Chọn một bài trong mục lục bên trái.</div></section></main>
 </div></div><div id="toast" class="toast"></div>
 <script src="./data.js?v=ae0a49c"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=BOOKS&amp;tqx=responseHandler:BJT_BOOKS_CB&amp;v=20260710a" onerror="BJT.feedError('BOOKS')"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=LESSONS&amp;tqx=responseHandler:BJT_LESSONS_CB&amp;v=20260710a" onerror="BJT.feedError('LESSONS')"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=QUESTIONS&amp;tqx=responseHandler:BJT_QUESTIONS_CB&amp;v=20260710a" onerror="BJT.feedError('QUESTIONS')"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=CONTENT&amp;tqx=responseHandler:BJT_CONTENT_CB&amp;v=20260710a" onerror="BJT.feedError('CONTENT')"></script>
-<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=MEDIA&amp;tqx=responseHandler:BJT_MEDIA_CB&amp;v=20260710a" onerror="BJT.feedError('MEDIA')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=BOOKS&amp;tqx=responseHandler:BJT_BOOKS_CB&amp;v=20260710b" onerror="BJT.feedError('BOOKS')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=LESSONS&amp;tqx=responseHandler:BJT_LESSONS_CB&amp;v=20260710b" onerror="BJT.feedError('LESSONS')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=QUESTIONS&amp;tqx=responseHandler:BJT_QUESTIONS_CB&amp;v=20260710b" onerror="BJT.feedError('QUESTIONS')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=CONTENT&amp;tqx=responseHandler:BJT_CONTENT_CB&amp;v=20260710b" onerror="BJT.feedError('CONTENT')"></script>
+<script src="https://docs.google.com/spreadsheets/d/1wqrd8M74RgcISCIeBwAXObYwocu8VHbXvXvt0NrXvX8/gviz/tq?sheet=MEDIA&amp;tqx=responseHandler:BJT_MEDIA_CB&amp;v=20260710b" onerror="BJT.feedError('MEDIA')"></script>
 <script src="https://accounts.google.com/gsi/client"></script>
 <script src="./google-client-bridge.js?v=594c64f"></script>
-<script src="./google-session-mode.js?v=482e122"></script>
+<script src="./google-token-cache.js?v=fd85b64"></script>
 <script src="./ui.js?v=7feb591"></script>
 <script src="./audio-controller.js?v=982b49b"></script>
-<script src="./audio-folder-loader.js?v=07572a9"></script>
-<script src="./audio-auto-auth.js?v=05599ba"></script>
+<script src="./audio-folder-loader.js?v=39e5eab"></script>
+<script src="./audio-auto-auth.js?v=5da373a"></script>
 <script src="./audio-visibility-guard.js?v=bc703de"></script>
 <script src="./audio-ux-restore.js?v=0f058ac"></script>
 <script src="./mobile-ux.js?v=65e696b"></script>
 <script src="./pdf-native.js?v=b827468"></script>
 <script src="./pdf-state.js?v=cd15888"></script>
+<script src="./pdf-mobile-fix.js?v=977ecea"></script>
 <script src="./start.js?v=d5d2893"></script>
 </body>
 </html>
