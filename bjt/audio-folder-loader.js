@@ -71,11 +71,11 @@
     }
     if(id==='BJT-RED'){
       const ranges={
-        'BJT-RED-P1S1':[4,13],
-        'BJT-RED-P1S2':[16,25],
-        'BJT-RED-P1S3':[28,43],
-        'BJT-RED-P2S1':[45,59],
-        'BJT-RED-P2S2':[62,76]
+        'BJT-RED-P1S1':[1,13],
+        'BJT-RED-P1S2':[14,25],
+        'BJT-RED-P1S3':[26,43],
+        'BJT-RED-P2S1':[44,59],
+        'BJT-RED-P2S2':[60,76]
       };
       return ls.filter(l=>ranges[l.lesson_id]&&n>=ranges[l.lesson_id][0]&&n<=ranges[l.lesson_id][1]);
     }
