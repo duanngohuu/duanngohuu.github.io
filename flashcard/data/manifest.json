@@ -1,5 +1,5 @@
 {
-  "version": "2026.07.05-vocab-920",
+  "version": "2026.07.20-onomatopoeia",
   "title": "Thư viện từ vựng N2",
   "lessonSize": 50,
   "courses": [
@@ -8,14 +8,110 @@
       "title": "400 từ vựng N2 - Trường văn",
       "description": "Data từ ảnh bảng 400 từ vựng hay xuất hiện trong bài trường văn N2.",
       "lessons": [
-        { "id": "n2-reading-001-050", "title": "Bài 01 · STT 1-50", "description": "50 từ đầu tiên", "path": "./data/n2-reading-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "reading"] },
-        { "id": "n2-reading-051-100", "title": "Bài 02 · STT 51-100", "description": "Từ 51 đến 100", "path": "./data/n2-reading-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "tags": ["n2", "reading"] },
-        { "id": "n2-reading-101-150", "title": "Bài 03 · STT 101-150", "description": "Từ 101 đến 150", "path": "./data/n2-reading-101-150.tsv", "count": 50, "startNo": 101, "endNo": 150, "tags": ["n2", "reading"] },
-        { "id": "n2-reading-151-200", "title": "Bài 04 · STT 151-200", "description": "Từ 151 đến 200", "path": "./data/n2-reading-151-200.tsv", "count": 50, "startNo": 151, "endNo": 200, "tags": ["n2", "reading"] },
-        { "id": "n2-reading-201-250", "title": "Bài 05 · STT 201-250", "description": "Từ 201 đến 250", "path": "./data/n2-reading-201-250.tsv", "count": 50, "startNo": 201, "endNo": 250, "tags": ["n2", "reading"] },
-        { "id": "n2-reading-251-300", "title": "Bài 06 · STT 251-300", "description": "Từ 251 đến 300", "path": "./data/n2-reading-251-300.tsv", "count": 50, "startNo": 251, "endNo": 300, "tags": ["n2", "reading"] },
-        { "id": "n2-reading-301-350", "title": "Bài 07 · STT 301-350", "description": "Từ 301 đến 350", "path": "./data/n2-reading-301-350.tsv", "count": 50, "startNo": 301, "endNo": 350, "tags": ["n2", "reading"] },
-        { "id": "n2-reading-351-400", "title": "Bài 08 · STT 351-400", "description": "Từ 351 đến 400", "path": "./data/n2-reading-351-400.tsv", "count": 50, "startNo": 351, "endNo": 400, "tags": ["n2", "reading"] }
+        {
+          "id": "n2-reading-001-050",
+          "title": "Bài 01 · STT 1-50",
+          "description": "50 từ đầu tiên",
+          "path": "./data/n2-reading-001-050.tsv",
+          "count": 50,
+          "startNo": 1,
+          "endNo": 50,
+          "tags": [
+            "n2",
+            "reading"
+          ]
+        },
+        {
+          "id": "n2-reading-051-100",
+          "title": "Bài 02 · STT 51-100",
+          "description": "Từ 51 đến 100",
+          "path": "./data/n2-reading-051-100.tsv",
+          "count": 50,
+          "startNo": 51,
+          "endNo": 100,
+          "tags": [
+            "n2",
+            "reading"
+          ]
+        },
+        {
+          "id": "n2-reading-101-150",
+          "title": "Bài 03 · STT 101-150",
+          "description": "Từ 101 đến 150",
+          "path": "./data/n2-reading-101-150.tsv",
+          "count": 50,
+          "startNo": 101,
+          "endNo": 150,
+          "tags": [
+            "n2",
+            "reading"
+          ]
+        },
+        {
+          "id": "n2-reading-151-200",
+          "title": "Bài 04 · STT 151-200",
+          "description": "Từ 151 đến 200",
+          "path": "./data/n2-reading-151-200.tsv",
+          "count": 50,
+          "startNo": 151,
+          "endNo": 200,
+          "tags": [
+            "n2",
+            "reading"
+          ]
+        },
+        {
+          "id": "n2-reading-201-250",
+          "title": "Bài 05 · STT 201-250",
+          "description": "Từ 201 đến 250",
+          "path": "./data/n2-reading-201-250.tsv",
+          "count": 50,
+          "startNo": 201,
+          "endNo": 250,
+          "tags": [
+            "n2",
+            "reading"
+          ]
+        },
+        {
+          "id": "n2-reading-251-300",
+          "title": "Bài 06 · STT 251-300",
+          "description": "Từ 251 đến 300",
+          "path": "./data/n2-reading-251-300.tsv",
+          "count": 50,
+          "startNo": 251,
+          "endNo": 300,
+          "tags": [
+            "n2",
+            "reading"
+          ]
+        },
+        {
+          "id": "n2-reading-301-350",
+          "title": "Bài 07 · STT 301-350",
+          "description": "Từ 301 đến 350",
+          "path": "./data/n2-reading-301-350.tsv",
+          "count": 50,
+          "startNo": 301,
+          "endNo": 350,
+          "tags": [
+            "n2",
+            "reading"
+          ]
+        },
+        {
+          "id": "n2-reading-351-400",
+          "title": "Bài 08 · STT 351-400",
+          "description": "Từ 351 đến 400",
+          "path": "./data/n2-reading-351-400.tsv",
+          "count": 50,
+          "startNo": 351,
+          "endNo": 400,
+          "tags": [
+            "n2",
+            "reading"
+          ]
+        }
       ]
     },
     {
@@ -23,10 +119,62 @@
       "title": "Chữ Hán N2 theo đề 2010–2025",
       "description": "Batch hiện tại gồm 193 từ từ kỳ 07/2010 đến 12/2019. Sẽ bổ sung tiếp các năm còn lại.",
       "lessons": [
-        { "id": "n2-kanji-exam-001-050", "title": "Bài 01 · 07/2010–07/2012", "description": "STT 1 đến 50", "path": "./data/n2-kanji-exam-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "kanji", "exam"] },
-        { "id": "n2-kanji-exam-051-100", "title": "Bài 02 · 12/2012–12/2014", "description": "STT 51 đến 100", "path": "./data/n2-kanji-exam-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "tags": ["n2", "kanji", "exam"] },
-        { "id": "n2-kanji-exam-101-150", "title": "Bài 03 · 07/2015–07/2017", "description": "STT 101 đến 150", "path": "./data/n2-kanji-exam-101-150.tsv", "count": 50, "startNo": 101, "endNo": 150, "tags": ["n2", "kanji", "exam"] },
-        { "id": "n2-kanji-exam-151-193", "title": "Bài 04 · 12/2017–12/2019", "description": "STT 151 đến 193", "path": "./data/n2-kanji-exam-151-193.tsv", "count": 43, "startNo": 151, "endNo": 193, "tags": ["n2", "kanji", "exam"] }
+        {
+          "id": "n2-kanji-exam-001-050",
+          "title": "Bài 01 · 07/2010–07/2012",
+          "description": "STT 1 đến 50",
+          "path": "./data/n2-kanji-exam-001-050.tsv",
+          "count": 50,
+          "startNo": 1,
+          "endNo": 50,
+          "tags": [
+            "n2",
+            "kanji",
+            "exam"
+          ]
+        },
+        {
+          "id": "n2-kanji-exam-051-100",
+          "title": "Bài 02 · 12/2012–12/2014",
+          "description": "STT 51 đến 100",
+          "path": "./data/n2-kanji-exam-051-100.tsv",
+          "count": 50,
+          "startNo": 51,
+          "endNo": 100,
+          "tags": [
+            "n2",
+            "kanji",
+            "exam"
+          ]
+        },
+        {
+          "id": "n2-kanji-exam-101-150",
+          "title": "Bài 03 · 07/2015–07/2017",
+          "description": "STT 101 đến 150",
+          "path": "./data/n2-kanji-exam-101-150.tsv",
+          "count": 50,
+          "startNo": 101,
+          "endNo": 150,
+          "tags": [
+            "n2",
+            "kanji",
+            "exam"
+          ]
+        },
+        {
+          "id": "n2-kanji-exam-151-193",
+          "title": "Bài 04 · 12/2017–12/2019",
+          "description": "STT 151 đến 193",
+          "path": "./data/n2-kanji-exam-151-193.tsv",
+          "count": 43,
+          "startNo": 151,
+          "endNo": 193,
+          "tags": [
+            "n2",
+            "kanji",
+            "exam"
+          ]
+        }
       ]
     },
     {
@@ -34,13 +182,137 @@
       "title": "Vũ Quang Dũng JLPT",
       "description": "327 từ vựng từ Unit 8, Unit 12, phần bổ sung và bộ đọc hiểu N2 tháng 07/2024.",
       "lessons": [
-        { "id": "vqd-unit-08-001-050", "title": "Unit 8 · STT 1-50", "description": "50 từ vựng Unit 8", "path": "./data/vqd-unit-08-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "vocabulary", "vqd", "unit-8"] },
-        { "id": "vqd-unit-12-001-050", "title": "Unit 12 · STT 1-50", "description": "50 từ đầu của Unit 12", "path": "./data/vqd-unit-12-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "tags": ["n2", "vocabulary", "vqd", "unit-12"] },
-        { "id": "vqd-unit-12-051-100", "title": "Unit 12 · STT 51-100", "description": "50 từ tiếp theo của Unit 12", "path": "./data/vqd-unit-12-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "tags": ["n2", "vocabulary", "vqd", "unit-12"] },
-        { "id": "vqd-supplement-034-083", "title": "Bổ sung · STT 34-83", "description": "Ảnh nguồn không hiển thị tên Unit", "path": "./data/vqd-supplement-034-083.tsv", "count": 50, "startNo": 34, "endNo": 83, "tags": ["n2", "vocabulary", "vqd", "supplement"] },
-        { "id": "vqd-supplement-084-110", "title": "Bổ sung · STT 84-110", "description": "Ảnh nguồn không hiển thị tên Unit", "path": "./data/vqd-supplement-084-110.tsv", "count": 27, "startNo": 84, "endNo": 110, "tags": ["n2", "vocabulary", "vqd", "supplement"] },
-        { "id": "vqd-n2-reading-2024-001-050", "title": "Đọc hiểu N2 07/2024 · STT 1-50", "description": "Từ khó kèm cách dùng và cụm từ đi kèm", "path": "./data/vqd-n2-reading-2024-001-050.tsv", "count": 50, "startNo": 1, "endNo": 50, "faces": 4, "tags": ["n2", "vocabulary", "vqd", "reading", "2024-07"] },
-        { "id": "vqd-n2-reading-2024-051-100", "title": "Đọc hiểu N2 07/2024 · STT 51-100", "description": "Từ khó kèm cách dùng và cụm từ đi kèm", "path": "./data/vqd-n2-reading-2024-051-100.tsv", "count": 50, "startNo": 51, "endNo": 100, "faces": 4, "tags": ["n2", "vocabulary", "vqd", "reading", "2024-07"] }
+        {
+          "id": "vqd-unit-08-001-050",
+          "title": "Unit 8 · STT 1-50",
+          "description": "50 từ vựng Unit 8",
+          "path": "./data/vqd-unit-08-001-050.tsv",
+          "count": 50,
+          "startNo": 1,
+          "endNo": 50,
+          "tags": [
+            "n2",
+            "vocabulary",
+            "vqd",
+            "unit-8"
+          ]
+        },
+        {
+          "id": "vqd-unit-12-001-050",
+          "title": "Unit 12 · STT 1-50",
+          "description": "50 từ đầu của Unit 12",
+          "path": "./data/vqd-unit-12-001-050.tsv",
+          "count": 50,
+          "startNo": 1,
+          "endNo": 50,
+          "tags": [
+            "n2",
+            "vocabulary",
+            "vqd",
+            "unit-12"
+          ]
+        },
+        {
+          "id": "vqd-unit-12-051-100",
+          "title": "Unit 12 · STT 51-100",
+          "description": "50 từ tiếp theo của Unit 12",
+          "path": "./data/vqd-unit-12-051-100.tsv",
+          "count": 50,
+          "startNo": 51,
+          "endNo": 100,
+          "tags": [
+            "n2",
+            "vocabulary",
+            "vqd",
+            "unit-12"
+          ]
+        },
+        {
+          "id": "vqd-supplement-034-083",
+          "title": "Bổ sung · STT 34-83",
+          "description": "Ảnh nguồn không hiển thị tên Unit",
+          "path": "./data/vqd-supplement-034-083.tsv",
+          "count": 50,
+          "startNo": 34,
+          "endNo": 83,
+          "tags": [
+            "n2",
+            "vocabulary",
+            "vqd",
+            "supplement"
+          ]
+        },
+        {
+          "id": "vqd-supplement-084-110",
+          "title": "Bổ sung · STT 84-110",
+          "description": "Ảnh nguồn không hiển thị tên Unit",
+          "path": "./data/vqd-supplement-084-110.tsv",
+          "count": 27,
+          "startNo": 84,
+          "endNo": 110,
+          "tags": [
+            "n2",
+            "vocabulary",
+            "vqd",
+            "supplement"
+          ]
+        },
+        {
+          "id": "vqd-n2-reading-2024-001-050",
+          "title": "Đọc hiểu N2 07/2024 · STT 1-50",
+          "description": "Từ khó kèm cách dùng và cụm từ đi kèm",
+          "path": "./data/vqd-n2-reading-2024-001-050.tsv",
+          "count": 50,
+          "startNo": 1,
+          "endNo": 50,
+          "faces": 4,
+          "tags": [
+            "n2",
+            "vocabulary",
+            "vqd",
+            "reading",
+            "2024-07"
+          ]
+        },
+        {
+          "id": "vqd-n2-reading-2024-051-100",
+          "title": "Đọc hiểu N2 07/2024 · STT 51-100",
+          "description": "Từ khó kèm cách dùng và cụm từ đi kèm",
+          "path": "./data/vqd-n2-reading-2024-051-100.tsv",
+          "count": 50,
+          "startNo": 51,
+          "endNo": 100,
+          "faces": 4,
+          "tags": [
+            "n2",
+            "vocabulary",
+            "vqd",
+            "reading",
+            "2024-07"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "daily-onomatopoeia-clean",
+      "title": "Từ tượng thanh・tượng hình dùng hằng ngày",
+      "description": "Danh sách đã gộp mục trùng và sửa nghĩa. Mỗi từ có 5 ví dụ thực tế, bản dịch và bối cảnh.",
+      "lessons": [
+        {
+          "id": "daily-onomatopoeia-001-025",
+          "title": "Bài 01 · STT 1-25",
+          "description": "25 từ đầu · 5 ví dụ cho mỗi từ",
+          "path": "./data/daily-onomatopoeia-001-025.tsv",
+          "count": 25,
+          "startNo": 1,
+          "endNo": 25,
+          "faces": 7,
+          "tags": [
+            "daily",
+            "onomatopoeia",
+            "context"
+          ]
+        }
       ]
     }
   ]
